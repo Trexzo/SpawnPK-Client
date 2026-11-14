@@ -125,6 +125,14 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(result["startup_override_count"], 4)
         self.assertEqual(result["without_explicit_startup_override"], ["OtherPlugin"])
 
+    def test_annotation_type_reference_is_not_plugin_subclass(self):
+        self.files["source/rs/plugins/PluginDependency.java"] = (
+            b"public @interface PluginDependency { Class<? extends Plugin> value(); }")
+        self.pack()
+        result = self.scan()
+        self.assertEqual(result["plugin_subclass_count"], 4)
+        self.assertNotIn("PluginDependency", result["without_explicit_startup_override"])
+
     def test_duplicate_startup_override_refused(self):
         self.files["source/rs/plugins/loottracker/LootTrackerPlugin.java"] = (
             b"class LootTrackerPlugin extends Plugin { protected void startUp(){}"
