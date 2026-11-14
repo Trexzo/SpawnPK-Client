@@ -166,7 +166,7 @@ def build(kit_dir: Path, result_dir: Path, compiler: Path, expected_manifest: di
     with log.open("w",encoding="utf-8",errors="replace") as f:
         p=subprocess.run(cmd,stdout=f,stderr=subprocess.STDOUT,timeout=240,check=False)
     if p.returncode:raise Refused("JAVAC_FAILED_RETURN_CODE_"+str(p.returncode))
-    classfiles=sorted(classes.rglob("*.class"))
+    classfiles=sorted(classes.rglob("*.class"), key=lambda p: p.relative_to(classes).as_posix())
     if len(classfiles)!=CLASS_COUNT:raise Refused("GENERATED_CLASS_COUNT_DRIFT: "+str(len(classfiles)))
     jar=result_dir/"R383-Source-Built-From-Private-Kit.jar"
     if jar.exists():raise Refused("REFUSE_EXISTING_JAR_OUTPUT")
