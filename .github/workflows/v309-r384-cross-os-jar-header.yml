@@ -1,0 +1,35 @@
+name: v309 R384 cross-OS JAR creator header (PUBLIC synthetic only)
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v309-r384-cross-os-jar-header.yml'
+      - 'tools/r383/verify_private_full_build.py'
+      - 'tools/r384/synthetic_cross_os_jar_probe.py'
+      - 'tests/test_v309_r383_full_windows_contract.py'
+      - 'tests/test_v309_r384_cross_os_jar.py'
+      - 'docs/V309_R384_CROSS_OS_JAR_HEADER_REPRODUCIBILITY.md'
+      - 'research/v309-source-recovery/r384-cross-os-jar-header-witness.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-synthetic-canonical-jar:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Synthetic archive verification (NO private code)
+        run: python -m unittest discover -s tests -p 'test_v309_r38*_*.py' -v
+      - name: Synthetic JDK21 canonical-archive probe (NO private code)
+        run: python tools/r384/synthetic_cross_os_jar_probe.py
