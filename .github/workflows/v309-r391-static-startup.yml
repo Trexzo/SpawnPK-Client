@@ -1,0 +1,34 @@
+name: v309 R391 static startup differential (public synthetic only)
+on:
+  push:
+    branches:
+      - 'research/v309-r391-*'
+  pull_request:
+    paths:
+      - 'tools/r391/audit_startup_bytecode.py'
+      - 'tests/test_v309_r391_startup_differential.py'
+      - 'docs/V309_R391_STATIC_STARTUP_DIFFERENTIAL.md'
+      - '.github/workflows/v309-r391-static-startup.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / JDK21
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Compile tiny synthetic Java startup fixtures and static javap regression
+        run: python -m unittest discover -s tests -p 'test_v309_r391_startup_differential.py' -v
