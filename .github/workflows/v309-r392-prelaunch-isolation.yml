@@ -1,0 +1,30 @@
+name: v309 R392 prelaunch source isolation inventory (synthetic public only)
+on:
+  push:
+    branches:
+      - 'research/v309-r392-*'
+  pull_request:
+    paths:
+      - 'tools/r392/**'
+      - 'tests/test_v309_r392_prelaunch_isolation.py'
+      - 'docs/V309_R392_PRELAUNCH_ISOLATION_GATE.md'
+      - '.github/workflows/v309-r392-prelaunch-isolation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: No-private-code static zip and host-gate synthetic regression
+        run: python -m unittest discover -s tests -p 'test_v309_r392_prelaunch_isolation.py' -v
