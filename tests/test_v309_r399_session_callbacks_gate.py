@@ -112,6 +112,7 @@ class SyntheticLootTracker {
        if (!r399AcceptingDrops || instance != this) {return;}
        r399DropSessionEpoch = r399SessionEpoch;
        ++r399RecordMutationSequence;
+       r396LastCommitSucceeded = false;
        pendingRecords.add(record);
        if (!historyLoaded) r396PreloadRecords.add(record);
     }
