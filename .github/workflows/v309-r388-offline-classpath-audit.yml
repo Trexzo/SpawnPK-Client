@@ -1,0 +1,32 @@
+name: v309 R388 static classpath audit (public synthetic ONLY)
+on:
+  push:
+    branches:
+      - 'research/v309-r388-*'
+  pull_request:
+    paths:
+      - 'tools/r388/**'
+      - 'tests/test_v309_r388_classpath_closure.py'
+      - '.github/workflows/v309-r388-offline-classpath-audit.yml'
+  workflow_dispatch:
+jobs:
+  verify_synthetic:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Compile generic no-initialization linkage probe
+        run: javac --release 11 -d . tools/r388/LinkageAllProbe.java
+      - name: Source-free synthetic tests
+        run: python -m unittest discover -s tests -p test_v309_r388_classpath_closure.py -v
