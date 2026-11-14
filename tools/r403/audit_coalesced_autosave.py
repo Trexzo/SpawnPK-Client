@@ -40,12 +40,12 @@ def check_structure(raw:bytes)->dict:
     except UnicodeDecodeError as exc:
         raise Refused("NON_UTF8_PRIVATE_SOURCE") from exc
     fields=(
-        (r"\\b(?:volatile\\s+)?java\\.util\\.concurrent\\.ExecutorService\\s+r403AutosaveExecutor\\s*;", "executor"),
-        (r"\\bboolean\\s+r403AutosaveQueued\\s*;", "queued"),
-        (r"\\bboolean\\s+r403AutosaveDirty\\s*;", "dirty"),
-        (r"\\b(?:final\\s+)?ThreadLocal<Long>\\s+r403WorkerEpoch\\s*;", "epoch"))
+        (r"\b(?:volatile\s+)?java\.util\.concurrent\.ExecutorService\s+r403AutosaveExecutor\s*;", "executor"),
+        (r"\bboolean\s+r403AutosaveQueued\s*;", "queued"),
+        (r"\bboolean\s+r403AutosaveDirty\s*;", "dirty"),
+        (r"\b(?:final\s+)?ThreadLocal<Long>\s+r403WorkerEpoch\s*;", "epoch"))
     for pattern,label in fields:
-        if not re.search(pattern.replace(r"\\",r"\"),source):
+        if not re.search(pattern,source):
             raise Refused("R403_WORKER_FIELD_MISSING")
     if not re.search(r"\bvolatile\s+boolean\s+savePending\s*;",source):
         raise Refused("R403_SAVE_PENDING_NOT_VOLATILE")
