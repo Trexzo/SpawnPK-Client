@@ -106,8 +106,11 @@ class ResourceParityTests(unittest.TestCase):
             self.check()
 
     def test_backslash_alias(self):
-        self.companion_items[-1] = ("assets\\pixel.png", b"abc")
-        self.pack()
+        # ZIP's writer normalizes path separators on Windows. Patch the raw
+        # local/central filename bytes instead, preserving equal ZIP lengths.
+        raw = self.companion.read_bytes()
+        self.assertEqual(raw.count(b"assets/pixel.png"), 2)
+        self.companion.write_bytes(raw.replace(b"assets/pixel.png", b"assets\\pixel.png"))
         with self.assertRaisesRegex(Refused, "UNSAFE_ARCHIVE_MEMBER"):
             self.check()
 
