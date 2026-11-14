@@ -39,10 +39,17 @@ def method_body(source: str, name: str) -> str:
     """Conservative method-body extraction after masking literals/comments."""
     if not re.fullmatch(r"[a-zA-Z_$][\w$]*", name):
         raise Refused("INVALID_METHOD_NAME")
-    expression = re.compile(
-        r"(?<![\w$.])" + re.escape(name)
-        + r"\s*\([^;{}]*\)\s*(?:throws\s+[\w\s,.]+)?\s*\{"
-    )
+    if name == "LoadoutsPanel":
+        expression = _r393.constructor_pattern(name)
+    else:
+        # Require a declaration's return type. Calls in conditions (such as
+        # 'if (deleteTree(...)) {') must not masquerade as method bodies.
+        expression = re.compile(
+            r"(?m)(?:^[ \t]*|(?<=[;{}])[ \t]*)"
+            r"(?:(?:public|private|protected|static|final|synchronized)\s+)*"
+            r"[\w$<>?,\[\]]+\s+" + re.escape(name)
+            + r"\s*\([^;{}]*\)\s*(?:throws\s+[\w\s,.]+)?\s*\{"
+        )
     matches = list(expression.finditer(source))
     if len(matches) != 1:
         raise Refused("METHOD_NOT_UNIQUELY_DEFINED")
