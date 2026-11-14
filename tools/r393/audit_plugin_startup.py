@@ -24,7 +24,9 @@ REQUIRED = ("source/rs/pkg42/Class255.java",
 SOURCE_PREFIX = "source/"
 PLUGIN_PREFIX = "source/rs/plugins/"
 START = re.compile(r"\b(?:public|protected|private)\s+(?:final\s+)?void\s+startUp\s*\(\s*\)\s*(?:throws\s+[\w\s,.]+)?\s*\{")
-EXTENDS = re.compile(r"\bextends\s+Plugin\b")
+# Require an actual class declaration; annotation members like
+# 'Class<? extends Plugin>' are not plugin subclasses.
+EXTENDS = re.compile(r"\bclass\s+\w+(?:\s*<[^>]+>)?\s+extends\s+Plugin\b")
 CONSTRUCT = re.compile(r"\bnew\s+(?:[\w$]+\.)*([A-Z]\w*)\s*(?:<[^;{}()]*>)?\s*\(")
 
 # Textual evidence within startUp() or explicitly named one-hop constructors.
