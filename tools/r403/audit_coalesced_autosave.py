@@ -43,7 +43,7 @@ def check_structure(raw:bytes)->dict:
         (r"\b(?:volatile\s+)?java\.util\.concurrent\.ExecutorService\s+r403AutosaveExecutor\s*;", "executor"),
         (r"\bboolean\s+r403AutosaveQueued\s*;", "queued"),
         (r"\bboolean\s+r403AutosaveDirty\s*;", "dirty"),
-        (r"\b(?:final\s+)?ThreadLocal<Long>\s+r403WorkerEpoch\s*;", "epoch"))
+        (r"\b(?:final\s+)?ThreadLocal<Long>\s+r403WorkerEpoch\s*(?:=[^;]+)?;", "epoch"))
     for pattern,label in fields:
         if not re.search(pattern,source):
             raise Refused("R403_WORKER_FIELD_MISSING")
