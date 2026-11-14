@@ -1,0 +1,20 @@
+{
+  "milestone":"R383_WINDOWS_FULL_SOURCE_COMPILE_PREPARATION",
+  "repository":"Trexzo/SpawnPK-Client",
+  "stacked_on_pr":1177,
+  "private_input_r382_zip_sha256":"9f21f71d070ab67ea50baed259bb13a8ae477eb2cee75236809128240a1169b3",
+  "private_nested_r381_package_sha256":"67cf1940f1332d445d9e485424b85ceff3cafd76dbbafddcca16b4f1019c52db",
+  "private_r381_build_kit_sha256":"902e3b583840073c095ea51c5fe5bee4034340ab92bd19dc7c36f3173f092f96",
+  "private_r381_java_source_count":1277,
+  "expected_class_files":1388,
+  "reference_jar_sha256":"ed092c2e56967cee501c6e120f915ac10810cc9adb375cd9efba4e86d2dbebf3",
+  "linux_full_build_replayed_with_space_path":true,
+  "linux_rebuild_matched_expected_sha256":true,
+  "connected_owner_windows_pc_online_at_preflight":false,
+  "windows_full_1277_source_compile_tested":false,
+  "hosted_ci_compiles_private_source":false,
+  "new_private_java_source_changes":0,
+  "source_m1_release_approved":false,
+  "original_v309_runtime_tested":false,
+  "production_v312_changed":false
+}
