@@ -262,11 +262,9 @@ class R400AuditTests(unittest.TestCase):
         self.rejects("R400_ONE_FILE_CLASS_SCOPE_DRIFT")
 
     def test_unexpected_store_change_restricted(self):
-        self.store=b"class InvalidAdditionalStoreRevision {}"
-        self.write()
-        self.rejects("R400_GOLDEN_TWO_FILE_CLASS_SCOPE_DRIFT") if False else self.rejects("R400_ONE_FILE_CLASS_SCOPE_DRIFT") if False else self.assertEqual(self.result()["changed_source_count_vs_r399"],1)
-        # Store changed in both previous and candidate fixture, so it is a
-        # different baseline and is not a valid negative source-delta test.
+        path=self.candidate_sources/audit.STORE
+        path.write_bytes(b"class InvalidAdditionalStoreRevision {}")
+        self.rejects("R400_ONE_FILE_CLASS_SCOPE_DRIFT")
 
     def test_reference_hash_pinning(self):
         with self.assertRaisesRegex(audit.Refused,"ARCHIVE_SHA_DRIFT"):
@@ -292,7 +290,7 @@ class R400AuditTests(unittest.TestCase):
         self.assertEqual(audit.main(self.cli(output)),2)
         self.assertEqual(output.read_text("utf8"),"KEEP")
 
-    def test_cli_writes_one_new_no-release_receipt(self):
+    def test_cli_writes_one_new_no_release_receipt(self):
         output=self.root/"report.json"
         self.assertEqual(audit.main(self.cli(output)),0)
         data=json.loads(output.read_text("utf8"))
