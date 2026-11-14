@@ -34,7 +34,14 @@ def require(source: str, needle: str, reason: str) -> None:
 
 
 def check_structure(plugin: bytes, store: bytes) -> dict:
-    flags = r395.static_assertions(plugin)
+    # The inherited R395 gate expects the earlier lenient read spelling.
+    # Normalize that *one token in memory* for inherited barrier checks;
+    # the new strict method is checked separately below.
+    if plugin.count(b"restoreStore.loadForMerge(") != 1:
+        raise Refused("ASYNC_STRICT_SOURCE_CALL_COUNT_DRIFT")
+    inherited_source = plugin.replace(b"restoreStore.loadForMerge(",
+                                      b"restoreStore.load(")
+    flags = r395.static_assertions(inherited_source)
     try:
         p = r393.mask_java(plugin.decode("utf-8"))
         s = r393.mask_java(store.decode("utf-8"))
