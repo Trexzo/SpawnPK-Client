@@ -38,11 +38,33 @@ def hash_file(path: Path) -> str:
         for chunk in iter(lambda:f.read(1024*1024),b""):h.update(chunk)
     return h.hexdigest()
 
+# Windows filesystem aliases can make a syntactically relative ZIP entry unsafe,
+# even when extraction runs on Linux. Check every component before writing.
+WINDOWS_RESERVED_STEMS = frozenset({"CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$"}
+    | {f"COM{i}" for i in range(1, 10)}
+    | {f"LPT{i}" for i in range(1, 10)})
+WINDOWS_FORBIDDEN_CHARS = frozenset('<>:"\\|?*')
+
+
+def safe_windows_component(component: str) -> bool:
+    if not component or component in (".", ".."):
+        return False
+    if component.endswith((".", " ")):
+        return False
+    if any((ord(c) < 32 or ord(c) == 127 or c in WINDOWS_FORBIDDEN_CHARS)
+           for c in component):
+        return False
+    stem = component.split(".", 1)[0].upper()
+    # Windows also treats superscript 1/2/3 as COM/LPT device digits.
+    stem = stem.translate(str.maketrans("¹²³", "123"))
+    return stem not in WINDOWS_RESERVED_STEMS
+
+
 def safe_member(info: zipfile.ZipInfo) -> bool:
     n=info.filename
     parts=n.split("/")
-    return (n and not n.startswith(("/","\\")) and "\\" not in n
-        and ":" not in n and all(x not in ("", ".", "..") for x in parts)
+    return bool(n and not n.startswith(("/", "\\"))
+        and all(safe_windows_component(x) for x in parts)
         and not info.is_dir() and not (info.flag_bits & 1)
         and stat.S_IFMT(info.external_attr >> 16)!=stat.S_IFLNK
         and info.file_size<=16_000_000)
