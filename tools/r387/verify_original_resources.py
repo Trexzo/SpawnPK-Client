@@ -28,8 +28,9 @@ def file_sha256(path: Path) -> str:
 
 def _safe(info) -> None:
     name = info.filename
+    raw_name = info.orig_filename  # zipfile normalizes backslashes on Windows
     mode = stat.S_IFMT(info.external_attr >> 16)
-    if (not name or name.startswith("/") or "\\" in name or "\x00" in name
+    if (not name or raw_name != name or name.startswith("/") or "\\" in name or "\x00" in name
         or any(part in ("", ".", "..") for part in name.split("/"))
         or info.is_dir() or info.flag_bits & 1 or mode == stat.S_IFLNK
         or info.file_size > MAX_MEMBER_UNCOMPRESSED):
