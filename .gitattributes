@@ -1,0 +1,4 @@
+# Owner-private archive verifiers: byte-for-byte SHA pins require LF on all platforms.
+# Do not use Windows checkout CRLF for these two SHA-pinned scripts.
+tools/r383/verify_private_full_build.py text eol=lf
+tools/r386/run_self_contained_acceptance.py text eol=lf
