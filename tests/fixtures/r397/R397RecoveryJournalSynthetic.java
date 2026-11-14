@@ -182,7 +182,21 @@ public final class R397RecoveryJournalSynthetic {
             Snapshot snapshot = readSnapshot();
             List<Drop> all = new ArrayList<Drop>(snapshot.records);
             for (Drop entry : scan()) {
-                if (entry.id > snapshot.watermark) all.add(entry);
+                if (entry.id > snapshot.watermark) {
+                    all.add(entry);
+                } else {
+                    // Snapshot and journal overlap by design after a commit.
+                    // Confirm old framed IDs are identical; never silently
+                    // suppress a conflicting event when replaying.
+                    boolean matches = false;
+                    for (Drop saved : snapshot.records) {
+                        if (saved.id == entry.id) {
+                            matches = saved.value.equals(entry.value);
+                            break;
+                        }
+                    }
+                    if (!matches) throw new IOException("COMMITTED_JOURNAL_MISMATCH");
+                }
             }
             return all;
         }
@@ -331,6 +345,14 @@ public final class R397RecoveryJournalSynthetic {
             try { a.append("extra"); throw new AssertionError("corrupt snapshot accepted"); }
             catch(IOException expected) { /* primary history remains byte-for-byte untouched */ }
             check(Files.exists(a.frames) && Files.exists(a.main), "files unexpectedly removed");
+        });
+        run("committed event IDs cannot silently change payload", root -> {
+            Journal a=new Journal(root);a.append("original");a.commit();
+            // Valid replacement frame CRC but inconsistent event identity.
+            Files.write(a.frames,Journal.encodeFrame(1,"modified"),
+                    StandardOpenOption.TRUNCATE_EXISTING);
+            try {a.recovered();throw new AssertionError("conflicting event ignored");}
+            catch(IOException expected){}
         });
         run("oversized payload refused before writing", root -> {
             Journal a=new Journal(root);
