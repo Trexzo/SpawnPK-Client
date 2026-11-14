@@ -200,7 +200,9 @@ public final class R403AutosaveWorkerSynthetic {
     }
     static void restartWorkerIsNotClearedByPriorSession(){
         M m=new M();m.start();m.stop();m.start();m.add("new");
-        m.request();await(m.firstCompletedWrite,"restart writer");
+        m.request();
+        try {m.worker.submit(()->{}).get(2,TimeUnit.SECONDS);}
+        catch(Exception ex) {throw new AssertionError("restart worker failed",ex);}
         ids(m.disk,"new");m.stop();passed++;
     }
     static void failedWriteRequiresRetry(){
