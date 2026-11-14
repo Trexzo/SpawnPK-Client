@@ -1,0 +1,40 @@
+name: v309 R397 clean shutdown and journal prototype (synthetic public only)
+on:
+  push:
+    branches:
+      - 'research/v309-r397-*'
+  pull_request:
+    paths:
+      - 'tools/r397/**'
+      - 'tests/test_v309_r397_clean_stop_gate.py'
+      - 'tests/fixtures/r397/**'
+      - 'docs/V309_R397_CLEAN_STOP_AND_JOURNAL_DESIGN.md'
+      - '.github/workflows/v309-r397-clean-shutdown.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / JDK21
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R397 public-only triple-empty startup gate and source/class refusals
+        run: python -m unittest discover -s tests -p 'test_v309_r397_clean_stop_gate.py' -v
+      - name: R397 standalone CRC-framed journal and crash/replay experiment
+        run: |
+          python -c "from pathlib import Path; Path('build/r397-synthetic').mkdir(parents=True, exist_ok=True)"
+          javac --release 11 -d build/r397-synthetic tests/fixtures/r397/R397RecoveryJournalSynthetic.java
+          java -cp build/r397-synthetic R397RecoveryJournalSynthetic
