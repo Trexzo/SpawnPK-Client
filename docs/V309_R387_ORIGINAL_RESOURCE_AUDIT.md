@@ -29,6 +29,20 @@ resource companion paths:
 
     python tools/r387/verify_original_resources.py --original PATH_TO_V309_ORIGINAL.jar --companion PATH_TO_RESOURCES_ONLY.jar
 
+### R387 verified Windows replay after portability correction
+
+The GitHub-committed verifier itself was downloaded at pinned commit
+af6d9f2bc99e5968fc953059323f475b746c4798 and executed against the
+two SHA-pinned owner-private archives on the Windows PC:
+**R387_RESOURCE_PRESERVATION_PASS, 419/419 resources**. Its 17 synthetic
+negative/positive tests also passed **17/17 on Windows Python 3.12**.
+An initial synthetic backslash-fixture failure exposed Windows' zipfile
+filename normalization. The verifier now checks ZipInfo.orig_filename
+against the normalized filename, and the test mutates actual ZIP header
+filename bytes to cover the unsafe raw spelling cross-platform. No
+staging or live-client files were modified. Hosted public CI remains
+separate from this owner-private Windows evidence.
+
 ## Limits and blocked gates
 
 The reconstructed R381/R386 candidate is 1,388 compiled classes with no
