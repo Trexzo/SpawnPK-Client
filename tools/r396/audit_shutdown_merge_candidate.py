@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import re
 from pathlib import Path
 
 _R395 = Path(__file__).resolve().parents[1] / "r395" / "audit_private_candidate_delta.py"
@@ -80,6 +81,22 @@ def check_structure(plugin: bytes, store: bytes) -> dict:
     )
     for body, needle, reason in requires:
         require(body, needle, reason)
+    # The only benign empty result is a genuinely absent history file.
+    # Unreadable/invalid content may not be treated as an empty document.
+    missing = re.search(r"if\s*\(\s*!file\.exists\(\)\s*\)\s*\{", strict)
+    if missing is None:
+        raise Refused("MISSING_FILE_BRANCH_NOT_DISTINCT")
+    missing_body = r393.braced_body(strict, strict.find("{", missing.start(), missing.end()))
+    if "return new ArrayList<>();" not in missing_body:
+        raise Refused("MISSING_FILE_RETURN_NOT_EMPTY")
+    if strict.count("return new ArrayList<>();") != 1:
+        raise Refused("INVALID_READ_MAPPED_TO_EMPTY")
+    invalid = re.search(r"if\s*\(\s*record\s*==\s*null\s*\)\s*\{", strict)
+    if invalid is None:
+        raise Refused("STRICT_DTO_VALIDATION_MISSING")
+    invalid_body = r393.braced_body(strict, strict.find("{", invalid.start(), invalid.end()))
+    if "return null;" not in invalid_body:
+        raise Refused("STRICT_DTO_VALIDATION_MISSING")
     if not r395.ordered(fallback,
                         "historyStore.loadForMerge(", "new ArrayList<>(original)",
                         "combined.addAll(r396PreloadRecords)",
