@@ -18,7 +18,7 @@ public final class R395AsyncRestoreSynthetic {
 
     static final class FakeGate {
         final Queue<Runnable> background = new ArrayDeque<Runnable>();
-        final Queue<Runnable> edt = new ArrayDeque<Runnable>();
+        final ArrayDeque<Runnable> edt = new ArrayDeque<Runnable>();
         final List<String> panel = new ArrayList<String>();
         final List<String> disk = new ArrayList<String>();
         final List<String> pending = new ArrayList<String>();
