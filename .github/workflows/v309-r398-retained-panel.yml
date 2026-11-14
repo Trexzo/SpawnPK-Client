@@ -1,0 +1,40 @@
+name: v309 R398 retained-panel recovery gate (public synthetic only)
+on:
+  push:
+    branches:
+      - 'research/v309-r398-*'
+  pull_request:
+    paths:
+      - 'tools/r398/**'
+      - 'tests/test_v309_r398_retained_panel_gate.py'
+      - 'tests/fixtures/r398/**'
+      - 'docs/V309_R398_RETAINED_PANEL_GUARD.md'
+      - '.github/workflows/v309-r398-retained-panel.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / JDK21
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R398 public synthetic SHA-pinned source/class and fail-closed controls
+        run: python -m unittest discover -s tests -p 'test_v309_r398_retained_panel_gate.py' -v
+      - name: R398 standalone Java retained-panel and lock-order model
+        run: |
+          python -c "from pathlib import Path; Path('build/r398-synthetic').mkdir(parents=True, exist_ok=True)"
+          javac --release 11 -d build/r398-synthetic tests/fixtures/r398/R398RetainedPanelSynthetic.java
+          java -cp build/r398-synthetic R398RetainedPanelSynthetic
