@@ -68,7 +68,7 @@ audit. A normal history write still synchronously serializes to disk.
   no panel getter/render nested under the history gate, source/class
   change scope and fail-closed release flags.
 - Public-only synthetic checks on owner Windows:
-  **23/23 Python negative/positive controls** and
+  **25/25 Python negative/positive controls** and
   **16/16 Java deterministic interleaving cases**, including a
   two-thread snapshot/handoff exercise, passed.
 - Private compiled custody JAR:
