@@ -58,6 +58,8 @@ def inspect(source:str)->dict:
         "R415_SYNTHETIC_NONCLOBBER_INTENT_PASS",
     ):need(source,token,"R415_SYNTHETIC_MISSING_SAFETY_CASE_"+token)
     main=body(source,"boolean delete22()throws IOException")
+    if "if(phase!=Phase.COMMITTED)" in main or "if(!acknowledged)panel.clear()" in main:
+        raise Refused("R415_AMBIGUOUS_WRITE_ROLLBACK_NOT_ALLOWED")
     order(main,
         "if(unsafe||!admitted())",
         "List<Integer> snapshot=new ArrayList<>(panel)",
