@@ -91,6 +91,19 @@ def validate(old_plugin:bytes,new_plugin:bytes,old_store:bytes,new_store:bytes)-
         "if (!r402EditWriteReceipt)",
         "r401ClearUnsafe = true",
         "r402EditTransactionOpen = false")
+    # Keep every original admission condition, not merely the edit
+    # generation and eventual failure receipt. Otherwise a source
+    # change could skip an existing unsafe/clear/handoff barrier.
+    original_admission = (
+        r"if\s*\(\s*!historyLoaded\s*\|\|\s*r401ClearInProgress"
+        r"\s*\|\|\s*r401ClearUnsafe\s*\|\|\s*r400PanelHandoffUnsafe"
+        r"\s*\|\|\s*r398UnreconciledPanelAtStart\s*\|\|"
+        r"\s*r402EditTransactionOpen\s*\)"
+    )
+    if not re.search(original_admission,new):
+        raise Refused("R412_ORIGINAL_ADMISSION_CONDITIONS_CHANGED")
+    if not re.search(original_admission,old):
+        raise Refused("R412_PREVIOUS_ADMISSION_CONDITIONS_DRIFT")
     if new.count("mutation.run()")!=2:
         raise Refused("R412_DELETE_MUTATION_COUNT_DRIFT")
     if new.count("persistHistory()")!=1:
