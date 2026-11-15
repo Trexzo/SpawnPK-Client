@@ -126,7 +126,7 @@ class R409PrivatePrerequisiteTests(unittest.TestCase):
         with ZipFile(self.kit,"w") as z:
             for name in sorted(self.content):
                 if name==gate.MOVE:
-                    z.writestr("source/"+name,self.content[name])
+                    z.writestr("source/"+name,SYNTH_MOVE.encode("utf8"))
                 else:
                     z.writestr("source/"+name,b"earlier synthetic java")
         with ZipFile(self.ref,"w") as z:
