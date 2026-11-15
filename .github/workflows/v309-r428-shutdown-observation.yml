@@ -1,0 +1,39 @@
+name: v309-r428-bounded-async-close-observation
+on:
+  push:
+    branches:
+      - research/v309-r428-bounded-async-owner-close-observation
+  pull_request:
+    paths:
+      - tests/fixtures/r427/**
+      - tests/test_v309_r428_*.py
+      - .github/workflows/v309-r428-shutdown-observation.yml
+      - docs/V309_R428_BOUNDED_SHUTDOWN_OBSERVATION.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-shutdown-deadline-and-uncertain-release:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Verify Java11 real-Swing close observation and fault injection with fabricated TEMP only
+        run: python -m unittest discover -s tests -p 'test_v309_r428_*.py' -v
