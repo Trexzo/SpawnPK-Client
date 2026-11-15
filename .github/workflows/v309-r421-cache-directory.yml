@@ -1,0 +1,40 @@
+name: v309-r421-cache-directory-preflight
+on:
+  push:
+    branches:
+      - research/v309-r421-nofollow-cache-directory-preflight
+  pull_request:
+    paths:
+      - tools/r421/**
+      - tests/fixtures/r421/**
+      - tests/test_v309_r421_*.py
+      - .github/workflows/v309-r421-cache-directory.yml
+      - docs/V309_R421_CACHE_DIRECTORY_PREFLIGHT.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-cache-path-tests:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Invented Java one-level directory and SHA-auditor mutation tests
+        run: python -m unittest discover -s tests -p 'test_v309_r421_*.py' -v
