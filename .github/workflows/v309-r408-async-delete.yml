@@ -1,0 +1,40 @@
+name: v309 R408 async deletion receipt protocol (public synthetic only)
+on:
+  push:
+    branches:
+      - 'research/v309-r408-*'
+  pull_request:
+    paths:
+      - 'tools/r408/**'
+      - 'tests/test_v309_r408_async_delete_prerequisites.py'
+      - 'tests/fixtures/r408/**'
+      - 'docs/V309_R408_ASYNC_DELETE_RECEIPT_PROTOCOL.md'
+      - '.github/workflows/v309-r408-async-delete.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / JDK21
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R408 fabricated source/class negative checks for existing private protocol prerequisites
+        run: python -m unittest discover -s tests -p 'test_v309_r408_async_delete_prerequisites.py' -v
+      - name: R408 independent Java staged commit plus EDT acknowledgment concurrency model
+        run: |
+          python -c "from pathlib import Path; Path('build/r408-synthetic').mkdir(parents=True, exist_ok=True)"
+          javac --release 11 -d build/r408-synthetic tests/fixtures/r408/R408AsyncDeleteProtocolSynthetic.java
+          java -cp build/r408-synthetic R408AsyncDeleteProtocolSynthetic
