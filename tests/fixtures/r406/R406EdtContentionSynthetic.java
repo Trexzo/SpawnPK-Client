@@ -267,6 +267,46 @@ public final class R406EdtContentionSynthetic {
         yes(m.disk.stored instanceof List,"synthetic memory-only store");
         passed++;
     }
+    static final class EpochQueueCounterexample {
+        long sessionEpoch=5;
+        boolean queued=true,dirty=false;
+        void clearAll() {
+            sessionEpoch++; // R405 clear-all invalidates old callbacks
+            // R405 does not reset queued or dirty here.
+        }
+        void oldWorkerFinishes(long issuedEpoch) {
+            if (issuedEpoch==sessionEpoch) {
+                queued=false;
+                dirty=false;
+            }
+        }
+        void newDropRequestsAutosave() {
+            if (queued) {
+                dirty=true;
+                return;
+            }
+            queued=true;
+        }
+    }
+    static void clearAllCanOrphanExistingQueuedAutosave() {
+        EpochQueueCounterexample q=new EpochQueueCounterexample();
+        long oldEpoch=q.sessionEpoch;
+        q.clearAll();
+        q.oldWorkerFinishes(oldEpoch);
+        yes(q.queued,"orphaned queue scenario not reproduced");
+        passed++;
+    }
+    static void postClearDropDoesNotAutomaticallyRecoverQueue() {
+        EpochQueueCounterexample q=new EpochQueueCounterexample();
+        long oldEpoch=q.sessionEpoch;
+        q.clearAll();
+        q.oldWorkerFinishes(oldEpoch);
+        q.newDropRequestsAutosave();
+        yes(q.queued&&q.dirty,
+            "post-clear autosave admission should still be orphaned on R405");
+        passed++;
+    }
+
     static void benchmarkSyntheticDelay() {
         // Informational only. These delays are invented; not hardware,
         // actual file I/O, a production benchmark or an asserted SLA.
@@ -315,6 +355,8 @@ public final class R406EdtContentionSynthetic {
         workerQueueIsNotAnAcceptedDeleteReceipt();
         failedWriteMustNotMarkDurableReceipt();
         noHiddenFilesystemOrNetworkDependency();
+        clearAllCanOrphanExistingQueuedAutosave();
+        postClearDropDoesNotAutomaticallyRecoverQueue();
         System.out.println("R406_SYNTHETIC_PASS "+passed+" cases");
         if(args.length==1&&"--benchmark".equals(args[0])) {
             benchmarkSyntheticDelay();
