@@ -107,14 +107,19 @@ public final class R415NonClobberDeleteIntentSynthetic {
         boolean unsafe,acknowledged,markerPublished;
         int forceCount,historyMoveAttempts,markerCreates,automaticMarkerDeletes;
         Fault fault=Fault.NONE;
-        Sim(Path root)throws IOException {
+        Sim(Path root)throws IOException {this(root,false);}
+        Sim(Path root,boolean attachToExisting)throws IOException {
             directory=root;history=root.resolve("invented-history.txt");
             stage=root.resolve("invented-history.txt.tmp");
             marker=root.resolve(INTENT_NAME);
             markerTemp=root.resolve(INTENT_NAME+".tmp");
             initial.addAll(Arrays.asList(11,22,33));
             panel.addAll(initial);
-            Files.write(history,encode(11,22,33),StandardOpenOption.CREATE_NEW);
+            if(attachToExisting) {
+                yes(present(history),"restart attempted without an existing synthetic history");
+            } else {
+                Files.write(history,encode(11,22,33),StandardOpenOption.CREATE_NEW);
+            }
         }
         byte[] currentPanelImage(){
             int[] ids=new int[panel.size()];
