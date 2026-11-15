@@ -1,0 +1,40 @@
+name: v309-r422-public-harness-synthetic
+on:
+  push:
+    branches:
+      - research/v309-r422-private-store-isolated-acceptance
+  pull_request:
+    paths:
+      - tests/fixtures/r422/**
+      - tools/r422/**
+      - tests/test_v309_r422_*.py
+      - .github/workflows/v309-r422-public-harness.yml
+      - docs/V309_R422_PRIVATE_STORE_ISOLATED_ACCEPTANCE.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fabricated-harness-contract:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Public-only synthetic Store stub + actual harness and process safety checks
+        run: python -m unittest discover -s tests -p 'test_v309_r422_*.py' -v
