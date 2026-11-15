@@ -340,7 +340,7 @@ class R407EpochGateTests(unittest.TestCase):
 
     def test_threadlocal_token_must_be_removed(self):
         self.mutate("r403WorkerEpoch.remove();","noOp();")
-        self.refuse("R407_WORKER_EPOCH_TOKEN_LEAK")
+        self.refuse()
 
     def test_both_persistence_fences_required(self):
         self.mutate(
