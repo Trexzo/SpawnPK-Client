@@ -280,11 +280,11 @@ class R413PrivateGateTests(unittest.TestCase):
         self.prior_classes={name:b"old invented "+name.encode()
                             for name in gate.ORIGINAL_CLASS_DIFFERENCES}
         self.prior_classes[gate.R411_ADDED]=b"old R411 nested enum"
-        self.new_classes=self.prior_classes.copy()
+        self.candidate_class_map=self.prior_classes.copy()
         for name in gate.CLASSES:
-            self.new_classes[name]=b"new invented "+name.encode()
+            self.candidate_class_map[name]=b"new invented "+name.encode()
         for name in gate.ADDED:
-            self.new_classes[name]=b"new invented nested "+name.encode()
+            self.candidate_class_map[name]=b"new invented nested "+name.encode()
         self.write()
 
     @staticmethod
@@ -309,7 +309,7 @@ class R413PrivateGateTests(unittest.TestCase):
         self.put(self.before_dir,self.prior)
         self.put(self.after_dir,self.candidate)
         self.put(self.old_classes,self.prior_classes)
-        self.put(self.new_classes,self.new_classes)
+        self.put(self.new_classes,self.candidate_class_map)
 
     def gate(self):
         return gate.audit(kit=self.kit,kit_sha=sha(self.kit),
@@ -518,17 +518,17 @@ class R413PrivateGateTests(unittest.TestCase):
         self.refuse("R413_EXACT_THREE_SOURCE_THREE_CLASS_REQUIRED")
 
     def test_class_drift_refused(self):
-        self.new_classes[gate.P+"LootTrackerItem.class"]=b"unrelated class changed"
+        self.candidate_class_map[gate.P+"LootTrackerItem.class"]=b"unrelated class changed"
         self.write()
         self.refuse("R413_EXACT_THREE_SOURCE_THREE_CLASS_REQUIRED")
 
     def test_new_nested_snapshot_class_must_exist(self):
-        self.new_classes.pop(gate.P+"LootTrackerPanel$R413DeleteSnapshot.class")
+        self.candidate_class_map.pop(gate.P+"LootTrackerPanel$R413DeleteSnapshot.class")
         self.write()
         self.refuse("R413_PRIVATE_CLASS_COUNT_DRIFT")
 
     def test_new_nested_disposition_class_must_exist(self):
-        self.new_classes.pop(gate.P+"LootHistoryStore$R413WriteDisposition.class")
+        self.candidate_class_map.pop(gate.P+"LootHistoryStore$R413WriteDisposition.class")
         self.write()
         self.refuse("R413_PRIVATE_CLASS_COUNT_DRIFT")
 
