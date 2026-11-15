@@ -109,6 +109,10 @@ def check_source(store: str, plugin: str) -> dict:
          "R419_STORE_START_MISSING")
     need("historyStore.deleteStale()" not in start,
          "R419_STARTUP_DISK_CLEANUP_BEFORE_LEASE")
+    need(worker.count("restoreStore.r419ActivateOwner()") == 1 and
+         worker.count("restoreStore.deleteStale()") == 1 and
+         worker.count("restoreStore.loadForMerge()") == 1,
+         "R419_DUPLICATE_OR_UNBOUNDED_RESTORE_IO")
     need("new Thread" in worker and
          ordered(worker, "restoreStore.r419ActivateOwner()",
                  "generation != r395HistoryGeneration",
