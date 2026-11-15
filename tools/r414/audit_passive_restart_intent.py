@@ -57,6 +57,7 @@ def check_structure(old_store:bytes,new_store:bytes,
     if old_price!=new_price:raise Refused("R414_PRICE_CACHE_CHANGED")
     before=code(old_store)
     s=code(new_store)
+    raw=new_store.decode("utf8")
     for token in ("NONE","ABORTED_BEFORE_REPLACE",
                   "COMMITTED_BEFORE_ACK","QUARANTINED"):
         require(s,token,"R414_INTENT_STATUS_MISSING_"+token)
@@ -64,8 +65,12 @@ def check_structure(old_store:bytes,new_store:bytes,
         raise Refused("R414_SINGLE_CLASSIFIER_ENUM_REQUIRED")
     require(s,"R414_MAX_INTENT_BYTES = 512",
             "R414_MARKER_MAX_BYTES_CHANGED")
-    require(s,'R414_INTENT_NAME = "loot-history.delete.intent"',
+    require(raw,'R414_INTENT_NAME = "loot-history.delete.intent"',
             "R414_INTENT_FILENAME_DRIFT")
+    for grammar_token in ('"v=1"', 'serial=[1-9][0-9]{0,15}',
+                          'nonce=[0-9a-f]{8}', 'before=(ABSENT|[0-9a-f]{64})',
+                          'after=[0-9a-f]{64}', '"SHA-256"', '"ABSENT"'):
+        require(raw,grammar_token,"R414_CANONICAL_MARKER_GRAMMAR_DRIFT")
     classify=method(s,"r414IntentState")
     ordered(classify,
         "unresolvedIntentTemp",
@@ -80,11 +85,11 @@ def check_structure(old_store:bytes,new_store:bytes,
         "Files.newByteChannel(intent, noFollowRead)",
         "r414SameMetadata(intentBefore",
         "text.split(",
-        '"v=1".equals(fields[0])',
-        "serial=[1-9][0-9]{0,15}",
-        "nonce=[0-9a-f]{8}",
-        "before=(ABSENT|[0-9a-f]{64})",
-        "after=[0-9a-f]{64}",
+        "fields.length != 6",
+        "fields[1].matches(",
+        "fields[2].matches(",
+        "fields[3].matches(",
+        "fields[4].matches(",
         "Arrays.equals(marker, text.getBytes(StandardCharsets.US_ASCII))",
         "before.equals(after)",
         "r414DigestCurrentHistory()",
@@ -105,10 +110,9 @@ def check_structure(old_store:bytes,new_store:bytes,
     ordered(digest,
         "Files.readAttributes(target",
         "LinkOption.NOFOLLOW_LINKS",
-        'return "ABSENT"',
         "prior.isRegularFile()",
         "prior.size() > MAX_HISTORY_BYTES",
-        'MessageDigest.getInstance("SHA-256")',
+        "MessageDigest.getInstance(",
         "options.add(LinkOption.NOFOLLOW_LINKS)",
         "Files.newByteChannel(target, options)",
         "observed > MAX_HISTORY_BYTES",
