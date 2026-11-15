@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BooleanSupplier;
 import javax.swing.SwingUtilities;
@@ -37,6 +38,11 @@ final class R427AsyncDeleteCoordinator {
 
     enum Kind { CLEAR_ALL, RECORD_IDS, SOURCE_KEY, TYPE_KEY }
     enum Outcome { CONFIRMED, REFUSED, UNCERTAIN }
+
+    /** A deadline is a progress observation, NEVER permission to drop a lock. */
+    enum CloseObservation {
+        RELEASE_CONFIRMED, RELEASE_UNCERTAIN, UNCONFIRMED_AT_DEADLINE
+    }
 
     static final class Request {
         final Kind kind;
@@ -173,8 +179,11 @@ final class R427AsyncDeleteCoordinator {
                     outcome = Outcome.UNCERTAIN;
                 }
             }
-        } catch (Exception ambiguousDiskOutcome) {
-            // A thrown exception does not prove that a durable write failed.
+        } catch (Throwable ambiguousDiskOutcome) {
+            // A thrown exception *or Error* cannot prove a durable write
+            // failed. Keep the original session quarantined; do not retry.
+            // A fatal VM failure can still terminate the process; this is
+            // only best-effort containment in a live synthetic JVM.
             outcome = Outcome.UNCERTAIN;
         }
         if (outcome == Outcome.UNCERTAIN) {
@@ -227,7 +236,10 @@ final class R427AsyncDeleteCoordinator {
                     // Single worker executes this AFTER the accepted commit.
                     store.closeOwner();
                     closeFuture.complete(null);
-                } catch (Exception releaseError) {
+                } catch (Throwable releaseError) {
+                    // No exception category proves that the OS lock was
+                    // actually released. Report unknown rather than success.
+                    quarantined.set(true);
                     failure = releaseError;
                     closeFuture.completeExceptionally(releaseError);
                 } finally {
@@ -241,6 +253,29 @@ final class R427AsyncDeleteCoordinator {
             closeFuture.completeExceptionally(unavailable);
         }
         return closeFuture;
+    }
+
+    /**
+     * EDT-only, nonblocking bounded *observation* of graceful owner release.
+     * An overdue writer remains owned/unknown; this never interrupts the
+     * durable commit, deletes a marker, or releases the owner out-of-order.
+     * The original closeFuture may still complete later and ownerClosed()
+     * still reports that final result on the EDT.
+     */
+    CompletableFuture<CloseObservation> closeWithDeadline(long duration, TimeUnit unit) {
+        requireEdt();
+        if (duration <= 0 || unit == null) {
+            throw new IllegalArgumentException("R428_INVALID_CLOSE_DEADLINE");
+        }
+        final CompletableFuture<Void> completion = closeAsync();
+        final CompletableFuture<CloseObservation> observation = new CompletableFuture<>();
+        completion.whenComplete((ignored, failure) -> observation.complete(
+            failure == null ? CloseObservation.RELEASE_CONFIRMED :
+                              CloseObservation.RELEASE_UNCERTAIN));
+        // The timer reports incomplete progress, it is NOT a cancellation.
+        CompletableFuture.delayedExecutor(duration, unit).execute(() ->
+            observation.complete(CloseObservation.UNCONFIRMED_AT_DEADLINE));
+        return observation;
     }
 
     boolean isPending() {
