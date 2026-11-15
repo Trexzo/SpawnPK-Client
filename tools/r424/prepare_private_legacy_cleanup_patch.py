@@ -126,7 +126,9 @@ def patch_source_text(original: str, expected_sha256: str) -> str:
 
     # Work from original offsets backwards so no unrelated text is modified.
     result = original[:doc_start] + original[b:]
-    result = result[:begin] + REPLACEMENT_METHOD + result[end:]
+    newline = "\r\n" if "\r\n" in original else "\n"
+    replacement = REPLACEMENT_METHOD.replace("\n", newline)
+    result = result[:begin] + replacement + result[end:]
     require("private static boolean deleteTree" not in result,
             "R424_OLD_DELETE_METHOD_NOT_REMOVED")
     require("deleteTree(parts)" not in result and
@@ -146,6 +148,7 @@ def stage(source_root: Path, helper_source: Path, destination: Path) -> dict:
             "R424_DESTINATION_MUST_BE_FRESH_DIRECT_TEMP_CHILD")
     require(not dest.exists() and not dest.is_symlink(),
             "R424_REFUSE_EXISTING_DESTINATION")
+    require(not source_root.is_symlink(), "R424_SYMLINK_SOURCE_ROOT")
     root = source_root.resolve(strict=True)
     require(root.is_dir() and not root.is_symlink(),
             "R424_MISSING_OR_SYMLINK_SOURCE_ROOT")
@@ -161,16 +164,17 @@ def stage(source_root: Path, helper_source: Path, destination: Path) -> dict:
     require(digest(original) == PINNED_R421_STORE_SHA,
             "R424_PARENT_STORE_SHA_PIN_MISMATCH")
     require(not (root / HELPER).exists(), "R424_HELPER_ALREADY_IN_PARENT")
+    require(helper_source.is_file() and not helper_source.is_symlink(),
+            "R424_PUBLIC_HELPER_NOT_REGULAR_FILE")
     public_bytes = helper_source.read_bytes()
-    require(helper_source.is_file() and not helper_source.is_symlink() and
-            digest(public_bytes) == PINNED_PUBLIC_HELPER_SHA,
+    require(digest(public_bytes) == PINNED_PUBLIC_HELPER_SHA,
             "R424_PUBLIC_HELPER_SHA_PIN_MISMATCH")
     patch = patch_source_text(original.decode("utf-8"), PINNED_R421_STORE_SHA)
     # Only after ALL admission checks succeed may a fresh output be created.
     dest.mkdir()
     shutil.copytree(root, dest / "source")
     new_store = dest / "source" / STORE
-    new_store.write_text(patch, encoding="utf-8")
+    new_store.write_bytes(patch.encode("utf-8"))
     helper_target = dest / "source" / HELPER
     helper_target.write_bytes(public_bytes)
     after = sorted((dest / "source").rglob("*.java"))
