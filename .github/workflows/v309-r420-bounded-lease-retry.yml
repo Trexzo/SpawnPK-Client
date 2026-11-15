@@ -1,0 +1,40 @@
+name: v309-r420-bounded-lease-retry
+on:
+  push:
+    branches:
+      - research/v309-r420-bounded-lease-retry-fault-injection
+  pull_request:
+    paths:
+      - tools/r420/**
+      - tests/fixtures/r420/**
+      - tests/test_v309_r420_*.py
+      - .github/workflows/v309-r420-bounded-lease-retry.yml
+      - docs/V309_R420_BOUNDED_RETRY_FAULT_VALIDATION.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-lock-fault-suite:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Synthetic real-file-lock retry crash suite and pinned-scope negative tests
+        run: python -m unittest discover -s tests -p 'test_v309_r420_*.py' -v
