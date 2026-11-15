@@ -159,6 +159,33 @@ def validate_inputs(args) -> None:
          "R425_PRIVATE_INPUT_INVENTORY_DRIFT")
 
 
+def verify_unchanged_build_inputs(
+    args, original_source_snapshot: dict[str, str],
+    original_class_snapshot: dict[str, str],
+    candidate_source_snapshot: dict[str, str],
+    candidate_source_tree: Path,
+) -> None:
+    """Fail closed if owner-private or staged inputs changed since snapshot.
+
+    Files are hashed again, not merely counted. This doesn't provide
+    protection from a hostile process swapping files between the checks,
+    but rejects accidental edits and most non-atomic concurrent changes.
+    """
+    need(sha_inventory(args.prior_source_root, ".java") ==
+         original_source_snapshot,
+         "R426_PRIOR_SOURCE_CHANGED_DURING_BUILD")
+    need(sha_inventory(args.prior_classes_root, ".class") ==
+         original_class_snapshot,
+         "R426_PRIOR_CLASSES_CHANGED_DURING_BUILD")
+    need(sha_inventory(candidate_source_tree, ".java") ==
+         candidate_source_snapshot,
+         "R426_CANDIDATE_SOURCES_CHANGED_DURING_BUILD")
+    need(hash_file(args.dependency_a) == args.dependency_a_sha256,
+         "R426_DEPENDENCY_A_CHANGED_DURING_BUILD")
+    need(hash_file(args.dependency_b) == args.dependency_b_sha256,
+         "R426_DEPENDENCY_B_CHANGED_DURING_BUILD")
+
+
 def java11_compiler(args, source_tree: Path, compiled: Path,
                     deps: str, log: Path) -> None:
     compiled.mkdir()
@@ -231,21 +258,32 @@ def run(args) -> dict:
                             args.fresh_temp_destination)
     dest = args.fresh_temp_destination.resolve()
     source_tree = dest / "source"
-    changed = gate_source_inventory(
-        parent_src, sha_inventory(source_tree, ".java"))
+    candidate_src = sha_inventory(source_tree, ".java")
+    changed = gate_source_inventory(parent_src, candidate_src)
+    verify_unchanged_build_inputs(
+        args, parent_src, parent_cls, candidate_src, source_tree)
     compiled = dest / "R425-Compiled-Classes"
     deps = os.pathsep.join((str(args.dependency_a),
                             str(args.dependency_b)))
     java11_compiler(args, source_tree, compiled, deps,
                     dest / "R425-full-javac.log")
+    verify_unchanged_build_inputs(
+        args, parent_src, parent_cls, candidate_src, source_tree)
     class_delta = gate_class_inventory(
         parent_cls, sha_inventory(compiled, ".class"))
     accepted = execute_actual_class_acceptance(args, compiled, deps, dest)
+    verify_unchanged_build_inputs(
+        args, parent_src, parent_cls, candidate_src, source_tree)
     need(hash_file(args.prior_source_root / STORE) == PINNED_R421_STORE_SHA,
          "R425_PARENT_PRIVATE_SOURCE_CHANGED_DURING_ACCEPTANCE")
     need(hash_file(args.prior_classes_root / EXPECTED_CHANGED_EXISTING_CLASS)
          == PINNED_R421_STORE_CLASS,
          "R425_PARENT_COMPILED_CLASS_CHANGED_DURING_ACCEPTANCE")
+    # Treat the compiled output tree as immutable after class-scope review.
+    # This is not a race-proof snapshot, but detects ordinary drift during
+    # acceptance, before declaring a pass.
+    compiled_snapshot = sha_inventory(compiled, ".class")
+    gate_class_inventory(parent_cls, compiled_snapshot)
     receipt = {
         "status": "R425_PRIVATE_OVERLAY_COMPILE_AND_ACTUAL_STORE_PASS",
         "source_scope": changed,
