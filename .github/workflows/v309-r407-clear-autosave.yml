@@ -1,0 +1,40 @@
+name: v309 R407 clear/autosave epoch recovery (public synthetic only)
+on:
+  push:
+    branches:
+      - 'research/v309-r407-*'
+  pull_request:
+    paths:
+      - 'tools/r407/**'
+      - 'tests/test_v309_r407_clear_autosave_gate.py'
+      - 'tests/fixtures/r407/**'
+      - 'docs/V309_R407_CLEAR_AUTOSAVE_EPOCH_RECOVERY.md'
+      - '.github/workflows/v309-r407-clear-autosave.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / JDK21
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R407 synthetic SHA-pinned one-source one-class Clear-all/worker gate
+        run: python -m unittest discover -s tests -p 'test_v309_r407_clear_autosave_gate.py' -v
+      - name: R407 Java stale worker, failed clear, retry and new session model
+        run: |
+          python -c "from pathlib import Path; Path('build/r407-synthetic').mkdir(parents=True, exist_ok=True)"
+          javac --release 11 -d build/r407-synthetic tests/fixtures/r407/R407ClearAutosaveSynthetic.java
+          java -cp build/r407-synthetic R407ClearAutosaveSynthetic
