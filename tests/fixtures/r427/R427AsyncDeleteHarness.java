@@ -74,6 +74,9 @@ public final class R427AsyncDeleteHarness {
         volatile boolean block;
         volatile boolean recheckAdmission = true;
         volatile boolean throwAfterWrite;
+        volatile boolean throwErrorAfterWrite;
+        volatile boolean failCloseWithError;
+        volatile boolean failCloseWithException;
         volatile R427AsyncDeleteCoordinator.Outcome next =
             R427AsyncDeleteCoordinator.Outcome.CONFIRMED;
         volatile List<String> lastKeys = Collections.emptyList();
@@ -115,6 +118,9 @@ public final class R427AsyncDeleteHarness {
                 if (throwAfterWrite) {
                     throw new IOException("synthetic-ambiguous-post-write-crash");
                 }
+                if (throwErrorAfterWrite) {
+                    throw new AssertionError("synthetic-post-write-assertion-error");
+                }
                 return next;
             } finally {
                 commitInProgress.set(false);
@@ -125,6 +131,12 @@ public final class R427AsyncDeleteHarness {
             releaseOnEdt.set(SwingUtilities.isEventDispatchThread());
             if (commitInProgress.get()) {
                 throw new AssertionError("release-overtook-durable-commit");
+            }
+            if (failCloseWithError) {
+                throw new AssertionError("synthetic-owner-release-error");
+            }
+            if (failCloseWithException) {
+                throw new IllegalStateException("synthetic-owner-release-exception");
             }
             ownerReleased.set(true);
         }
@@ -143,6 +155,7 @@ public final class R427AsyncDeleteHarness {
         final CountDownLatch released = new CountDownLatch(1);
         final TestStore store;
         volatile R427AsyncDeleteCoordinator.Request lastRequest;
+        volatile Throwable closeFailure;
 
         TestView(TestStore store) { this.store = store; }
         void checkThread() {
@@ -169,7 +182,8 @@ public final class R427AsyncDeleteHarness {
             checkThread(); uncertain.incrementAndGet(); result.countDown();
         }
         @Override public void ownerClosed(Throwable error) {
-            checkThread(); closed.incrementAndGet(); released.countDown();
+            checkThread(); closeFailure = error;
+            closed.incrementAndGet(); released.countDown();
         }
     }
 
