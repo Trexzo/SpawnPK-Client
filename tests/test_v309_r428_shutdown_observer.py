@@ -107,8 +107,11 @@ class R428BoundedShutdownAcceptance(unittest.TestCase):
         s=MODEL.read_text(encoding="utf-8")
         segment=s.split("closeWithDeadline(long duration, TimeUnit unit)")[1]
         segment=segment.split("\n    boolean isPending()",1)[0]
-        self.assertGreaterEqual(segment.count("SwingUtilities.invokeLater"),2)
-        self.assertIn("observation.complete",segment)
+        self.assertIn("Consumer<CloseObservation> onEdt", segment)
+        self.assertIn("reportCloseObservationOnEdt(", segment)
+        self.assertIn("SwingUtilities.invokeLater", segment)
+        self.assertIn("if (result.complete(outcome))", segment)
+        self.assertIn("observer.accept(outcome)", segment)
 
     def test_11_existing_r427_worker_still_non_daemon(self):
         s=MODEL.read_text(encoding="utf-8")
