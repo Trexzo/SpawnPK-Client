@@ -111,7 +111,7 @@ def verify_structure(old_store:bytes,new_store:bytes,
         raise Refused("R415_AMBIGUOUS_WRITER_DISPATCH")
     ordered(writer,
         "r413LastWriteDisposition = R413WriteDisposition.FAILED_BEFORE_REPLACE",
-        'r411RefuseUnresolvedStage("history save")',
+        "r411RefuseUnresolvedStage(",
         "if (records == null)",
         "if (confirmedDeletion)",
         "r415OriginalDigest = r414DigestCurrentHistory()",
