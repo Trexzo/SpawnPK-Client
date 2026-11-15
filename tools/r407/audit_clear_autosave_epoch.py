@@ -168,7 +168,8 @@ def source_structure(raw:bytes)->dict:
     require(worker,"r403AutosaveDirty = true;","R407_COALESCING_REMOVED")
     if worker.count("r403WorkerEpoch.remove()")!=1:
         raise Refused("R407_WORKER_EPOCH_TOKEN_LEAK")
-    if worker.count("if (issuedEpoch == r399SessionEpoch)")<3:
+    if (worker.count("if (issuedEpoch == r399SessionEpoch)")<2 or
+        "if (issuedEpoch == r399SessionEpoch &&" not in worker):
         raise Refused("R407_SUCCESS_CLEANUP_OR_REJECTION_FENCE_REMOVED")
     if "shutdownNow(" in worker or "shutdownNow(" in stop:
         raise Refused("R407_INTERRUPT_WHILE_WRITING_NOT_AUTHORIZED")
