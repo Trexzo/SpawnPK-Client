@@ -1,0 +1,40 @@
+name: v309-r424-private-cleanup-patch-preparation
+on:
+  push:
+    branches:
+      - research/v309-r424-legacy-cleanup-private-patch-prep
+  pull_request:
+    paths:
+      - tools/r424/**
+      - tests/fixtures/r424/**
+      - tests/test_v309_r424_*.py
+      - .github/workflows/v309-r424-patch-preparation.yml
+      - docs/V309_R424_PRIVATE_LEGACY_CLEANUP_PATCH_PREP.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-fabricated-integration-gates:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: SHA-gated fabricated private-overlay tests and real Java11 TEMP helper checks
+        run: python -m unittest discover -s tests -p 'test_v309_r424_*.py' -v
