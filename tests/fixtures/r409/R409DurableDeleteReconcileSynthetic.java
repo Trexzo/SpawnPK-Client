@@ -272,15 +272,19 @@ public final class R409DurableDeleteReconcileSynthetic {
                 forceDirectoryBestEffort();
             }
         }
-        void reconcileAndResolve() throws IOException {
+        void reconcileAndResolve(List<Integer> adoptedUiImage) throws IOException {
             synchronized(fileGate) {
                 Recovery r=recover();
                 if(r.result==Result.QUARANTINED)
                     throw new IllegalStateException("unknown state requires manual recovery");
+                // Startup must validate that the UI actually adopted the
+                // authoritative disk image BEFORE discarding the intent.
+                // It is never safe to infer UI adoption from disk alone.
+                if(adoptedUiImage==null||!r.fileRows.equals(adoptedUiImage))
+                    throw new IllegalStateException("UI has not adopted verified disk image");
                 if(r.result==Result.CLEAN)return;
-                // Reload panel from the authenticated authoritative disk,
-                // then remove sidecar. ABORTED means old file was retained.
-                // COMMITTED means the new file was installed pre-crash.
+                // ABORTED means the old file survived; COMMITTED means
+                // the post-image was installed before an EDT callback.
                 Files.delete(intent);
                 forceDirectoryBestEffort();
             }
@@ -360,7 +364,7 @@ public final class R409DurableDeleteReconcileSynthetic {
             Store b=reopened(s);
             equal(b.recover().result,Result.ABORTED_BEFORE_REPLACE,"abort");
             assertRows(b,1,2,3);
-            b.reconcileAndResolve();
+            b.reconcileAndResolve(b.recover().fileRows);
             equal(b.recover().result,Result.CLEAN,"abort cleanup");
         });
     }
@@ -386,7 +390,7 @@ public final class R409DurableDeleteReconcileSynthetic {
             equal(r.result,Result.COMMITTED_BEFORE_ACK,"commit recovery");
             assertRows(b,1,3);
             yes(!r.autoWriteAllowed(),"resume autosave before reconciliation");
-            b.reconcileAndResolve();
+            b.reconcileAndResolve(b.recover().fileRows);
             equal(b.recover().result,Result.CLEAN,"post-commit resolved");
         });
     }
@@ -400,7 +404,7 @@ public final class R409DurableDeleteReconcileSynthetic {
                 CrashPoint.AFTER_EDT_SUCCESS_BEFORE_JOURNAL_CLEANUP);
             Store b=reopened(s);
             equal(b.recover().result,Result.COMMITTED_BEFORE_ACK,"stale sidecar");
-            b.reconcileAndResolve();
+            b.reconcileAndResolve(b.recover().fileRows);
             assertRows(b,1,3);
             equal(b.recover().result,Result.CLEAN,"ack idempotent");
         });
@@ -456,7 +460,7 @@ public final class R409DurableDeleteReconcileSynthetic {
                 CrashPoint.AFTER_INTENT_ATOMIC_MOVE);
             Store b=reopened(s);
             expectedIOException(()->b.deleteOne(1,CrashPoint.NONE));
-            b.reconcileAndResolve();
+            b.reconcileAndResolve(b.recover().fileRows);
             Intent newTx=b.deleteOne(1,CrashPoint.NONE);
             b.acknowledgeAndClean(newTx,CrashPoint.NONE);
             assertRows(b,2,3);
@@ -469,6 +473,25 @@ public final class R409DurableDeleteReconcileSynthetic {
             Intent wrong=new Intent(tx.serial+1,tx.before,tx.after);
             expectedIOException(()->s.acknowledgeAndClean(wrong,CrashPoint.NONE));
             equal(s.recover().result,Result.COMMITTED_BEFORE_ACK,"journal kept");
+        });
+    }
+    static void uiAdoptionRequiredBeforeJournalDeletion()throws Exception {
+        scenario("adoption_guard",s->{
+            seeded(s);s.deleteOne(2,CrashPoint.NONE);
+            Store b=reopened(s);
+            expectedIOException(()->b.reconcileAndResolve(Arrays.asList(1,2,3)));
+            equal(b.recover().result,Result.COMMITTED_BEFORE_ACK,
+                "unadopted UI image discarded journal");
+            b.reconcileAndResolve(Arrays.asList(1,3));
+            equal(b.recover().result,Result.CLEAN,"correct adoption refused");
+        });
+    }
+    static void missingUiAdoptionCannotResolve()throws Exception {
+        scenario("null_adoption",s->{
+            seeded(s);s.deleteOne(2,CrashPoint.NONE);
+            expectedIOException(()->s.reconcileAndResolve(null));
+            equal(s.recover().result,Result.COMMITTED_BEFORE_ACK,
+                "null UI adoption discarded intent");
         });
     }
     static void rawHistoryStaysBytesAfterAbort()throws Exception {
@@ -539,15 +562,17 @@ public final class R409DurableDeleteReconcileSynthetic {
         scenario("two_threads",s->{
             seeded(s);
             CountDownLatch start=new CountDownLatch(1),go=new CountDownLatch(1);
-            AtomicBoolean firstDone=new AtomicBoolean(false),secondRefused=new AtomicBoolean(false);
+            AtomicBoolean firstDone=new AtomicBoolean(false),secondDone=new AtomicBoolean(false);
+            AtomicBoolean firstRefused=new AtomicBoolean(false),secondRefused=new AtomicBoolean(false);
             Thread first=new Thread(()->{
                 start.countDown();
                 try{go.await(3,TimeUnit.SECONDS);s.deleteOne(1,CrashPoint.NONE);firstDone.set(true);}
+                catch(IllegalStateException e){firstRefused.set(true);}
                 catch(Exception e){throw new RuntimeException(e);}
             },"synthetic-delete-1");
             Thread second=new Thread(()->{
                 try{start.await(3,TimeUnit.SECONDS);go.await(3,TimeUnit.SECONDS);
-                    s.deleteOne(2,CrashPoint.NONE);}
+                    s.deleteOne(2,CrashPoint.NONE);secondDone.set(true);}
                 catch(IllegalStateException e){secondRefused.set(true);}
                 catch(Exception e){throw new RuntimeException(e);}
             },"synthetic-delete-2");
@@ -556,9 +581,13 @@ public final class R409DurableDeleteReconcileSynthetic {
             first.join(4000);second.join(4000);
             yes(!first.isAlive()&&!second.isAlive(),"threads hung");
             yes(s.recover().result==Result.COMMITTED_BEFORE_ACK,"no terminal intent");
-            // One contender must be refused; order of winning ID is not assumed.
-            yes(firstDone.get()!=secondRefused.get() || s.loadRows().size()==2,
-                "one gate owner expected");
+            // Exactly one local transaction must own the journal.
+            // Do not assume which thread won the serialized monitor.
+            yes(firstDone.get()!=secondDone.get(),"two writers succeeded or neither did");
+            yes(firstRefused.get()!=secondRefused.get(),"exactly one refusal required");
+            yes(firstDone.get()!=firstRefused.get()&&
+                secondDone.get()!=secondRefused.get(),"writer mixed receipt state");
+            yes(s.loadRows().size()==2,"unexpected number of persisted rows");
         });
     }
     static void directorySyncIsNotUniversalClaim()throws Exception {
@@ -660,6 +689,8 @@ public final class R409DurableDeleteReconcileSynthetic {
         secondDeleteRefusedUntilAck();
         abortCanBeResolvedThenNewDeletion();
         wrongReceiptCannotDeleteJournal();
+        uiAdoptionRequiredBeforeJournalDeletion();
+        missingUiAdoptionCannotResolve();
         rawHistoryStaysBytesAfterAbort();
         postCommitHistoryExactHash();
         duplicateRowDeletesOneOccurrence();
