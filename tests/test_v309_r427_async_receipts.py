@@ -142,6 +142,14 @@ class R427ReceiptBehavior(unittest.TestCase):
         self.assertIn("root.getParent().equals(tmp)", text)
         self.assertIn("R427_REFUSED_NON_SYNTHETIC_ROOT", text)
 
+    def test_21_real_edt_stays_responsive_during_held_disk_worker(self):
+        self.run_scenario("edt-responsive")
+
+    def test_22_worker_does_not_daemonize_accepted_durable_operation(self):
+        text = MODEL.read_text(encoding="utf-8")
+        self.assertIn("t.setDaemon(false)", text)
+        self.assertNotIn("t.setDaemon(true)", text)
+
 
 if __name__ == "__main__":
     unittest.main()
