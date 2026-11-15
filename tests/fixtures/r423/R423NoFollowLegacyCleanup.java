@@ -76,6 +76,9 @@ public final class R423NoFollowLegacyCleanup {
             return !closed && lock.isValid() && root.equals(directory);
         }
         synchronized Result withinOwner(Path directory, boolean dryRun, BeforeDelete hook) {
+            // Check cancellation before querying native lock/toolkit state.
+            if (Thread.currentThread().isInterrupted())
+                return new Result(State.INTERRUPTED, 0, 0);
             if (!owns(directory)) return new Result(State.REFUSED, 0, 0);
             return cleanupUnderLease(directory, dryRun, hook);
         }
@@ -267,6 +270,8 @@ public final class R423NoFollowLegacyCleanup {
 
     private static Result cleanupUnderLease(Path root, boolean dryRun,
                                             BeforeDelete hook) {
+        if (Thread.currentThread().isInterrupted())
+            return new Result(State.INTERRUPTED, 0, 0);
         if (SwingUtilities.isEventDispatchThread())
             return new Result(State.REFUSED, 0, 0);
         if (Thread.currentThread().isInterrupted())
