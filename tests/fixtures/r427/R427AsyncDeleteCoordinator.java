@@ -269,12 +269,16 @@ final class R427AsyncDeleteCoordinator {
         }
         final CompletableFuture<Void> completion = closeAsync();
         final CompletableFuture<CloseObservation> observation = new CompletableFuture<>();
-        completion.whenComplete((ignored, failure) -> observation.complete(
-            failure == null ? CloseObservation.RELEASE_CONFIRMED :
-                              CloseObservation.RELEASE_UNCERTAIN));
+        completion.whenComplete((ignored, failure) ->
+            SwingUtilities.invokeLater(() -> observation.complete(
+                failure == null ? CloseObservation.RELEASE_CONFIRMED :
+                                  CloseObservation.RELEASE_UNCERTAIN)));
         // The timer reports incomplete progress, it is NOT a cancellation.
+        // Complete the observation on EDT so its completion callbacks cannot
+        // accidentally change Swing state from a timer or I/O thread.
         CompletableFuture.delayedExecutor(duration, unit).execute(() ->
-            observation.complete(CloseObservation.UNCONFIRMED_AT_DEADLINE));
+            SwingUtilities.invokeLater(() ->
+                observation.complete(CloseObservation.UNCONFIRMED_AT_DEADLINE)));
         return observation;
     }
 
