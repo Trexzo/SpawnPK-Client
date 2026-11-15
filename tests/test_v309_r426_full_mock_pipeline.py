@@ -332,7 +332,8 @@ class R426FullSyntheticPipeline(unittest.TestCase):
         cli = (ROOT/"tools/r425/compile_and_accept_private_overlay.py").read_text()
         self.assertNotIn("--mock-pin",cli)
         self.assertNotIn("--skip-source-sha",cli)
-        self.assertNotIn("--release",cli)
+        self.assertNotIn("--authorize-deploy",cli)
+        self.assertNotIn("--skip-acceptance",cli)
         self.assertIn("PINNED_R421_STORE_CLASS",cli)
 
 
