@@ -294,9 +294,7 @@ class R406EvidenceTests(unittest.TestCase):
     def test_panel_delete_must_use_plugin_transaction(self):
         self.mutate(audit.PANEL,"plugin.r402ApplyPanelDeletion(() ->",
                     "plugin.requestSave(); plugin.r402ApplyPanelDeletion(() ->")
-        self.refuses() if False else self.assertTrue(self.validate()["three_confirmation_selectors_retain_receipts"])
-        # The checker only proves the required transaction is present,
-        # not absence of any additional public method calls.
+        self.refuses("R406_DIRECT_UI_SAVE_REGRESSION")
 
     def test_write_must_serialize_record_dtos(self):
         self.mutate(audit.STORE,
