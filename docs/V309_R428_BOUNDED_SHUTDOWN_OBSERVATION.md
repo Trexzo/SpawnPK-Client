@@ -16,7 +16,7 @@ R427 moved a *hypothetical* confirmed-delete Store adapter to a single managed n
   - `RELEASE_CONFIRMED`: the Store adapter's `closeOwner()` returned normally;
   - `RELEASE_UNCERTAIN`: `closeOwner()` raised a Throwable and lock state is unknown;
   - `UNCONFIRMED_AT_DEADLINE`: the original close operation has not completed *as observed at the deadline*. **This is not proof the lock is held or released**.
-- Deadline scheduling uses Java 11 `CompletableFuture.delayedExecutor` and completes its observation **on Swing EDT** via `invokeLater`. It never invokes `shutdownNow`, interrupts the worker, invokes a second owner release, deletes any history marker, or modifies the original `closeFuture`. An overdue observation cannot authorize a restart, a new owner, a file cleanup or JAR release.
+- Deadline scheduling uses Java 11 `CompletableFuture.delayedExecutor` and completes its observation **on Swing EDT** via `invokeLater`. The overload `closeWithDeadline(duration, unit, Consumer<CloseObservation>)` provides a **guaranteed EDT callback**, invoked **at most once** for the first winning status. This explicit callback is the UI integration path: using a regular `CompletableFuture.thenAccept` is **not** an EDT guarantee because dependent callbacks can execute on a caller/completion thread when already completed. It never invokes `shutdownNow`, interrupts the worker, invokes a second owner release, deletes any history marker, or modifies the original `closeFuture`. An overdue observation cannot authorize a restart, a new owner, a file cleanup or JAR release.
 - After an overdue result, the **original** `closeFuture` may still eventually complete, and `View.ownerClosed(Throwable)` still reports the final result. A second observer of an already completed close may return the final status. No owner lock is released because of the deadline.
 - An exception or `Error` after a possible Store write now conservatively maps to `UNCERTAIN`, quarantines further delete requests, and never marks a panel row deleted. This is *best-effort in a live JVM*; a real VM-wide failure (OOM, kill or crash) cannot be safely recovered using this prototype alone.
 - A `closeOwner()` `Error`, not just an Exception, completes the original close Future **exceptionally**, quarantines the session and reports the original Throwable to Swing; owner release is **not** claimed successful.
@@ -41,6 +41,10 @@ A real Store adapter must still check the R419 lease and R411 journal state at t
 `tests/test_v309_r428_shutdown_observer.py` runs those **six** real-JVM/EDT scenarios and six static gate checks. The existing R427 22-test suite is inherited and re-run when the modified synthetic Java fixture triggers the R427 workflow. Tests use **only** invented direct TEMP paths and `javac --release 11`.
 
 **Hosted:** dedicated Windows/Ubuntu × Python 3.11/3.13 + JDK21 CI, separate Recovery CI. Only claim success after reviewing final workflow job conclusions.
+
+### Windows callback scheduling regression and correction
+
+The first public R428 CI run passed three jobs but failed the Windows/Python 3.11 deadline test: a plain `CompletableFuture.thenAccept` dependent callback was not consistently observed on Swing EDT even though the future's status was correct. Rather than asserting a thread guarantee that `CompletableFuture` does not make, the model now provides an **explicit, one-shot EDT callback overload**. The harness waits for that callback using `CountDownLatch` and confirms it is invoked exactly once, including after an overdue observation followed by a later actual owner release. The returned future remains useful for background status consumers but must not be used alone as an implicit Swing-thread dispatch mechanism.
 
 ## Private integration blockers
 
