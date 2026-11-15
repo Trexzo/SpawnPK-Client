@@ -415,7 +415,7 @@ public final class R409DurableDeleteReconcileSynthetic {
             Files.write(s.history,Store.encode(Arrays.asList(9,9)));
             Store b=reopened(s);
             equal(b.recover().result,Result.QUARANTINED,"unknown changed disk hash");
-            expectedIOException(b::reconcileAndResolve);
+            expectedIOException(()->b.reconcileAndResolve(b.recover().fileRows));
         });
     }
     static void forgedManifestQuarantines()throws Exception {
@@ -424,7 +424,7 @@ public final class R409DurableDeleteReconcileSynthetic {
             Files.write(s.intent,"unsafe\n".getBytes(StandardCharsets.US_ASCII));
             Store b=reopened(s);
             equal(b.recover().result,Result.QUARANTINED,"invalid manifest");
-            expectedIOException(b::reconcileAndResolve);
+            expectedIOException(()->b.reconcileAndResolve(b.recover().fileRows));
         });
     }
     static void noIntentButMalformedHistoryQuarantines()throws Exception {
