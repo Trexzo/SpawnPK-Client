@@ -66,6 +66,12 @@ GitHub contains an independent *public synthetic* Store stub inherited from R422
 
 The suite must be verified on final branch head before claiming hosted success. These mock tests verify the **test machinery** and boundary conditions, not the actual private integration.
 
+## Explicit owner-only Windows entrypoint
+
+`tools/r425/owner_only_run_r425.ps1` is a **non-autostarting** PowerShell convenience wrapper intended for the previously known isolated owner TEMP workspace. It refuses to run unless `-RunOwnerPrivateAcceptance` is explicitly supplied. The wrapper verifies the expected R421 source/class paths, Python3.12 and installed JDK21 tools, independently checks both existing dependency JARs' SHA256, and generates a fresh UUID-named `R424-Private-Candidate-R425-*` TEMP output path.
+
+Only then does it launch the owner-local R425 Python acceptance runner. It refuses a missing final receipt; never invokes the SpawnPK launcher, runs `java -jar`, creates a release archive, accesses live history or merges a PR. **The script has NOT been executed on the owner's PC.** The public CI runs **static negative checks on the PowerShell wrapper**, not the private owner operation.
+
 ## Remaining release blockers
 
 1. Desktop Commander quota still blocks any owner-private compilation, hash audit and actual-class R425 acceptance. No attempt to bypass the usage pause.
