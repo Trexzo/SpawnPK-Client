@@ -78,8 +78,12 @@ def sha_inventory(root: Path, suffix: str) -> dict[str, str]:
 
 def gate_source_inventory(
     prior: dict[str, str], candidate: dict[str, str],
-    expected_base_count: int = BASELINE_SOURCE_COUNT,
+    expected_base_count: int | None = None,
 ) -> dict:
+    # Resolve the default at call-time, allowing invented test-only
+    # mini-client baselines without exposing any owner CLI override.
+    if expected_base_count is None:
+        expected_base_count = BASELINE_SOURCE_COUNT
     helper = HELPER.as_posix()
     store = STORE.as_posix()
     need(len(prior) == expected_base_count,
@@ -97,8 +101,10 @@ def gate_source_inventory(
 
 def gate_class_inventory(
     prior: dict[str, str], candidate: dict[str, str],
-    expected_base_count: int = BASELINE_CLASS_COUNT,
+    expected_base_count: int | None = None,
 ) -> dict:
+    if expected_base_count is None:
+        expected_base_count = BASELINE_CLASS_COUNT
     need(len(prior) == expected_base_count,
          "R425_PARENT_CLASS_COUNT_DRIFT")
     added = set(candidate) - set(prior)
@@ -157,6 +163,33 @@ def validate_inputs(args) -> None:
     need(len(source) == BASELINE_SOURCE_COUNT and
          len(classes) == BASELINE_CLASS_COUNT,
          "R425_PRIVATE_INPUT_INVENTORY_DRIFT")
+
+
+def verify_unchanged_build_inputs(
+    args, original_source_snapshot: dict[str, str],
+    original_class_snapshot: dict[str, str],
+    candidate_source_snapshot: dict[str, str],
+    candidate_source_tree: Path,
+) -> None:
+    """Fail closed if owner-private or staged inputs changed since snapshot.
+
+    Files are hashed again, not merely counted. This doesn't provide
+    protection from a hostile process swapping files between the checks,
+    but rejects accidental edits and most non-atomic concurrent changes.
+    """
+    need(sha_inventory(args.prior_source_root, ".java") ==
+         original_source_snapshot,
+         "R426_PRIOR_SOURCE_CHANGED_DURING_BUILD")
+    need(sha_inventory(args.prior_classes_root, ".class") ==
+         original_class_snapshot,
+         "R426_PRIOR_CLASSES_CHANGED_DURING_BUILD")
+    need(sha_inventory(candidate_source_tree, ".java") ==
+         candidate_source_snapshot,
+         "R426_CANDIDATE_SOURCES_CHANGED_DURING_BUILD")
+    need(hash_file(args.dependency_a) == args.dependency_a_sha256,
+         "R426_DEPENDENCY_A_CHANGED_DURING_BUILD")
+    need(hash_file(args.dependency_b) == args.dependency_b_sha256,
+         "R426_DEPENDENCY_B_CHANGED_DURING_BUILD")
 
 
 def java11_compiler(args, source_tree: Path, compiled: Path,
@@ -231,21 +264,33 @@ def run(args) -> dict:
                             args.fresh_temp_destination)
     dest = args.fresh_temp_destination.resolve()
     source_tree = dest / "source"
-    changed = gate_source_inventory(
-        parent_src, sha_inventory(source_tree, ".java"))
+    candidate_src = sha_inventory(source_tree, ".java")
+    changed = gate_source_inventory(parent_src, candidate_src)
+    verify_unchanged_build_inputs(
+        args, parent_src, parent_cls, candidate_src, source_tree)
     compiled = dest / "R425-Compiled-Classes"
     deps = os.pathsep.join((str(args.dependency_a),
                             str(args.dependency_b)))
     java11_compiler(args, source_tree, compiled, deps,
                     dest / "R425-full-javac.log")
-    class_delta = gate_class_inventory(
-        parent_cls, sha_inventory(compiled, ".class"))
+    verify_unchanged_build_inputs(
+        args, parent_src, parent_cls, candidate_src, source_tree)
+    compiled_snapshot = sha_inventory(compiled, ".class")
+    class_delta = gate_class_inventory(parent_cls, compiled_snapshot)
     accepted = execute_actual_class_acceptance(args, compiled, deps, dest)
+    verify_unchanged_build_inputs(
+        args, parent_src, parent_cls, candidate_src, source_tree)
+    need(sha_inventory(compiled, ".class") == compiled_snapshot,
+         "R426_COMPILED_CLASSES_CHANGED_DURING_ACCEPTANCE")
     need(hash_file(args.prior_source_root / STORE) == PINNED_R421_STORE_SHA,
          "R425_PARENT_PRIVATE_SOURCE_CHANGED_DURING_ACCEPTANCE")
     need(hash_file(args.prior_classes_root / EXPECTED_CHANGED_EXISTING_CLASS)
          == PINNED_R421_STORE_CLASS,
          "R425_PARENT_COMPILED_CLASS_CHANGED_DURING_ACCEPTANCE")
+    # Re-validate the class snapshot just before issuing the final receipt.
+    # Ordinary class output rewrites cannot pass the same compiled SHA inventory.
+    need(sha_inventory(compiled, ".class") == compiled_snapshot,
+         "R426_COMPILED_CLASSES_CHANGED_BEFORE_RECEIPT")
     receipt = {
         "status": "R425_PRIVATE_OVERLAY_COMPILE_AND_ACTUAL_STORE_PASS",
         "source_scope": changed,
