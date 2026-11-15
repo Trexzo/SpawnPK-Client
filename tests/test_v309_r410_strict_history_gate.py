@@ -239,7 +239,7 @@ class R410StrictHistoryGateTests(unittest.TestCase):
     def test_price_cache_source_byte_identical(self):
         self.current[gate.CACHE]=b"changed price cache"
         self.write()
-        self.refuse("R410_PRICE_CACHE_SOURCE_MUST_BE_BYTE_IDENTICAL")
+        self.refuse("R410_EXACT_TWO_SOURCE_TWO_CLASS_REQUIRED")
 
     def test_old_legacy_move_method_unchanged(self):
         self.mutate(gate.MOVER,"catch (AtomicMoveNotSupportedException e)",
