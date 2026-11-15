@@ -61,7 +61,9 @@ class R424HelperAcceptance(unittest.TestCase):
         self.assertIn("R424_REFUSED_NON_SYNTHETIC_TEMP_ROOT", p.stderr)
 
     def test_03_helper_sha_matches_pinned_public_source(self):
-        self.assertEqual(sha256(JAVA.read_bytes()).hexdigest(), EXPECTED_SHA)
+        normalized = JAVA.read_bytes().replace(b"\r\n", b"\n")
+        self.assertNotIn(b"\r", normalized)
+        self.assertEqual(sha256(normalized).hexdigest(), EXPECTED_SHA)
 
     def test_04_helper_source_contains_no_game_imports(self):
         imports = [x.strip() for x in JAVA.read_text("utf-8").splitlines()
