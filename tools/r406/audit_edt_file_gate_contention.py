@@ -141,12 +141,31 @@ def analyze(plugin:bytes,panel:bytes,store:bytes)->dict:
     logout=method_block(p,"onGameStateChanged")
     require(logout,"persistHistory()","R406_LOGOUT_RECEIPT_CHANGED")
 
+    # Additional R406 finding: Clear all invalidates the session epoch
+    # while the R403 autosave worker only releases the queued flag when
+    # its original epoch still matches. If an old worker was queued at
+    # clear time, it cannot reset that flag, and a later request merely
+    # marks the dirty flag forever. This is an existing R405 risk,
+    # not a fix implemented by this passive PR.
+    require(clear,"++r399SessionEpoch",
+            "R406_CLEAR_MUST_INVALIDATE_PRE_CLEAR_WORKERS")
+    require(autosave,"if (issuedEpoch == r399SessionEpoch)",
+            "R406_OLD_WORKER_COMPLETION_EPOCH_GUARD_MISSING")
+    require(autosave,"r403AutosaveQueued = false;",
+            "R406_WORKER_COMPLETION_FLAG_RESET_MISSING")
+    if "r403AutosaveQueued = false;" in clear:
+        raise Refused("R406_CLEAR_QUEUE_RESET_ALREADY_CHANGED")
+    if "r403AutosaveDirty = false;" in clear:
+        raise Refused("R406_CLEAR_DIRTY_RESET_ALREADY_CHANGED")
+
     return {
         "source_confirmed_edt_delete_acquires_shared_file_monitor":True,
         "source_confirmed_edt_delete_calls_disk_commit_synchronously":True,
         "source_confirmed_edt_clear_acquires_shared_file_monitor":True,
         "background_autosave_competes_for_same_file_monitor":True,
         "source_confirmed_direct_logout_and_shutdown_saves":True,
+        "source_confirmed_clear_can_orphan_r403_queued_autosave":True,
+        "clear_during_queued_autosave_regression_fixed":False,
         "three_confirmation_selectors_retain_receipts":True,
         "unsafe_naive_async_ack_not_integrated":True,
         "proposed_nonblocking_production_delete_implemented":False,
