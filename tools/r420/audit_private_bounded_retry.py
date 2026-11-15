@@ -98,6 +98,9 @@ def check_contract(previous: str, candidate: str) -> dict:
          "R420_OWNER_ACQUISITION_COUNT_DRIFT")
     need("if (!r420AcquireRestoreLeaseWithBoundedRetry(restoreStore, generation))" in restore,
          "R420_RESTORE_MUST_USE_BOUNDED_RETRY")
+    need(restore.count("restoreStore.deleteStale()") == 1 and
+         restore.count("restoreStore.loadForMerge()") == 1,
+         "R420_RESTORE_DUPLICATE_IO_BEFORE_LEASE")
     need("if (!restoreStore.r419ActivateOwner())" not in restore,
          "R420_OLD_SINGLE_TRY_STILL_USED")
     need(order(restore, "r420AcquireRestoreLeaseWithBoundedRetry(restoreStore, generation)",
