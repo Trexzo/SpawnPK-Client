@@ -153,5 +153,21 @@ class R425PublicSyntheticHarness(unittest.TestCase):
         self.assertTrue((root/"preserve-legacy"/"loot-keys-seen.txt").exists())
 
 
+    def test_14_compiled_helper_has_exact_five_class_files(self):
+        from tools.r425.compile_and_accept_private_overlay import EXPECTED_HELPER_CLASSES
+        actual = {
+            p.relative_to(self.classes).as_posix()
+            for p in self.classes.rglob("LootLegacyCleanupR424*.class")
+        }
+        self.assertEqual(actual, EXPECTED_HELPER_CLASSES)
+
+    def test_15_owner_cli_import_and_help_without_pythonpath(self):
+        p = subprocess.run([sys.executable, str(R425_OWNER_RUNNER), "--help"],
+                           capture_output=True, text=True, timeout=15)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertIn("--prior-source-root", p.stdout)
+        self.assertIn("--fresh-temp-destination", p.stdout)
+
+
 if __name__=="__main__":
     unittest.main()
