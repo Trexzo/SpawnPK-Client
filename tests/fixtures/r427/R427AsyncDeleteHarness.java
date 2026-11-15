@@ -455,20 +455,23 @@ public final class R427AsyncDeleteHarness {
         f.awaitCommit();
 
         AtomicBoolean observationOffEdt = new AtomicBoolean();
+        AtomicInteger observationCount = new AtomicInteger();
+        CountDownLatch observationDelivered = new CountDownLatch(1);
         CompletableFuture<R427AsyncDeleteCoordinator.CloseObservation> observation =
-            edt(() -> {
-                CompletableFuture<R427AsyncDeleteCoordinator.CloseObservation> o =
-                    f.coordinator.closeWithDeadline(75, TimeUnit.MILLISECONDS);
-                o.thenAccept(status -> {
+            edt(() -> f.coordinator.closeWithDeadline(
+                75, TimeUnit.MILLISECONDS, status -> {
                     if (!SwingUtilities.isEventDispatchThread())
                         observationOffEdt.set(true);
-                });
-                return o;
-            });
+                    observationCount.incrementAndGet();
+                    observationDelivered.countDown();
+                }));
         check(observation.get(WAIT_SECONDS, TimeUnit.SECONDS) ==
             R427AsyncDeleteCoordinator.CloseObservation.UNCONFIRMED_AT_DEADLINE,
             "overdue-only-reported");
+        check(observationDelivered.await(WAIT_SECONDS, TimeUnit.SECONDS),
+              "callback-delivered-explicitly");
         check(!observationOffEdt.get(), "observation-completed-on-edt");
+        check(observationCount.get() == 1, "single-observer-result");
         check(!f.store.ownerReleased.get(), "watchdog-never-releases-lock");
         check(f.store.commitInProgress.get(), "worker-still-holds-commit");
         check(f.coordinator.isClosed(), "new-work-rejected");
@@ -484,6 +487,7 @@ public final class R427AsyncDeleteHarness {
               "eventual-owner-release");
         check(f.store.ownerReleased.get(), "owner-finally-released");
         check(f.view.closed.get() == 1, "single-release-event");
+        check(observationCount.get() == 1, "late-release-does-not-repeat-observer");
         check(f.view.applied.get() == 0, "no-stale-ui-apply-after-close");
         CompletableFuture<R427AsyncDeleteCoordinator.CloseObservation> late =
             edt(() -> f.coordinator.closeWithDeadline(3, TimeUnit.SECONDS));
