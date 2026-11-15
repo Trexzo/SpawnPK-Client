@@ -1,0 +1,40 @@
+name: v309-r423-legacy-cleanup-nofollow
+on:
+  push:
+    branches:
+      - research/v309-r423-nofollow-legacy-cleanup-validation
+  pull_request:
+    paths:
+      - tools/r423/**
+      - tests/fixtures/r423/**
+      - tests/test_v309_r423_*.py
+      - .github/workflows/v309-r423-legacy-cleanup.yml
+      - docs/V309_R423_NOFOLLOW_LEGACY_CLEANUP.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-nofollow-and-pinned-source-review:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Java 11 TEMP-only nofollow cleanup, crash and symlink regression suite
+        run: python -m unittest discover -s tests -p 'test_v309_r423_*.py' -v
