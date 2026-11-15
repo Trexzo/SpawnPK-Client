@@ -1,0 +1,39 @@
+name: v309-r429-durable-uncertain-restart-fence
+on:
+  push:
+    branches:
+      - research/v309-r429-durable-uncertain-restart-fence
+  pull_request:
+    paths:
+      - tests/fixtures/r429/**
+      - tests/test_v309_r429_*.py
+      - .github/workflows/v309-r429-restart-fence.yml
+      - docs/V309_R429_RESTART_QUARANTINE_EVIDENCE.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-restart-quarantine:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Run Java11 synthetic restart, corruption, competing JVM lock and nofollow evidence regressions
+        run: python -m unittest discover -s tests -p 'test_v309_r429_*.py' -v
