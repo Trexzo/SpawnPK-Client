@@ -1,0 +1,40 @@
+name: v309 R411 orphan history stage quarantine (public synthetic only)
+on:
+  push:
+    branches:
+      - 'research/v309-r411-*'
+  pull_request:
+    paths:
+      - 'tools/r411/**'
+      - 'tests/test_v309_r411_orphan_stage_gate.py'
+      - 'tests/fixtures/r411/**'
+      - 'docs/V309_R411_ORPHAN_STAGE_QUARANTINE.md'
+      - '.github/workflows/v309-r411-orphan-stage.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / JDK21
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R411 public-only synthetic pinned scope and source admission refusal checks
+        run: python -m unittest discover -s tests -p 'test_v309_r411_orphan_stage_gate.py' -v
+      - name: R411 independent staged-file metadata and filesystem quarantine scenarios
+        run: |
+          python -c "from pathlib import Path; Path('build/r411-synthetic').mkdir(parents=True, exist_ok=True)"
+          javac --release 11 -d build/r411-synthetic tests/fixtures/r411/R411OrphanStageQuarantineSynthetic.java
+          java -cp build/r411-synthetic R411OrphanStageQuarantineSynthetic
