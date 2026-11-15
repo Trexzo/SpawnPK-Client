@@ -22,6 +22,12 @@ import sys
 import tempfile
 from typing import Iterable
 
+# Support owner-local direct CLI invocation as well as python -m, without
+# depending on a global PYTHONPATH or user site-packages installation.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 from tools.r424.prepare_private_legacy_cleanup_patch import (
     HELPER, STORE, PINNED_R421_STORE_SHA, stage as prepare_r424,
 )
