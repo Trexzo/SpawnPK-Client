@@ -38,11 +38,20 @@ public final class R422ActualStoreAcceptance {
         Path root = Paths.get(arg).toAbsolutePath().normalize();
         Path temp = Paths.get(System.getProperty("java.io.tmpdir"))
                          .toAbsolutePath().normalize();
+        // An absent final leaf is valid for the one-level directory-creation
+        // test, but the direct parent must already be a real directory.
+        // The actual R421 store performs its own full ancestor preflight.
+        boolean exists = Files.exists(root, LinkOption.NOFOLLOW_LINKS);
+        boolean safeLeaf = exists
+            ? Files.isDirectory(root, LinkOption.NOFOLLOW_LINKS) &&
+              !Files.isSymbolicLink(root)
+            : root.getParent() != null &&
+              Files.isDirectory(root.getParent(), LinkOption.NOFOLLOW_LINKS) &&
+              !Files.isSymbolicLink(root.getParent());
         if (!root.startsWith(temp) || root.equals(temp) ||
             root.getFileName() == null ||
             !root.getFileName().toString().startsWith("R422-Synthetic-") ||
-            !Files.isDirectory(root, LinkOption.NOFOLLOW_LINKS) ||
-            Files.isSymbolicLink(root))
+            !safeLeaf)
             throw new IllegalArgumentException("R422_REFUSE_NON_SYNTHETIC_TEMP_ROOT");
         return root;
     }
