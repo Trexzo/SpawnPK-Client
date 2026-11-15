@@ -14,7 +14,7 @@ import unittest
 
 from tools.r424.prepare_private_legacy_cleanup_patch import (
     Refused, PINNED_PUBLIC_HELPER_SHA, PINNED_R421_STORE_SHA,
-    patch_source_text,
+    canonical_helper_bytes, patch_source_text,
 )
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -210,7 +210,7 @@ class R424PatchGate(unittest.TestCase):
             self.assertNotEqual(compiled.returncode,0)
 
     def test_19_public_helper_exact_pin(self):
-        self.assertEqual(sha256(HELPER.read_bytes()).hexdigest(),
+        self.assertEqual(sha256(canonical_helper_bytes(HELPER.read_bytes())).hexdigest(),
                          PINNED_PUBLIC_HELPER_SHA)
 
     def test_20_private_pin_is_unchanged_r421(self):
@@ -271,5 +271,15 @@ class R424PatchGate(unittest.TestCase):
     def test_26_output_source_uses_bytes_not_platform_text_newline(self):
         source=PATCH.read_text('utf8')
         self.assertIn('new_store.write_bytes(patch.encode("utf-8"))',source)
+
+
+    def test_27_crlf_helper_checkout_normalizes_to_pinned_bytes(self):
+        original=canonical_helper_bytes(HELPER.read_bytes())
+        changed=original.replace(b'\n',b'\r\n')
+        self.assertEqual(canonical_helper_bytes(changed),original)
+
+    def test_28_lone_cr_helper_rejected(self):
+        with self.assertRaises(Refused):
+            canonical_helper_bytes(HELPER.read_bytes().replace(b'\n',b'\r'))
 
 if __name__=='__main__': unittest.main()
