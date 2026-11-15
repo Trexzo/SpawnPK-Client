@@ -80,6 +80,10 @@ def main(argv=None):
     full_cp = os.pathsep.join((str(classes), cp))
     def command(mode: str, root: Path) -> list[str]:
         return [str(args.java), "-Xmx512m",
+                # Java and Python can have different default TEMP roots on
+                # Windows GitHub runners. Use the already validated Python
+                # TEMP parent for both instead of weakening Java's path gate.
+                "-Djava.io.tmpdir=" + str(temp_parent),
                 "-Duser.home=" + str(workspace),
                 "-cp", full_cp, MAIN, mode, str(root)]
 
