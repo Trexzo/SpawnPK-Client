@@ -39,6 +39,16 @@ def digest(data: bytes) -> str:
     return sha256(data).hexdigest()
 
 
+def canonical_helper_bytes(data: bytes) -> bytes:
+    # Git checkout may convert a public Java fixture to CRLF on Windows.
+    # Only ordinary LF or CRLF source is admitted; lone CR is refused.
+    normalized = data.replace(b"\r\n", b"\n")
+    require(b"\r" not in normalized, "R424_PUBLIC_HELPER_INVALID_LINE_ENDING")
+    require(digest(normalized) == PINNED_PUBLIC_HELPER_SHA,
+            "R424_PUBLIC_HELPER_SHA_PIN_MISMATCH")
+    return normalized
+
+
 def unique_method_span(source: str, name: str) -> tuple[int, int, str]:
     pattern = re.compile(
         r"^[ \t]*(?:private|protected|public)?[ \t]*(?:static[ \t]+)?"
@@ -166,9 +176,7 @@ def stage(source_root: Path, helper_source: Path, destination: Path) -> dict:
     require(not (root / HELPER).exists(), "R424_HELPER_ALREADY_IN_PARENT")
     require(helper_source.is_file() and not helper_source.is_symlink(),
             "R424_PUBLIC_HELPER_NOT_REGULAR_FILE")
-    public_bytes = helper_source.read_bytes()
-    require(digest(public_bytes) == PINNED_PUBLIC_HELPER_SHA,
-            "R424_PUBLIC_HELPER_SHA_PIN_MISMATCH")
+    public_bytes = canonical_helper_bytes(helper_source.read_bytes())
     patch = patch_source_text(original.decode("utf-8"), PINNED_R421_STORE_SHA)
     # Only after ALL admission checks succeed may a fresh output be created.
     dest.mkdir()
