@@ -217,7 +217,7 @@ class R426FullSyntheticPipeline(unittest.TestCase):
         if p.is_dir() and p.parent == Path(tempfile.gettempdir()):
             shutil.rmtree(p)
 
-    def test_mode(self):
+    def _fixture_pins(self):
         context = ExitStack()
         self.addCleanup(context.close)
         context.enter_context(
@@ -236,7 +236,7 @@ class R426FullSyntheticPipeline(unittest.TestCase):
         return context
 
     def test_01_entire_r425_pipeline_with_real_javac_and_mock_source(self):
-        with self.test_mode():
+        with self._fixture_pins():
             receipt = runner.run(self.args)
         self.assertEqual(receipt["status"],
                          "R425_PRIVATE_OVERLAY_COMPILE_AND_ACTUAL_STORE_PASS")
@@ -262,7 +262,7 @@ class R426FullSyntheticPipeline(unittest.TestCase):
                          receipt["status"])
 
     def test_02_tampered_dependency_after_snapshot_refused(self):
-        with self.test_mode():
+        with self._fixture_pins():
             runner.validate_inputs(self.args)
             original = runner.sha_inventory(self.source, ".java")
             classes = runner.sha_inventory(self.prior_classes, ".class")
@@ -273,7 +273,7 @@ class R426FullSyntheticPipeline(unittest.TestCase):
                     self.args, original, classes, original, self.source)
 
     def test_03_tampered_second_dependency_after_snapshot_refused(self):
-        with self.test_mode():
+        with self._fixture_pins():
             runner.validate_inputs(self.args)
             original = runner.sha_inventory(self.source, ".java")
             classes = runner.sha_inventory(self.prior_classes, ".class")
@@ -284,7 +284,7 @@ class R426FullSyntheticPipeline(unittest.TestCase):
                     self.args, original, classes, original, self.source)
 
     def test_04_tampered_parent_java_source_after_snapshot_refused(self):
-        with self.test_mode():
+        with self._fixture_pins():
             original = runner.sha_inventory(self.source, ".java")
             classes = runner.sha_inventory(self.prior_classes, ".class")
             (self.source/"rs/plugins/loottracker/SyntheticUnrelated.java").write_text(
@@ -295,7 +295,7 @@ class R426FullSyntheticPipeline(unittest.TestCase):
                     self.args, original, classes, original, self.source)
 
     def test_05_tampered_candidate_java_source_after_snapshot_refused(self):
-        with self.test_mode():
+        with self._fixture_pins():
             original = runner.sha_inventory(self.source, ".java")
             classes = runner.sha_inventory(self.prior_classes, ".class")
             candidate = Path(self.workspace.name)/"fake-candidate"
@@ -308,7 +308,7 @@ class R426FullSyntheticPipeline(unittest.TestCase):
                     self.args, original, classes, candidate_before, candidate)
 
     def test_06_tampered_original_class_after_snapshot_refused(self):
-        with self.test_mode():
+        with self._fixture_pins():
             original = runner.sha_inventory(self.source, ".java")
             classes = runner.sha_inventory(self.prior_classes, ".class")
             p=self.prior_classes/"rs/plugins/loottracker/SyntheticUnrelated.class"
@@ -319,7 +319,7 @@ class R426FullSyntheticPipeline(unittest.TestCase):
                     self.args, original, classes, original, self.source)
 
     def test_07_helper_hash_refusal_retains_owner_input(self):
-        with self.test_mode():
+        with self._fixture_pins():
             self.args.dependency_a_sha256="0"*64
             with self.assertRaisesRegex(runner.Refused,"R425_DEPENDENCY_A_SHA_DRIFT"):
                 runner.run(self.args)
