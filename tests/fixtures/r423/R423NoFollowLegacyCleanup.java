@@ -177,7 +177,11 @@ public final class R423NoFollowLegacyCleanup {
                     directory != now.isDirectory() ||
                     (!directory && !now.isRegularFile())) return false;
                 if (key != null) return key.equals(now.fileKey());
-                // Weak fallback on systems without file keys; not hostile-swap-safe.
+                // After deleting children, a directory's size/mtime naturally
+                // changes (and Windows may report null fileKey). Do not
+                // compare these mutable fields on a directory. NOFOLLOW
+                // and type still apply; hostile path swaps remain unsolved.
+                if (directory) return now.isDirectory();
                 return size == now.size() && modified.equals(now.lastModifiedTime());
             } catch (IOException | SecurityException e) {
                 return false;
