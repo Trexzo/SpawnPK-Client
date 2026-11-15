@@ -46,7 +46,15 @@ class InventedPlugin {
     }
   }
   void r403QueueAutosave() {
-    executor.execute(() -> persistHistory());
+    executor.execute(() -> {
+      try {
+        persistHistory();
+      } finally {
+        if (issuedEpoch == r399SessionEpoch) {
+          r403AutosaveQueued = false;
+        }
+      }
+    });
   }
   void requestSave() {
     r403QueueAutosave();
@@ -57,6 +65,7 @@ class InventedPlugin {
       return;
     }
     r401ClearInProgress = true;
+    ++r399SessionEpoch;
     final boolean deleted;
     synchronized (r401FileGate) {
       deleted = historyStore.clearWithReceipt();
@@ -184,6 +193,8 @@ class R406EvidenceTests(unittest.TestCase):
         self.assertTrue(report["source_confirmed_edt_delete_calls_disk_commit_synchronously"])
         self.assertTrue(report["source_confirmed_edt_clear_acquires_shared_file_monitor"])
         self.assertTrue(report["background_autosave_competes_for_same_file_monitor"])
+        self.assertTrue(report["source_confirmed_clear_can_orphan_r403_queued_autosave"])
+        self.assertFalse(report["clear_during_queued_autosave_regression_fixed"])
         for name in ("proposed_nonblocking_production_delete_implemented",
                      "measured_real_edt_latency","actual_client_executed",
                      "private_source_modified_by_r406","private_client_rebuilt_by_r406",
@@ -264,6 +275,22 @@ class R406EvidenceTests(unittest.TestCase):
                     "SwingUtilities.isEventDispatchThread()",
                     "someOtherThread()")
         self.refuses()
+
+    def test_clear_must_advance_session_epoch(self):
+        self.mutate(audit.PLUGIN,"++r399SessionEpoch;","r399SessionEpoch;")
+        self.refuses("R406_CLEAR_MUST_INVALIDATE_PRE_CLEAR_WORKERS")
+
+    def test_obsolete_worker_completion_must_be_epoch_guarded(self):
+        self.mutate(audit.PLUGIN,
+                    "if (issuedEpoch == r399SessionEpoch)",
+                    "if (true)")
+        self.refuses("R406_OLD_WORKER_COMPLETION_EPOCH_GUARD_MISSING")
+
+    def test_clear_queue_flag_reset_changes_prior_r405_risk(self):
+        self.mutate(audit.PLUGIN,
+                    "++r399SessionEpoch;\n    final boolean deleted;",
+                    "++r399SessionEpoch;\n    r403AutosaveQueued = false;\n    final boolean deleted;")
+        self.refuses("R406_CLEAR_QUEUE_RESET_ALREADY_CHANGED")
 
     def test_clear_disk_receipt_must_share_gate(self):
         self.mutate(audit.PLUGIN,
