@@ -1,0 +1,34 @@
+name: v309-r416-passive-restart-schema
+on:
+  push:
+    branches:
+      - research/v309-r416-passive-committed-schema-check
+  pull_request:
+    paths:
+      - tests/test_v309_r416_restart_schema.py
+      - .github/workflows/v309-r416-restart-schema.yml
+      - docs/V309_R416_PASSIVE_RESTART_SCHEMA_VALIDATION.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  standalone-invented-fixtures:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: R416 passive committed-schema negative and positive controls
+        run: python -m unittest discover -s tests -p test_v309_r416_restart_schema.py -v
