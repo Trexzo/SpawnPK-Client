@@ -91,8 +91,14 @@ def main(argv=None):
     selftest = run(command("selftest", workspace), timeout=50)
     m = re.search(r"R422_ACTUAL_PRIVATE_STORE_PASS assertions=(\d+)",
                   selftest.stdout)
-    passed("actual_private_store_73_assertions",
-           selftest.returncode == 0 and m is not None and int(m.group(1)) >= 73)
+    if selftest.returncode != 0 or m is None or int(m.group(1)) < 73:
+        raise RuntimeError(
+            "R422_SELFTEST_DIAGNOSTIC:"
+            + "exit=" + str(selftest.returncode)
+            + ";stdout=" + selftest.stdout[-900:].replace("\n", " ")
+            + ";stderr=" + selftest.stderr[-1600:].replace("\n", " ")
+        )
+    passed("actual_private_store_73_assertions", True)
 
     lock_root = Path(tempfile.mkdtemp(prefix="R422-Synthetic-Lock-",dir=str(temp_parent)))
     holder = subprocess.Popen(command("hold", lock_root),
