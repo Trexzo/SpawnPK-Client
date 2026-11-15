@@ -215,7 +215,7 @@ public final class R415NonClobberDeleteIntentSynthetic {
             if(!before.equals(digest(history,true))||
                !after.equals(digest(stage,false)))return false;
             if(fault==Fault.FOREIGN_MARKER_AFTER_PREFLIGHT)
-                Files.write(marker,b"foreign-intent-untouched",StandardOpenOption.CREATE_NEW);
+                Files.write(marker,b("foreign-intent-untouched"),StandardOpenOption.CREATE_NEW);
             try {
                 // Atomic namespace insert without replacing an existing marker.
                 // Unsupported hard-link filesystem => fail closed.
