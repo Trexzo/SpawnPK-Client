@@ -123,6 +123,14 @@ def check_structure(before:bytes,current:bytes,prior_move:bytes,
         first=m.lstrip()
         if not first.startswith("if (r411RefuseUnresolvedStage("):
             raise Refused("R411_"+name+"_GATE_NOT_FIRST")
+        # The actual FIRST conditional must have the declared fail-closed
+        # return; a later unrelated return false must not disguise
+        # an unsafe "return true" in the staging refusal branch.
+        first_guard = re.match(
+            r"^if\s*\(\s*r411RefuseUnresolvedStage\([^)]*\)\s*\)\s*\{\s*"+
+            re.escape(result)+r"\s*\}",first)
+        if first_guard is None:
+            raise Refused("R411_"+name+"_FIRST_REFUSAL_RETURN_DRIFT")
         ordered(m,needle,result)
         if "Files.delete(" in m[:m.index(needle)] or "AtomicFileReplace.move" in m[:m.index(needle)]:
             raise Refused("R411_LATE_DANGEROUS_STAGE_CHECK")
