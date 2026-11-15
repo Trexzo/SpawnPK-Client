@@ -49,8 +49,12 @@ def require(s:str,token:str,why:str):
     if token not in s:raise Refused(why)
 
 def ordered(s:str,*tokens:str):
-    if not r395.ordered(s,*tokens):
-        raise Refused("R415_PRIVATE_INTENT_PHASE_ORDER_DRIFT")
+    offset=0
+    for token in tokens:
+        found=s.find(token,offset)
+        if found<0:
+            raise Refused("R415_PRIVATE_INTENT_PHASE_ORDER_DRIFT_"+token[:45])
+        offset=found+len(token)
 
 def code(blob:bytes)->str:
     try:return r393.mask_java(blob.decode("utf8"))
