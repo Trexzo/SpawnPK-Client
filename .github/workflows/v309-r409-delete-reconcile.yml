@@ -1,0 +1,40 @@
+name: v309 R409 durable delete restart reconciliation (public synthetic only)
+on:
+  push:
+    branches:
+      - 'research/v309-r409-*'
+  pull_request:
+    paths:
+      - 'tools/r409/**'
+      - 'tests/test_v309_r409_restart_reconcile_gate.py'
+      - 'tests/fixtures/r409/**'
+      - 'docs/V309_R409_DELETE_RESTART_RECONCILIATION.md'
+      - '.github/workflows/v309-r409-delete-reconcile.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / JDK21
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R409 invented source/class audit refusal tests for private durability gaps
+        run: python -m unittest discover -s tests -p 'test_v309_r409_restart_reconcile_gate.py' -v
+      - name: R409 Java 11 synthetic real temporary filesystem restart reconciliation and injected crash states
+        run: |
+          python -c "from pathlib import Path; Path('build/r409-synthetic').mkdir(parents=True, exist_ok=True)"
+          javac --release 11 -d build/r409-synthetic tests/fixtures/r409/R409DurableDeleteReconcileSynthetic.java
+          java -cp build/r409-synthetic R409DurableDeleteReconcileSynthetic
