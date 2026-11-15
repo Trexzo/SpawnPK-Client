@@ -446,6 +446,120 @@ public final class R427AsyncDeleteHarness {
         f.shutdown();
     }
 
+    /** A deadline reports overdue progress but cannot release held I/O. */
+    static void closeDeadlineKeepsOwner() throws Exception {
+        Fixture f = new Fixture();
+        f.store.block = true;
+        f.store.recheckAdmission = false;
+        check(f.submit(R427AsyncDeleteCoordinator.Kind.CLEAR_ALL), "accepted");
+        f.awaitCommit();
+
+        AtomicBoolean observationOffEdt = new AtomicBoolean();
+        CompletableFuture<R427AsyncDeleteCoordinator.CloseObservation> observation =
+            edt(() -> {
+                CompletableFuture<R427AsyncDeleteCoordinator.CloseObservation> o =
+                    f.coordinator.closeWithDeadline(75, TimeUnit.MILLISECONDS);
+                o.thenAccept(status -> {
+                    if (!SwingUtilities.isEventDispatchThread())
+                        observationOffEdt.set(true);
+                });
+                return o;
+            });
+        check(observation.get(WAIT_SECONDS, TimeUnit.SECONDS) ==
+            R427AsyncDeleteCoordinator.CloseObservation.UNCONFIRMED_AT_DEADLINE,
+            "overdue-only-reported");
+        check(!observationOffEdt.get(), "observation-completed-on-edt");
+        check(!f.store.ownerReleased.get(), "watchdog-never-releases-lock");
+        check(f.store.commitInProgress.get(), "worker-still-holds-commit");
+        check(f.coordinator.isClosed(), "new-work-rejected");
+        check(!f.submit(R427AsyncDeleteCoordinator.Kind.CLEAR_ALL),
+              "deadline-cannot-reopen");
+        check(edt(() -> SwingUtilities.isEventDispatchThread()),
+              "edt-responsive-after-deadline");
+
+        f.store.release.countDown();
+        CompletableFuture<Void> finalClose = edt(f.coordinator::closeAsync);
+        finalClose.get(WAIT_SECONDS, TimeUnit.SECONDS);
+        check(f.view.released.await(WAIT_SECONDS, TimeUnit.SECONDS),
+              "eventual-owner-release");
+        check(f.store.ownerReleased.get(), "owner-finally-released");
+        check(f.view.closed.get() == 1, "single-release-event");
+        check(f.view.applied.get() == 0, "no-stale-ui-apply-after-close");
+        CompletableFuture<R427AsyncDeleteCoordinator.CloseObservation> late =
+            edt(() -> f.coordinator.closeWithDeadline(3, TimeUnit.SECONDS));
+        check(late.get(WAIT_SECONDS, TimeUnit.SECONDS) ==
+              R427AsyncDeleteCoordinator.CloseObservation.RELEASE_CONFIRMED,
+              "subsequent-observation-reports-real-release");
+    }
+
+    static void immediateCloseObserved() throws Exception {
+        Fixture f = new Fixture();
+        CompletableFuture<R427AsyncDeleteCoordinator.CloseObservation> future =
+            edt(() -> f.coordinator.closeWithDeadline(3, TimeUnit.SECONDS));
+        check(future.get(WAIT_SECONDS, TimeUnit.SECONDS) ==
+              R427AsyncDeleteCoordinator.CloseObservation.RELEASE_CONFIRMED,
+              "clean-owner-release-confirmed");
+        check(f.view.released.await(WAIT_SECONDS, TimeUnit.SECONDS),
+              "close-event-delivered");
+        check(f.store.ownerReleased.get(), "owner-released");
+        check(f.view.closeFailure == null, "no-close-error");
+    }
+
+    static void failingOwnerRelease(boolean asError) throws Exception {
+        Fixture f = new Fixture();
+        f.store.failCloseWithError = asError;
+        f.store.failCloseWithException = !asError;
+        CompletableFuture<R427AsyncDeleteCoordinator.CloseObservation> status =
+            edt(() -> f.coordinator.closeWithDeadline(3, TimeUnit.SECONDS));
+        check(status.get(WAIT_SECONDS, TimeUnit.SECONDS) ==
+              R427AsyncDeleteCoordinator.CloseObservation.RELEASE_UNCERTAIN,
+              "release-failure-not-confirmed");
+        check(f.view.released.await(WAIT_SECONDS, TimeUnit.SECONDS),
+              "failure-notification-arrived");
+        check(f.view.closeFailure != null,
+              "original-release-error-preserved");
+        check(f.coordinator.isQuarantined(), "release-failure-quarantines");
+        check(!f.store.ownerReleased.get(), "owner-not-claimed-released");
+        check(!f.submit(R427AsyncDeleteCoordinator.Kind.CLEAR_ALL),
+              "failed-shutdown-disallows-new-request");
+        CompletableFuture<Void> close = edt(f.coordinator::closeAsync);
+        check(close.isCompletedExceptionally(), "real-close-future-not-successful");
+    }
+
+    static void postWriteAssertionErrorIsUncertain() throws Exception {
+        Fixture f = new Fixture();
+        f.store.throwErrorAfterWrite = true;
+        check(f.submit(R427AsyncDeleteCoordinator.Kind.CLEAR_ALL), "accepted");
+        f.awaitResult();
+        check(f.store.durable.get(), "synthetic-write-completed-before-error");
+        check(f.coordinator.isQuarantined(), "error-after-write-quarantined");
+        check(f.view.uncertain.get() == 1, "error-receipt-uncertain");
+        check(f.view.applied.get() == 0, "no-optimistic-delete-on-error");
+        check(!f.submit(R427AsyncDeleteCoordinator.Kind.CLEAR_ALL),
+              "error-refuses-blind-retry");
+        f.shutdown();
+    }
+
+    static void invalidCloseDeadlines() throws Exception {
+        Fixture f = new Fixture();
+        boolean zeroRefused = false;
+        try {
+            edt(() -> f.coordinator.closeWithDeadline(0, TimeUnit.MILLISECONDS));
+        } catch (IllegalArgumentException correct) {
+            zeroRefused = true;
+        }
+        check(zeroRefused, "nonpositive-deadline-rejected");
+        boolean unitRefused = false;
+        try {
+            edt(() -> f.coordinator.closeWithDeadline(10, null));
+        } catch (IllegalArgumentException correct) {
+            unitRefused = true;
+        }
+        check(unitRefused, "null-timeunit-rejected");
+        check(!f.coordinator.isClosed(), "invalid-deadline-does-not-close");
+        f.shutdown();
+    }
+
     private static void run(String scenario, Path scratch) throws Exception {
         switch (scenario) {
             case "confirmed": successfulReceipt(); break;
@@ -463,6 +577,12 @@ public final class R427AsyncDeleteHarness {
             case "off-edt-refusal": rejectNonEdt(); break;
             case "validation": validation(); break;
             case "synthetic-file": realSyntheticFileReceipt(scratch); break;
+            case "close-deadline": closeDeadlineKeepsOwner(); break;
+            case "close-observed": immediateCloseObserved(); break;
+            case "close-exception": failingOwnerRelease(false); break;
+            case "close-error": failingOwnerRelease(true); break;
+            case "post-write-error": postWriteAssertionErrorIsUncertain(); break;
+            case "invalid-deadline": invalidCloseDeadlines(); break;
             default: throw new IllegalArgumentException("R427_UNKNOWN_SCENARIO");
         }
     }
