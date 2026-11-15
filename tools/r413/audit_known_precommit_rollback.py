@@ -200,7 +200,7 @@ def audit(*,kit:Path,kit_sha:str,reference:Path,reference_sha:str,
           previous_sources:Path,previous_classes:Path,
           candidate_sources:Path,candidate_classes:Path,
           expected_sources:int=1277,previous_classes_count:int=1389,
-          candidate_classes_count:int=1391)->dict:
+          candidate_classes_count:int=1391,expected_golden_classes:int=1388)->dict:
     r395.require_pin(kit,kit_sha)
     r395.require_pin(reference,reference_sha)
     original=r395.read_zip_bytes(kit,"source/",".java")
@@ -211,7 +211,7 @@ def audit(*,kit:Path,kit_sha:str,reference:Path,reference_sha:str,
     classes=r395.read_tree_bytes(candidate_classes,".class")
     if any(len(x)!=expected_sources for x in (original,prior,new)):
         raise Refused("R413_PRIVATE_SOURCE_COUNT_DRIFT")
-    if len(golden)!=1388 or len(prior_cls)!=previous_classes_count or \
+    if len(golden)!=expected_golden_classes or len(prior_cls)!=previous_classes_count or \
        len(classes)!=candidate_classes_count:
         raise Refused("R413_PRIVATE_CLASS_COUNT_DRIFT")
     if not(original.keys()==prior.keys()==new.keys()):
@@ -252,6 +252,7 @@ def main(argv=None)->int:
     p.add_argument("--expected-sources",type=int,default=1277)
     p.add_argument("--previous-classes-count",type=int,default=1389)
     p.add_argument("--candidate-classes-count",type=int,default=1391)
+    p.add_argument("--expected-golden-classes",type=int,default=1388)
     p.add_argument("--out",type=Path)
     a=p.parse_args(argv)
     try:
@@ -263,7 +264,8 @@ def main(argv=None)->int:
                 candidate_sources=a.candidate_sources,candidate_classes=a.candidate_classes,
                 expected_sources=a.expected_sources,
                 previous_classes_count=a.previous_classes_count,
-                candidate_classes_count=a.candidate_classes_count)
+                candidate_classes_count=a.candidate_classes_count,
+                expected_golden_classes=a.expected_golden_classes)
         encoded=json.dumps(r,sort_keys=True,indent=2)+"\n"
         if a.out:
             with a.out.open("x",encoding="utf8") as out:out.write(encoded)
