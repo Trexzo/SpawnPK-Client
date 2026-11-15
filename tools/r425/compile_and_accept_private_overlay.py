@@ -269,21 +269,22 @@ def run(args) -> dict:
                     dest / "R425-full-javac.log")
     verify_unchanged_build_inputs(
         args, parent_src, parent_cls, candidate_src, source_tree)
-    class_delta = gate_class_inventory(
-        parent_cls, sha_inventory(compiled, ".class"))
+    compiled_snapshot = sha_inventory(compiled, ".class")
+    class_delta = gate_class_inventory(parent_cls, compiled_snapshot)
     accepted = execute_actual_class_acceptance(args, compiled, deps, dest)
     verify_unchanged_build_inputs(
         args, parent_src, parent_cls, candidate_src, source_tree)
+    need(sha_inventory(compiled, ".class") == compiled_snapshot,
+         "R426_COMPILED_CLASSES_CHANGED_DURING_ACCEPTANCE")
     need(hash_file(args.prior_source_root / STORE) == PINNED_R421_STORE_SHA,
          "R425_PARENT_PRIVATE_SOURCE_CHANGED_DURING_ACCEPTANCE")
     need(hash_file(args.prior_classes_root / EXPECTED_CHANGED_EXISTING_CLASS)
          == PINNED_R421_STORE_CLASS,
          "R425_PARENT_COMPILED_CLASS_CHANGED_DURING_ACCEPTANCE")
-    # Treat the compiled output tree as immutable after class-scope review.
-    # This is not a race-proof snapshot, but detects ordinary drift during
-    # acceptance, before declaring a pass.
-    compiled_snapshot = sha_inventory(compiled, ".class")
-    gate_class_inventory(parent_cls, compiled_snapshot)
+    # Re-validate the class snapshot just before issuing the final receipt.
+    # Ordinary class output rewrites cannot pass the same compiled SHA inventory.
+    need(sha_inventory(compiled, ".class") == compiled_snapshot,
+         "R426_COMPILED_CLASSES_CHANGED_BEFORE_RECEIPT")
     receipt = {
         "status": "R425_PRIVATE_OVERLAY_COMPILE_AND_ACTUAL_STORE_PASS",
         "source_scope": changed,
