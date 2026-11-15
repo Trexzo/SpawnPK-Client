@@ -394,7 +394,7 @@ class R412ReadOnlyInspectorTests(unittest.TestCase):
     def test_regular_main_without_stage_no_recovery_proof(self):
         self.main.write_bytes(b"fabricated")
         r=self.probe()
-        self.assertEqual(r["entries"][0]["size_bytes"],9)
+        self.assertEqual(r["entries"][0]["size_bytes"],10)
         self.assertEqual(r["entries"][0]["status"],"REGULAR")
         self.assertEqual(r["stage_state"],"CLEAR")
         self.assertFalse(r["main_file_authoritative_proven"])
