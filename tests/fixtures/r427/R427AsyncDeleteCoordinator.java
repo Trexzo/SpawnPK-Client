@@ -15,6 +15,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import javax.swing.SwingUtilities;
 
 /**
@@ -263,23 +264,47 @@ final class R427AsyncDeleteCoordinator {
      * still reports that final result on the EDT.
      */
     CompletableFuture<CloseObservation> closeWithDeadline(long duration, TimeUnit unit) {
+        return closeWithDeadline(duration, unit, ignored -> { });
+    }
+
+    /**
+     * Optional explicit observer callback is guaranteed to run on EDT.
+     * Do NOT rely on CompletableFuture.thenAccept() for Swing thread affinity:
+     * dependent actions can run on the thread attaching the callback when
+     * a future is already completed. The callback is invoked at most once,
+     * for the winning deadline-or-final-close status only.
+     */
+    CompletableFuture<CloseObservation> closeWithDeadline(
+            long duration, TimeUnit unit, Consumer<CloseObservation> onEdt) {
         requireEdt();
-        if (duration <= 0 || unit == null) {
+        if (duration <= 0 || unit == null || onEdt == null) {
             throw new IllegalArgumentException("R428_INVALID_CLOSE_DEADLINE");
         }
         final CompletableFuture<Void> completion = closeAsync();
         final CompletableFuture<CloseObservation> observation = new CompletableFuture<>();
         completion.whenComplete((ignored, failure) ->
-            SwingUtilities.invokeLater(() -> observation.complete(
+            reportCloseObservationOnEdt(
+                observation,
                 failure == null ? CloseObservation.RELEASE_CONFIRMED :
-                                  CloseObservation.RELEASE_UNCERTAIN)));
-        // The timer reports incomplete progress, it is NOT a cancellation.
-        // Complete the observation on EDT so its completion callbacks cannot
-        // accidentally change Swing state from a timer or I/O thread.
+                                  CloseObservation.RELEASE_UNCERTAIN,
+                onEdt));
+        // Delayed result is a progress warning, never a release or cancellation.
         CompletableFuture.delayedExecutor(duration, unit).execute(() ->
-            SwingUtilities.invokeLater(() ->
-                observation.complete(CloseObservation.UNCONFIRMED_AT_DEADLINE)));
+            reportCloseObservationOnEdt(
+                observation, CloseObservation.UNCONFIRMED_AT_DEADLINE, onEdt));
         return observation;
+    }
+
+    private static void reportCloseObservationOnEdt(
+            CompletableFuture<CloseObservation> result,
+            CloseObservation outcome, Consumer<CloseObservation> observer) {
+        SwingUtilities.invokeLater(() -> {
+            // Losing timers and late close receipts must not report a
+            // second result to this observer. Real close still calls View.
+            if (result.complete(outcome)) {
+                observer.accept(outcome);
+            }
+        });
     }
 
     boolean isPending() {
