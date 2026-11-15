@@ -260,8 +260,8 @@ class R406EvidenceTests(unittest.TestCase):
 
     def test_autosave_remains_worker_submitted(self):
         self.mutate(audit.PLUGIN,
-                    "executor.execute(() -> persistHistory())",
-                    "persistHistory()")
+                    "executor.execute(() -> {",
+                    "executor.executeLater(() -> {")
         self.refuses()
 
     def test_request_save_does_not_block_client(self):
