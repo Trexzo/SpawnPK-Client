@@ -260,4 +260,16 @@ class R424PatchGate(unittest.TestCase):
             self.assertFalse(dest.exists())
             self.assertIn('R424_PREPARATION_REFUSED',p.stdout)
 
+
+    def test_25_crlf_original_newlines_preserved(self):
+        crlf=FAKE_PRIOR.replace('\\n','\\r\\n')
+        patched=patch_source_text(crlf,sha256(crlf.encode('utf-8')).hexdigest())
+        self.assertIn('\\r\\n',patched)
+        self.assertEqual(patched.count('\\n'),patched.count('\\r\\n'))
+        self.assertIn('false); // R424:',patched)
+
+    def test_26_output_source_uses_bytes_not_platform_text_newline(self):
+        source=PATCH.read_text('utf8')
+        self.assertIn('new_store.write_bytes(patch.encode("utf-8"))',source)
+
 if __name__=='__main__': unittest.main()
