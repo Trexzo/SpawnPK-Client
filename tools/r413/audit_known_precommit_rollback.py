@@ -171,9 +171,19 @@ def check_structure(prior:dict[str,bytes],new:dict[str,bytes])->dict:
     if "r413WriteDisposition() == LootHistoryStore.R413WriteDisposition.REPLACE_ATTEMPTED" in edit \
        or "r413WriteDisposition() != LootHistoryStore.R413WriteDisposition.COMMITTED" in edit:
         raise Refused("R413_AMBIGUOUS_COMMIT_MUST_NOT_ROLLBACK")
-    if "r402EditTransactionOpen = false" not in edit[
-          edit.index("panel.r413RestoreDeleteSnapshot(r413Before)"):]:
+    if not re.search(
+         r"r413ProvenUncommitted\s*=\s*historyStore\.r413WriteDisposition\(\)\s*"
+         r"==\s*LootHistoryStore\.R413WriteDisposition\.FAILED_BEFORE_REPLACE\s*;",
+         edit):
+        raise Refused("R413_ROLLBACK_ONLY_FOR_PROVEN_PRE_REPLACE_FAILURE")
+    rollback_tail=edit[edit.index("boolean r413ProvenUncommitted = false"):]
+    before_restore=rollback_tail[:rollback_tail.index(
+        "panel.r413RestoreDeleteSnapshot(r413Before)")]
+    if "r402EditTransactionOpen = false" in before_restore:
         raise Refused("R413_TRANSACTION_CLOSED_BEFORE_ROLLBACK")
+    if "r402EditTransactionOpen = false" not in rollback_tail[
+         rollback_tail.index("panel.r413RestoreDeleteSnapshot(r413Before)"):]:
+        raise Refused("R413_TRANSACTION_CLEANUP_MISSING")
     if "r401ClearUnsafe = false" in edit or "r396LastCommitSucceeded = true" in edit:
         raise Refused("R413_FAILED_DELETE_MUST_REMAIN_QUARANTINED")
     for name in ("persistHistory","r403QueueAutosave","clearHistory","shutDown"):
