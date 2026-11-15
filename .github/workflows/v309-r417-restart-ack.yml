@@ -7,6 +7,8 @@ on:
     paths:
       - tools/r417/restart_ack_model.py
       - tests/test_v309_r417_restart_ack.py
+      - tests/test_v309_r417_ack_fence_audit.py
+      - tools/r417/audit_private_ack_fence.py
       - .github/workflows/v309-r417-restart-ack.yml
   workflow_dispatch:
 
@@ -31,4 +33,4 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - name: Synthetic R417 interrupted ack, fresh process and malformed evidence tests
-        run: python -m unittest discover -s tests -p test_v309_r417_restart_ack.py -v
+        run: python -m unittest discover -s tests -p 'test_v309_r417_*.py' -v
