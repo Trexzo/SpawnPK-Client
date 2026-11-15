@@ -1,0 +1,40 @@
+name: v309 R414 passive restart intent classification (public synthetic only)
+on:
+  push:
+    branches:
+      - 'research/v309-r414-*'
+  pull_request:
+    paths:
+      - 'tools/r414/**'
+      - 'tests/test_v309_r414_passive_restart_intent.py'
+      - 'tests/fixtures/r414/**'
+      - 'docs/V309_R414_PASSIVE_RESTART_INTENT.md'
+      - '.github/workflows/v309-r414-passive-restart-intent.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / JDK21
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R414 invented intent grammar/hash refusal tests
+        run: python -m unittest discover -s tests -p 'test_v309_r414_passive_restart_intent.py' -v
+      - name: R414 synthetic real-temporary-file restart and child-process crash classification
+        run: |
+          python -c "from pathlib import Path; Path('build/r414-synthetic').mkdir(parents=True, exist_ok=True)"
+          javac --release 11 -d build/r414-synthetic tests/fixtures/r414/R414PassiveRestartIntentSynthetic.java
+          java -cp build/r414-synthetic R414PassiveRestartIntentSynthetic
