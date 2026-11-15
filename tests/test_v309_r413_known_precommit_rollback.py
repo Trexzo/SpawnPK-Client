@@ -317,7 +317,7 @@ class R413PrivateGateTests(unittest.TestCase):
             previous_sources=self.before_dir,previous_classes=self.old_classes,
             candidate_sources=self.after_dir,candidate_classes=self.new_classes,
             expected_sources=7,previous_classes_count=9,
-            candidate_classes_count=11)
+            candidate_classes_count=11,expected_golden_classes=8)
 
     def patch(self,name,a,b):
         prior=self.candidate[name]
@@ -538,7 +538,8 @@ class R413PrivateGateTests(unittest.TestCase):
                 reference=self.ref,reference_sha=sha(self.ref),
                 previous_sources=self.before_dir,previous_classes=self.old_classes,
                 candidate_sources=self.after_dir,candidate_classes=self.new_classes,
-                expected_sources=7,previous_classes_count=9,candidate_classes_count=11)
+                expected_sources=7,previous_classes_count=9,candidate_classes_count=11,
+                expected_golden_classes=8)
 
     def cli_args(self,out):
         return ["--kit",str(self.kit),"--kit-sha256",sha(self.kit),
@@ -549,6 +550,7 @@ class R413PrivateGateTests(unittest.TestCase):
                 "--candidate-classes",str(self.new_classes),
                 "--expected-sources","7",
                 "--previous-classes-count","9","--candidate-classes-count","11",
+                "--expected-golden-classes","8",
                 "--out",str(out)]
 
     def test_existing_receipt_refused(self):
