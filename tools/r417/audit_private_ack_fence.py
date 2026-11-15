@@ -73,8 +73,8 @@ def verify_ack_guard(source: str) -> dict:
             admission.find("r414IntentState()"),
             "R417_ACK_FENCE_MUST_PRECEDE_EXISTING_INTENT_CHECK")
     for term in (
-        "loot-history.delete.ack",
-        "loot-history.delete.ack.tmp",
+        '"loot-history.delete.ack"',
+        '"loot-history.delete.ack.tmp"',
         "Files.readAttributes(",
         "LinkOption.NOFOLLOW_LINKS",
         "NoSuchFileException",
