@@ -49,3 +49,11 @@ The GitHub branch publishes only:
 6. R415–R417 history intent/ack evidence remains quarantined. No actual restart adoption, no marker cleanup, no permission to resume previously fenced writes, no durable power-loss proof or v312 runtime acceptance.
 
 **Keep R422 draft/unmerged, private candidate uninstalled, and release gate CLOSED.** Once owner-device access is available, run the corrected process suite against the SHA-pinned actual R421 class again, then use a restricted isolated event-dispatch test harness for plugin lifecycle and UI-safe disk receipts before any recovery re-enable.
+
+## Final public CI verification (15 November 2026)
+
+The dedicated **public-only** GitHub Actions workflow `v309-r422-public-harness-synthetic`, run `43740406400`, completed **4/4 PASS** on Ubuntu and Windows × Python 3.11 and 3.13 / JDK21. An earlier CI attempt passed on Ubuntu but failed on Windows because the GitHub Java runner and Python `tempfile` chose different default TEMP locations; the synthetic harness correctly refused the mismatch. The public runner was changed to pass `-Djava.io.tmpdir` set to its **already validated Python TEMP parent**, rather than removing the synthetic-root restriction. All four jobs then passed. 
+
+**This only validates the public stand-in and test harness.** It does not change the earlier **73/73 actual private-class assertions PASS** or satisfy the separate owner-private cross-process rerun, still unavailable due to the Desktop Commander usage pause. The separate Recovery CI was still in progress at the latest check and is not marked passed.
+
+Additional unverified pre-release risk found by source inspection: existing legacy cleanup `deleteTree(File)` enumerates descendants with `File.listFiles()` and does not show an explicit no-follow symlink guard. Do **not** invoke it against untrusted legacy paths or treat R421's parent-directory preflight as a substitute for recursion safety. This deserves an isolated adversarial cleanup review before authorizing any automatic legacy-file deletion.
