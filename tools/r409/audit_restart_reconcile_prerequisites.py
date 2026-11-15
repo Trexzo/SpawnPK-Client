@@ -53,12 +53,13 @@ def block_from(text:str,signature:str)->str:
 def inspect(plugin:bytes,store:bytes,mover:bytes)->dict:
     try:
         p=r393.mask_java(plugin.decode("utf8"))
-        h=r393.mask_java(store.decode("utf8"))
+        h_raw=store.decode("utf8")
+        h=r393.mask_java(h_raw)
         m=r393.mask_java(mover.decode("utf8"))
     except UnicodeDecodeError as e:
         raise Refused("R409_UNREADABLE_SOURCE") from e
 
-    require(h,'FILE_NAME = "loot-history.json"',
+    require(h_raw,'FILE_NAME = "loot-history.json"',
             "R409_HISTORY_FILENAME_CHANGED")
     require(h,"FORMAT_VERSION = 1",
             "R409_JSON_HISTORY_VERSION_CHANGED")
@@ -75,10 +76,11 @@ def inspect(plugin:bytes,store:bytes,mover:bytes)->dict:
         raise Refused("R409_PRIVATE_RECONCILIATION_ALREADY_INTEGRATED")
 
     save=r394.method_body(h,"saveWithReceipt")
+    require(h_raw,'FILE_NAME + ".tmp"',
+            "R409_HISTORY_TEMP_NAMING_DRIFT")
     ordered(save,"new Document()",
             "document.version = FORMAT_VERSION",
             "RecordDto.from(record)",
-            'FILE_NAME + ".tmp"',
             "Files.newOutputStream(temp.toPath())",
             "GSON.a(document, writer)",
             "AtomicFileReplace.move(temp, file)",
