@@ -55,27 +55,32 @@ public final class R409DurableDeleteReconcileSynthetic {
     }
     static final class Intent {
         final long serial;
-        final String before,after;
+        final String nonce,before,after;
         Intent(long serial,String before,String after) {
-            this.serial=serial;this.before=before;this.after=after;
+            this(serial,java.util.UUID.randomUUID().toString(),before,after);
+        }
+        Intent(long serial,String nonce,String before,String after) {
+            this.serial=serial;this.nonce=nonce;this.before=before;this.after=after;
         }
         String encode() {
-            return "v=1\nserial="+serial+"\nbefore="+before+"\nafter="+after+"\n";
+            return "v=1\nserial="+serial+"\nnonce="+nonce+
+                "\nbefore="+before+"\nafter="+after+"\n";
         }
         static Intent decode(byte[] bytes) {
             if(bytes.length>MAX_MANIFEST_BYTES||bytes.length<100)
                 throw new IllegalArgumentException("manifest length");
             String raw=new String(bytes,StandardCharsets.US_ASCII);
             String[] fields=raw.split("\n",-1);
-            if(fields.length!=5||!fields[0].equals("v=1")||
+            if(fields.length!=6||!fields[0].equals("v=1")||
                !fields[1].matches("serial=[1-9][0-9]{0,15}")||
-               !fields[2].matches("before=(ABSENT|[0-9a-f]{64})")||
-               !fields[3].matches("after=[0-9a-f]{64}")||
-               !fields[4].isEmpty())
+               !fields[2].matches("nonce=[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")||
+               !fields[3].matches("before=(ABSENT|[0-9a-f]{64})")||
+               !fields[4].matches("after=[0-9a-f]{64}")||
+               !fields[5].isEmpty())
                 throw new IllegalArgumentException("manifest grammar");
             long serial=Long.parseLong(fields[1].substring(7));
-            Intent i=new Intent(serial,fields[2].substring(7),
-                fields[3].substring(6));
+            Intent i=new Intent(serial,fields[2].substring(6),
+                fields[3].substring(7),fields[4].substring(6));
             if(i.before.equals(i.after)||!raw.equals(i.encode()))
                 throw new IllegalArgumentException("ambiguous or noncanonical manifest");
             return i;
@@ -264,6 +269,8 @@ public final class R409DurableDeleteReconcileSynthetic {
                 if(state.result!=Result.COMMITTED_BEFORE_ACK||
                    state.intent==null||expected==null||
                    state.intent.serial!=expected.serial||
+                   !state.intent.nonce.equals(expected.nonce)||
+                   !state.intent.before.equals(expected.before)||
                    !state.intent.after.equals(expected.after))
                     throw new IllegalStateException("not an authenticated commit");
                 // The callback may mark a successful UI state now.
@@ -494,6 +501,22 @@ public final class R409DurableDeleteReconcileSynthetic {
                 "null UI adoption discarded intent");
         });
     }
+    static void oldAcknowledgmentCannotClaimReusedSerialAfterRestart()throws Exception {
+        scenario("reused_serial",s->{
+            seeded(s);
+            Intent prior=s.deleteOne(2,CrashPoint.NONE);
+            s.acknowledgeAndClean(prior,CrashPoint.NONE);
+            Store restarted=reopened(s);
+            Intent fresh=restarted.deleteOne(1,CrashPoint.NONE);
+            yes(prior.serial==fresh.serial,"fixture must reuse counter after restart");
+            yes(!prior.nonce.equals(fresh.nonce),"transaction nonce reused");
+            expectedIOException(()->restarted.acknowledgeAndClean(prior,CrashPoint.NONE));
+            equal(restarted.recover().result,Result.COMMITTED_BEFORE_ACK,
+                "old callback removed next transaction marker");
+            restarted.acknowledgeAndClean(fresh,CrashPoint.NONE);
+            assertRows(restarted,3);
+        });
+    }
     static void rawHistoryStaysBytesAfterAbort()throws Exception {
         scenario("preserve_before",s->{
             seeded(s);
@@ -534,6 +557,7 @@ public final class R409DurableDeleteReconcileSynthetic {
             seeded(s);Intent tx=s.deleteOne(2,CrashPoint.NONE);
             Intent parsed=Intent.decode(Files.readAllBytes(s.intent));
             equal(parsed.serial,tx.serial,"transaction number");
+            equal(parsed.nonce,tx.nonce,"transaction nonce");
             equal(parsed.before,tx.before,"before digest");
             equal(parsed.after,tx.after,"post digest");
         });
@@ -691,6 +715,7 @@ public final class R409DurableDeleteReconcileSynthetic {
         wrongReceiptCannotDeleteJournal();
         uiAdoptionRequiredBeforeJournalDeletion();
         missingUiAdoptionCannotResolve();
+        oldAcknowledgmentCannotClaimReusedSerialAfterRestart();
         rawHistoryStaysBytesAfterAbort();
         postCommitHistoryExactHash();
         duplicateRowDeletesOneOccurrence();
