@@ -1,0 +1,40 @@
+name: v309-r425-private-overlay-compile-acceptance
+on:
+  push:
+    branches:
+      - research/v309-r425-private-overlay-compile-acceptance
+  pull_request:
+    paths:
+      - tools/r425/**
+      - tests/fixtures/r425/**
+      - tests/test_v309_r425_*.py
+      - .github/workflows/v309-r425-private-overlay.yml
+      - docs/V309_R425_OWNER_PRIVATE_COMPILE_GATE.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-only-staged-compiler-contracts:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Public SHA/class inventory negatives and actual Java11 harness against synthetic mock
+        run: python -m unittest discover -s tests -p 'test_v309_r425_*.py' -v
