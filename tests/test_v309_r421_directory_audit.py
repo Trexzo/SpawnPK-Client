@@ -147,7 +147,7 @@ class R421AuditNegatives(unittest.TestCase):
         self.bad_store("FileAlreadyExistsException collision",
                        "RuntimeException collision")
 
-    def test_12_no_symlink rejection(self):
+    def test_12_no_symlink_rejection(self):
         self.bad_store("leafAfter.isSymbolicLink()",
                        "false")
 
