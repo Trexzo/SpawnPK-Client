@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -37,7 +38,17 @@ public final class R427AsyncDeleteHarness {
     private static <T> T edt(Callable<T> action) throws Exception {
         FutureTask<T> task = new FutureTask<>(action);
         SwingUtilities.invokeAndWait(task);
-        return task.get(WAIT_SECONDS, TimeUnit.SECONDS);
+        try {
+            return task.get(WAIT_SECONDS, TimeUnit.SECONDS);
+        } catch (ExecutionException wrapped) {
+            // FutureTask wraps a deliberate EDT-side invalid-input
+            // exception. Preserve the original type for negative tests.
+            Throwable cause = wrapped.getCause();
+            if (cause instanceof RuntimeException) throw (RuntimeException) cause;
+            if (cause instanceof Error) throw (Error) cause;
+            if (cause instanceof Exception) throw (Exception) cause;
+            throw wrapped;
+        }
     }
 
     private static final class TestSession implements R427AsyncDeleteCoordinator.Session {
