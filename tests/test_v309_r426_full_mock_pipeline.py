@@ -337,5 +337,53 @@ class R426FullSyntheticPipeline(unittest.TestCase):
         self.assertIn("PINNED_R421_STORE_CLASS",cli)
 
 
+    def test_09_modified_compiled_class_after_runtime_acceptance_refused(self):
+        with self._fixture_pins():
+            original = runner.execute_actual_class_acceptance
+
+            def sabotage(args, compiled, deps, dest):
+                accepted = original(args, compiled, deps, dest)
+                (compiled / runner.EXPECTED_CHANGED_EXISTING_CLASS).write_bytes(
+                    b"synthetic-class-byte-replacement-after-acceptance")
+                return accepted
+
+            with patch.object(runner, "execute_actual_class_acceptance",
+                              side_effect=sabotage):
+                with self.assertRaisesRegex(
+                        runner.Refused,
+                        "R426_COMPILED_CLASSES_CHANGED_DURING_ACCEPTANCE"):
+                    runner.run(self.args)
+
+        self.assertFalse((self.args.fresh_temp_destination /
+                          "R425-Final-Private-Acceptance-Receipt.json").exists())
+        self.assertEqual(
+            sha((self.source / STORE).read_bytes()), self.baseline_store)
+
+    def test_10_modified_candidate_source_after_javac_refused(self):
+        with self._fixture_pins():
+            original = runner.java11_compiler
+
+            def sabotage(*args, **kwargs):
+                original(*args, **kwargs)
+                source_tree = args[1]
+                (source_tree / STORE).write_bytes(
+                    (source_tree / STORE).read_bytes() +
+                    b"\n// synthetic concurrent post-javac edit\n")
+
+            with patch.object(runner, "java11_compiler",
+                              side_effect=sabotage):
+                with self.assertRaisesRegex(
+                        runner.Refused,
+                        "R426_CANDIDATE_SOURCES_CHANGED_DURING_BUILD"):
+                    runner.run(self.args)
+
+        self.assertFalse((self.args.fresh_temp_destination /
+                          "R425-Final-Private-Acceptance-Receipt.json").exists())
+        self.assertEqual(
+            runner.hash_file(self.prior_classes /
+                             runner.EXPECTED_CHANGED_EXISTING_CLASS),
+            self.baseline_class)
+
+
 if __name__ == "__main__":
     unittest.main()
