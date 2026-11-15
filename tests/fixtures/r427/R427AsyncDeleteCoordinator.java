@@ -122,7 +122,11 @@ final class R427AsyncDeleteCoordinator {
         this.view = Objects.requireNonNull(view, "view");
         ThreadFactory factory = operation -> {
             Thread t = new Thread(operation, "SpawnPK-R427-DeleteReceipt");
-            t.setDaemon(true);
+            // A daemon can disappear when the JVM exits while an accepted
+            // durable transaction is in flight. Keep this managed worker
+            // non-daemon and require the closeAsync drain to finish; this
+            // trades crash-exit latency for graceful-shutdown durability.
+            t.setDaemon(false);
             return t;
         };
         this.io = Executors.newSingleThreadExecutor(factory);
