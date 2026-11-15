@@ -38,10 +38,16 @@ Both modes refuse execution on Swing's event thread. The method assumes its priv
 
 Local offline verification on JDK21 with `javac --release 11`:
 
-- **26/26** fabricated-private-source patcher tests passed. They check exact source signature and SHA admission, reject changed/ambiguous recursion, prevent repeated application, preserve unrelated methods, compile a generated fabricated Java store alongside the public helper, and verify a simulated private startup cannot delete its invented retired tree or keys.
+- **28/28** fabricated-private-source patcher tests passed. They check exact source signature and SHA admission, reject changed/ambiguous recursion, prevent repeated application, preserve unrelated methods, compile a generated fabricated Java store alongside the public helper, and verify a simulated private startup cannot delete its invented retired tree or keys.
 - Independent Java 11 helper and harness compiled and passed **22 behavioral assertions** on Linux with invented TEMP files, including a non-destructive dry-run, synthetic explicit commit, unrelated/canonical history preservation, symlink and marker rejection, preinterrupted thread refusal, and EDT refusal. Symlink checks are optional where Windows privileges forbid their creation.
-- The initial 24 test suite exposed a missing negative for CRLF byte preservation; after correction the expanded **26/26** suite passes.
+- The initial 24 test suite exposed a missing negative for CRLF byte preservation; after correction the expanded **28/28** suite passes.
 - Hosted Windows/Ubuntu × Python 3.11/3.13 JDK21 matrix is a **public-only** test of the helper, fabricated store and patch tool; verify on final PR HEAD before claiming hosted PASS. Hosted CI does not include private source or client.
+
+## Hosted cross-platform CI and line-ending correction
+
+The initial hosted run failed two Windows SHA tests because Windows Git checkout rewrote the public Java helper's line endings from LF to CRLF. The patcher now accepts **only LF or CRLF**, normalizes the public helper to canonical LF **before verifying its pinned SHA**, refuses stray carriage returns, and writes the pinned canonical helper bytes to the private overlay. The **private R421 source SHA check remains exact on raw source bytes**; private source newlines are preserved during patching.
+
+**Final verified dedicated public-only workflow:** `v309-r424-private-cleanup-patch-preparation`, run **43745863238**, **4/4 PASS** (Windows and Ubuntu × Python 3.11/3.13, JDK21). Each hosted job executes 28 fabricated patcher/negative tests and 5 helper tests (33 total); the Java helper's own nested acceptance performs at least 20 filesystem assertions per platform (22 on local Linux). Hosted success does **not** mean the private source overlay was executed or compiled.
 
 ## Remaining release blockers
 
