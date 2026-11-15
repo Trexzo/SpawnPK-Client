@@ -296,8 +296,8 @@ class R411SyntheticGateTests(unittest.TestCase):
         self.refuse()
 
     def test_refusal_helper_cannot_delete_staging(self):
-        self.mutate(audit.STORE,"    return true;\n  }\n  void deleteStale()",
-                    "    Files.delete(staging.toPath()); return true;\n  }\n  void deleteStale()")
+        self.mutate(audit.STORE,"    return true;\n  }\n\n  void deleteStale()",
+                    "    Files.delete(staging.toPath()); return true;\n  }\n\n  void deleteStale()")
         self.refuse()
 
     def test_legacy_cleanup_must_have_quarantine_guard(self):
