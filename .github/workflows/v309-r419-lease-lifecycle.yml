@@ -1,0 +1,40 @@
+name: v309-r419-lease-lifecycle
+on:
+  push:
+    branches:
+      - research/v309-r419-private-lease-lifecycle-gates
+  pull_request:
+    paths:
+      - tools/r419/**
+      - tests/fixtures/r419/**
+      - tests/test_v309_r419_*.py
+      - .github/workflows/v309-r419-lease-lifecycle.yml
+      - docs/V309_R419_PRIVATE_LEASE_LIFECYCLE.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-lifecycle-models:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Invented lifecycle and read-only private SHA-gate negative controls
+        run: python -m unittest discover -s tests -p 'test_v309_r419_*.py' -v
