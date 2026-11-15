@@ -51,3 +51,11 @@ The first public R428 CI run passed three jobs but failed the Windows/Python 3.1
 Desktop Commander has already explicitly paused owner commands due to the monthly usage limit; do **not** retry or reconnect. No actual `LootHistoryStore.java` or `LootTrackerPlugin.java` has been edited/compiled/executed, no real history has been opened, no game/client JAR has been deployed, and no v312/FPS improvement has been measured. R422 private multiprocess acceptance, R425/R426 full 1,278-source private compilation and real Swing plugin lifecycle tests remain pending.
 
 **Do not merge R428 or enable history cleanup, actual UI deletion, automatic journal reconciliation, or release.** The public coordinator remains a research prototype until the recovered private adapter has been inspected, implemented and validated in isolation against fake histories before any runtime acceptance.
+
+## Final hosted verification — 15 November 2026
+
+The final corrected R428 branch successfully completed the dedicated public-only GitHub Actions workflow `v309-r428-bounded-async-close-observation`, run **43764040704: 4/4 PASS**, hosted Windows and Ubuntu × Python 3.11/3.13 / JDK21. The Windows/Python3.11 job ran **12 tests, OK**. These tests compile the independently authored Java coordinator with `javac --release 11` and use actual Swing EDT against synthetic locks/operations.
+
+The inherited R427 workflow, run **43764040690: 4/4 PASS**, verifies the existing 22 public synthetic receipt/EDT behavior tests still pass on the updated coordinator. The separate Recovery CI run **43764040692** remained `in_progress` at this final R428 checkpoint; it must not be marked passed from the R428 result.
+
+**This verifies only public code.** Desktop Commander usage was still paused and no actual private rebuilt LootHistoryStore/LootTrackerPlugin source, v312 client, personal history or game runtime was tested or modified. R428 remains draft/unmerged; production release gate CLOSED.
