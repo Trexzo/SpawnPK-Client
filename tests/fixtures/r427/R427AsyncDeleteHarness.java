@@ -68,6 +68,7 @@ public final class R427AsyncDeleteHarness {
         final AtomicBoolean ownerReleased = new AtomicBoolean();
         final AtomicBoolean releaseOnEdt = new AtomicBoolean();
         final AtomicBoolean commitOnEdt = new AtomicBoolean();
+        final AtomicBoolean commitOnDaemon = new AtomicBoolean();
         final AtomicBoolean durable = new AtomicBoolean();
         final AtomicBoolean commitInProgress = new AtomicBoolean();
         volatile boolean block;
@@ -82,6 +83,7 @@ public final class R427AsyncDeleteHarness {
                 R427AsyncDeleteCoordinator.Request request,
                 BooleanSupplier admission) throws Exception {
             commitOnEdt.set(SwingUtilities.isEventDispatchThread());
+            commitOnDaemon.set(Thread.currentThread().isDaemon());
             if (!admission.getAsBoolean()) {
                 return R427AsyncDeleteCoordinator.Outcome.REFUSED;
             }
@@ -207,10 +209,26 @@ public final class R427AsyncDeleteHarness {
         check(f.view.applied.get() == 1, "one-confirmed-ui-update");
         check(!f.view.appliedBeforeDurable.get(), "durable-before-apply");
         check(!f.store.commitOnEdt.get(), "commit-not-edt");
+        check(!f.store.commitOnDaemon.get(), "accepted-commit-non-daemon");
         check(!f.view.wrongThread.get(), "callbacks-on-edt");
         f.shutdown();
         check(f.store.ownerReleased.get(), "owner-released");
         check(!f.store.releaseOnEdt.get(), "owner-close-not-edt");
+    }
+
+    static void edtRemainsResponsive() throws Exception {
+        Fixture f = new Fixture();
+        f.store.block = true;
+        check(f.submit(R427AsyncDeleteCoordinator.Kind.CLEAR_ALL), "accepted");
+        f.awaitCommit();
+        // The disk worker remains deliberately stalled here, yet Swing's
+        // real Event Dispatch Thread must still dispatch an input callback.
+        boolean tick = edt(() -> SwingUtilities.isEventDispatchThread());
+        check(tick, "edt-served-during-blocking-disk-operation");
+        check(f.view.applied.get() == 0, "no-premature-panel-mutation");
+        f.store.release.countDown();
+        f.awaitResult();
+        f.shutdown();
     }
 
     static void immutableStableIds() throws Exception {
@@ -418,6 +436,7 @@ public final class R427AsyncDeleteHarness {
         switch (scenario) {
             case "confirmed": successfulReceipt(); break;
             case "immutable": immutableStableIds(); break;
+            case "edt-responsive": edtRemainsResponsive(); break;
             case "single-flight": rejectConcurrent(); break;
             case "refused": refusedDoesNotChangeUi(); break;
             case "uncertain": uncertainQuarantines(); break;
