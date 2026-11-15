@@ -122,7 +122,9 @@ def analyze(plugin:bytes,panel:bytes,store:bytes)->dict:
         ordered(action,"confirm(", "plugin.r402ApplyPanelDeletion(",
                 "records.removeIf(", "rebuild()")
         require(action,selector,"R406_PANEL_SELECTOR_CHANGED_"+name)
-        if "plugin.persistHistory()" in action:
+        if action.count("plugin.r402ApplyPanelDeletion(")!=1:
+            raise Refused("R406_PANEL_TRANSACTION_ADMISSION_COUNT_DRIFT_"+name)
+        if "plugin.persistHistory()" in action or "plugin.requestSave()" in action:
             raise Refused("R406_DIRECT_UI_SAVE_REGRESSION_"+name)
 
     save=method_block(disk,"saveWithReceipt")
