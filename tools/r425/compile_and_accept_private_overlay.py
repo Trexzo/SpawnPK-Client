@@ -78,8 +78,12 @@ def sha_inventory(root: Path, suffix: str) -> dict[str, str]:
 
 def gate_source_inventory(
     prior: dict[str, str], candidate: dict[str, str],
-    expected_base_count: int = BASELINE_SOURCE_COUNT,
+    expected_base_count: int | None = None,
 ) -> dict:
+    # Resolve the default at call-time, allowing invented test-only
+    # mini-client baselines without exposing any owner CLI override.
+    if expected_base_count is None:
+        expected_base_count = BASELINE_SOURCE_COUNT
     helper = HELPER.as_posix()
     store = STORE.as_posix()
     need(len(prior) == expected_base_count,
@@ -97,8 +101,10 @@ def gate_source_inventory(
 
 def gate_class_inventory(
     prior: dict[str, str], candidate: dict[str, str],
-    expected_base_count: int = BASELINE_CLASS_COUNT,
+    expected_base_count: int | None = None,
 ) -> dict:
+    if expected_base_count is None:
+        expected_base_count = BASELINE_CLASS_COUNT
     need(len(prior) == expected_base_count,
          "R425_PARENT_CLASS_COUNT_DRIFT")
     added = set(candidate) - set(prior)
