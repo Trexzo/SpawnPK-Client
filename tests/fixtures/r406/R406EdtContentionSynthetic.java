@@ -267,6 +267,37 @@ public final class R406EdtContentionSynthetic {
         yes(m.disk.stored instanceof List,"synthetic memory-only store");
         passed++;
     }
+    static void benchmarkSyntheticDelay() {
+        // Informational only. These delays are invented; not hardware,
+        // actual file I/O, a production benchmark or an asserted SLA.
+        Model m=new Model("A","B");
+        CountDownLatch gate=new CountDownLatch(1), release=new CountDownLatch(1),
+            admitted=new CountDownLatch(1);
+        Thread writer=new Thread(()->m.autosave(gate,release));
+        writer.setDaemon(true);writer.start();await(gate,"synthetic writer");
+        long start=System.nanoTime();
+        Thread edt=new Thread(()->m.deleteRow("A",admitted),"synthetic-EDT");
+        edt.setDaemon(true);edt.start();await(admitted,"synthetic EDT");
+        try {Thread.sleep(75L);}
+        catch(InterruptedException e) {Thread.currentThread().interrupt();throw new AssertionError(e);}
+        release.countDown();join(writer,"synthetic writer");join(edt,"synthetic EDT");
+        long gateWaitMs=TimeUnit.NANOSECONDS.toMillis(System.nanoTime()-start);
+
+        Model single=new Model("A","B");
+        CountDownLatch writing=new CountDownLatch(1), done=new CountDownLatch(1);
+        long ownStart=System.nanoTime();
+        Thread direct=new Thread(()->single.directSyncDelete("A",writing,done),
+            "synthetic-EDT-direct");
+        direct.setDaemon(true);direct.start();await(writing,"direct writer");
+        try {Thread.sleep(75L);}
+        catch(InterruptedException e) {Thread.currentThread().interrupt();throw new AssertionError(e);}
+        done.countDown();join(direct,"direct synthetic EDT");
+        long ownWriteMs=TimeUnit.NANOSECONDS.toMillis(System.nanoTime()-ownStart);
+        System.out.println("R406_SYNTHETIC_ONLY_CONTENDED_EDT_MS "+gateWaitMs);
+        System.out.println("R406_SYNTHETIC_ONLY_OWN_WRITE_EDT_MS "+ownWriteMs);
+        System.out.println("R406_REAL_CLIENT_LATENCY_UNMEASURED");
+    }
+
     public static void main(String[] args)throws Exception {
         autosaveBlocksConfirmedEdtDelete();
         autosaveBlocksClearAll();
@@ -285,5 +316,8 @@ public final class R406EdtContentionSynthetic {
         failedWriteMustNotMarkDurableReceipt();
         noHiddenFilesystemOrNetworkDependency();
         System.out.println("R406_SYNTHETIC_PASS "+passed+" cases");
+        if(args.length==1&&"--benchmark".equals(args[0])) {
+            benchmarkSyntheticDelay();
+        }
     }
 }
