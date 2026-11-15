@@ -76,6 +76,20 @@ def inspect(source:str)->dict:
     if "if(phase!=Phase.COMMITTED)" in main or "if(!acknowledged)panel.clear()" in main:
         raise Refused("R415_AMBIGUOUS_WRITE_ROLLBACK_NOT_ALLOWED")
     write=body(source,"boolean writeConfirmed(byte[] next)throws IOException")
+    if re.search(r"Files\.move\s*\(\s*markerTemp\s*,\s*marker",write):
+        raise Refused("R415_MARKER_OVERWRITE_BY_ATOMIC_MOVE_NOT_ALLOWED")
+    if "if(after==null||before.equals(after))return false;" not in write:
+        raise Refused("R415_EQUAL_BEFORE_AFTER_IMAGE_NOT_REFUSED")
+    if write.count("before.equals(digest(history,true))")!=2 or \
+       write.count("after.equals(digest(stage,false))")!=2:
+        raise Refused("R415_PRE_AND_POST_PUBLICATION_REHASH_REQUIRED")
+    after_publish=write.split("Files.delete(markerTemp)",1)
+    if len(after_publish)!=2:
+        raise Refused("R415_MARKER_TEMP_CLEANUP_MISSING")
+    before_history_move=after_publish[1].split("phase=Phase.REPLACE_ATTEMPTED",1)[0]
+    if "before.equals(digest(history,true))" not in before_history_move or \
+       "after.equals(digest(stage,false))" not in before_history_move:
+        raise Refused("R415_IMAGE_REHASH_MUST_FOLLOW_MARKER_PUBLICATION")
     order(write,
         "String before=digest(history,true)",
         "forced(stage,next)",
