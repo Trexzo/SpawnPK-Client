@@ -262,10 +262,10 @@ class R424PatchGate(unittest.TestCase):
 
 
     def test_25_crlf_original_newlines_preserved(self):
-        crlf=FAKE_PRIOR.replace('\\n','\\r\\n')
+        crlf=FAKE_PRIOR.replace('\n','\r\n')
         patched=patch_source_text(crlf,sha256(crlf.encode('utf-8')).hexdigest())
-        self.assertIn('\\r\\n',patched)
-        self.assertEqual(patched.count('\\n'),patched.count('\\r\\n'))
+        self.assertIn('\r\n',patched)
+        self.assertEqual(patched.count('\n'),patched.count('\r\n'))
         self.assertIn('false); // R424:',patched)
 
     def test_26_output_source_uses_bytes_not_platform_text_newline(self):
