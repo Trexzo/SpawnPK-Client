@@ -1,0 +1,40 @@
+name: v309 R415 nonclobber delete intent (public synthetic only)
+on:
+  push:
+    branches:
+      - 'research/v309-r415-*'
+  pull_request:
+    paths:
+      - 'tools/r415/**'
+      - 'tests/test_v309_r415_nonclobber_intent.py'
+      - 'tests/fixtures/r415/**'
+      - 'docs/V309_R415_NONCLOBBER_DELETE_INTENT.md'
+      - '.github/workflows/v309-r415-nonclobber-intent.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / JDK21
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R415 public-only nonclobber source structural negative controls
+        run: python -m unittest discover -s tests -p 'test_v309_r415_nonclobber_intent.py' -v
+      - name: R415 invented TEMP filesystem intent commit and separate-process restart model
+        run: |
+          python -c "from pathlib import Path; Path('build/r415-synthetic').mkdir(parents=True, exist_ok=True)"
+          javac --release 11 -d build/r415-synthetic tests/fixtures/r415/R415NonClobberDeleteIntentSynthetic.java
+          java -cp build/r415-synthetic R415NonClobberDeleteIntentSynthetic
