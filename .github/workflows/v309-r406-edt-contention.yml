@@ -1,0 +1,40 @@
+name: v309 R406 EDT writer contention and queue-epoch evidence (synthetic only)
+on:
+  push:
+    branches:
+      - 'research/v309-r406-*'
+  pull_request:
+    paths:
+      - 'tools/r406/**'
+      - 'tests/test_v309_r406_edt_contention_gate.py'
+      - 'tests/fixtures/r406/**'
+      - 'docs/V309_R406_EDT_CONTENTION_EVIDENCE.md'
+      - '.github/workflows/v309-r406-edt-contention.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / JDK21
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R406 SHA-pinned passive source audit synthetic rejection controls
+        run: python -m unittest discover -s tests -p 'test_v309_r406_edt_contention_gate.py' -v
+      - name: R406 standalone Java event-thread contention and lost-acknowledgment model
+        run: |
+          python -c "from pathlib import Path; Path('build/r406-synthetic').mkdir(parents=True, exist_ok=True)"
+          javac --release 11 -d build/r406-synthetic tests/fixtures/r406/R406EdtContentionSynthetic.java
+          java -cp build/r406-synthetic R406EdtContentionSynthetic
