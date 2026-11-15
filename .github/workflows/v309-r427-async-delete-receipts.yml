@@ -1,0 +1,39 @@
+name: v309-r427-async-deletion-receipts
+on:
+  push:
+    branches:
+      - research/v309-r427-async-delete-receipt-coordinator
+  pull_request:
+    paths:
+      - tests/fixtures/r427/**
+      - tests/test_v309_r427_*.py
+      - .github/workflows/v309-r427-async-delete-receipts.yml
+      - docs/V309_R427_ASYNC_DELETE_RECEIPT_DESIGN.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-edt-durable-receipts:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Run Java11 actual Swing EDT vs background delete-receipt and synthetic durable TEMP tests
+        run: python -m unittest discover -s tests -p 'test_v309_r427_*.py' -v
