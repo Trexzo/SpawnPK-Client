@@ -1,0 +1,40 @@
+name: v309 R413 confirmed delete known-precommit rollback (public synthetic only)
+on:
+  push:
+    branches:
+      - 'research/v309-r413-*'
+  pull_request:
+    paths:
+      - 'tools/r413/**'
+      - 'tests/test_v309_r413_known_precommit_rollback.py'
+      - 'tests/fixtures/r413/**'
+      - 'docs/V309_R413_KNOWN_PRE_REPLACE_ROLLBACK.md'
+      - '.github/workflows/v309-r413-known-precommit-rollback.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / JDK21
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R413 public fabricated SHA-pinned scope and phase/rollback refusal tests
+        run: python -m unittest discover -s tests -p 'test_v309_r413_known_precommit_rollback.py' -v
+      - name: R413 standalone real TEMP filesystem post-write ambiguity and UI snapshot tests
+        run: |
+          python -c "from pathlib import Path; Path('build/r413-synthetic').mkdir(parents=True, exist_ok=True)"
+          javac --release 11 -d build/r413-synthetic tests/fixtures/r413/R413KnownPreReplaceRollbackSynthetic.java
+          java -cp build/r413-synthetic R413KnownPreReplaceRollbackSynthetic
