@@ -228,6 +228,35 @@ public final class R431JournalBoundAsyncHarness {
         f.noOptimisticUI();
     }
 
+    static void foreignStageAfterPrefight(Path root) throws Exception {
+        beforeHistory(root);
+        Path stage = root.resolve(R431SyntheticJournalStore.STAGE);
+        byte[] foreign = "R431-FOREIGN-DO-NOT-OVERWRITE"
+            .getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+        Fixture f = new Fixture(root, phase -> {
+            if ("BEFORE_PERSISTENCE".equals(phase)) {
+                Files.write(stage, foreign, StandardOpenOption.CREATE_NEW);
+            }
+        });
+        try {
+            yes(f.submit(), "FOREIGN_STAGE_RACE_SUBMITTED");
+            f.receipt();
+            yes(f.view.uncertain.get() == 1,
+                "FAILED_STAGE_CREATE_CANNOT_BE_DEFINITE_REFUSAL");
+            yes(f.control.isQuarantined(), "FOREIGN_STAGE_NOT_QUARANTINED");
+            yes(java.util.Arrays.equals(Files.readAllBytes(stage), foreign),
+                "FOREIGN_STAGE_OVERWRITTEN");
+            yes(java.util.Arrays.equals(
+                Files.readAllBytes(root.resolve(R431SyntheticJournalStore.HISTORY)),
+                R431SyntheticJournalStore.BEFORE),
+                "FOREIGN_STAGE_CHANGED_CANONICAL_HISTORY");
+            yes(!Files.exists(root.resolve(R431SyntheticJournalStore.INTENT),
+                              LinkOption.NOFOLLOW_LINKS),
+                "FOREIGN_STAGE_SHOULD_NOT_PUBLISH_INTENT");
+            f.noOptimisticUI();
+        } finally { f.shutdown(); }
+    }
+
     static void refuseEvidence(Path root) throws Exception {
         beforeHistory(root);
         Path orphan = root.resolve(R431SyntheticJournalStore.ACK);
@@ -323,6 +352,7 @@ public final class R431JournalBoundAsyncHarness {
             case "fault-after-replace": failAfter(root, "AFTER_ATOMIC_REPLACE"); break;
             case "cancel-before": cancelBeforePersistence(root); break;
             case "refuse-ack": refuseEvidence(root); break;
+            case "foreign-stage-race": foreignStageAfterPrefight(root); break;
             case "refuse-kind": refuseUnsupportedIntent(root); break;
             case "refuse-symlink": refuseExistingSymlink(root); break;
             case "hold-owner": liveOwnerHold(root); break;
