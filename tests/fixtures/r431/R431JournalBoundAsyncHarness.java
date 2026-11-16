@@ -210,9 +210,14 @@ public final class R431JournalBoundAsyncHarness {
 
     static void cancelBeforePersistence(Path root) throws Exception {
         beforeHistory(root);
+        // Hook is invoked only after submit; use a stable holder so the
+        // lambda does not capture a local fixture before initialization.
+        final Fixture[] holder = new Fixture[1];
         Fixture f = new Fixture(root, stage -> {
-            if ("BEFORE_PERSISTENCE".equals(stage)) f.session.invalidate();
+            if ("BEFORE_PERSISTENCE".equals(stage))
+                holder[0].session.invalidate();
         });
+        holder[0] = f;
         try {
             yes(f.submit(), "CANCEL_SUBMITTED");
             // Callback is suppressed after invalidation: ensure worker drained
