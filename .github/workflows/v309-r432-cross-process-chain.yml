@@ -1,0 +1,35 @@
+name: v309-r432-owner-private-cross-process-chain
+on:
+  push:
+    branches:
+      - research/v309-r432-private-cross-process-gate-chain
+  pull_request:
+    paths:
+      - tools/r432/**
+      - tests/test_v309_r432_*.py
+      - .github/workflows/v309-r432-cross-process-chain.yml
+      - docs/V309_R432_PRIVATE_GATE_CHAIN.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-contract-and-invented-receipt:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: R432 invented receipts, byte-change refusals, owner CLI safety and full mocked process-chain
+        run: python -m unittest discover -s tests -p 'test_v309_r432_*.py' -v
