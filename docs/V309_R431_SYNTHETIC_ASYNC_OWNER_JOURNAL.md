@@ -27,13 +27,15 @@ For a fabricated confirmed-deletion *research* operation, the worker models R415
 
 **Crucial distinction:** Even after the synthetic atomic replacement completes, the adapter returns **`UNCERTAIN`, not `CONFIRMED`**, because R415/R416/R417 do not provide a fully adopted restart acknowledgment or proven directory-entry power-loss durability. R427 therefore leaves the UI unchanged and quarantines further deletes; a successful disk image and permission for continued writes are **different facts**. This is intentionally conservative, not a claim that the existing private confirmed-delete UI must behave exactly this way.
 
+The adapter's synthetic `closeOwner()` does not set `isReleased=true` until both OS lock release and file-channel close have completed normally. A failed release remains **unknown**, not claimed successful.
+
 No ack sidecar is created, no marker is cleaned, and no second automatic history write is authorized. A later `Store` instance observes the original final marker and refuses another transaction.
 
 ## Real Swing, JVM and cross-language public testing
 
 `tests/fixtures/r431/R431JournalBoundAsyncHarness.java` uses actual Swing `invokeAndWait` and `R427AsyncDeleteCoordinator` requests, with deterministic fault hooks and held-worker latches. It verifies owner release runs *after* the in-flight commit and off EDT. `closeWithDeadline` reports an overdue operation, but cannot drop the lock or authorize a restart.
 
-`tests/test_v309_r431_async_journal_bridge.py` compiles this independently authored Java source with `javac --release 11`, executes separate JVMs against fresh direct TEMP paths, and then calls the **existing public R417** classifier `tools.r417.restart_ack_model.inspect` to inspect the resulting actual marker/history bytes. The 18 tests cover:
+`tests/test_v309_r431_async_journal_bridge.py` compiles this independently authored Java source with `javac --release 11`, executes separate JVMs against fresh direct TEMP paths, and then calls the **existing public R417** classifier `tools.r417.restart_ack_model.inspect` to inspect the resulting actual marker/history bytes. The 21 tests cover:
 
 - Complete synthetic staged/atomic replacement with a retained, R417-compatible v1 `COMMITTED_UNACKED_FENCED` marker and **no confirmed UI deletion**.
 - A separate restarted JVM refusing the next persistent delete while preserving all existing marker/history bytes.
@@ -42,6 +44,8 @@ No ack sidecar is created, no marker is cleaned, and no second automatic history
 - Session invalidation before any filesystem stage, a preexisting orphan ack, unsupported `CLEAR_ALL` and a symlinked intent, all refused without history mutation.
 - Competing live JVM file-lock refusal; successful re-acquisition after orderly owner-close and after deliberately killing a synthetic owner process.
 - A nonsynthetic root refusal, no real client imports/deployment, exact R415 intent format and repeated read-only classification without deleting evidence.
+- A matching synthetic ACK **still** cannot allow another transaction or delete the original intent; two further JVM restarts keep the same permanent marker.
+- A second actor inserting a foreign history stage **after preflight but before CREATE_NEW** causes an **UNCERTAIN** receipt, preserves the foreign stage, and leaves canonical history unmodified. The adapter marks an attempted persistent side effect **before** opening the stage; a failed stage create/force is not misreported as definite `REFUSED`.
 
 The dedicated GitHub Actions workflow `v309-r431-journal-bound-async-owner` covers **Windows and Ubuntu × Python 3.11/3.13 with JDK21**, with exact final results requiring independent verification.
 
