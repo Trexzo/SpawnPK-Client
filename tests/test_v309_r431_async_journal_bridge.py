@@ -258,6 +258,32 @@ class R431JournalBoundAsyncTests(unittest.TestCase):
             self.inspect(legacy.COMMITTED)
         self.assertEqual(self.intent.read_bytes(), evidence)
 
+    def test_19_matching_synthetic_ack_still_cannot_authorize_replay(self):
+        self.run_mode("commit")
+        existing = self.inspect(legacy.COMMITTED)
+        ack = (
+            f"v=1\\nserial={existing.serial}\\nnonce={existing.nonce}\\n"
+            f"after={existing.history_sha}\\nacked=1\\n"
+        ).replace("\\n", "\n").encode("ascii")
+        (self.root / legacy.ACK).write_bytes(ack)
+        self.inspect(legacy.ACKED)
+        before = (self.history.read_bytes(), self.intent.read_bytes(),
+                  (self.root / legacy.ACK).read_bytes())
+        self.run_mode("restart")
+        after = (self.history.read_bytes(), self.intent.read_bytes(),
+                 (self.root / legacy.ACK).read_bytes())
+        self.assertEqual(before, after)
+        self.inspect(legacy.ACKED)
+
+    def test_20_legacy_confirmed_intent_never_becomes_second_transaction(self):
+        self.run_mode("commit")
+        marker = self.intent.read_bytes()
+        for _ in range(2):
+            self.run_mode("restart")
+        self.assertEqual(self.intent.read_bytes(), marker)
+        self.assertEqual(self.history.read_bytes(), AFTER)
+        self.inspect(legacy.COMMITTED)
+
 
 if __name__ == "__main__":
     unittest.main()
