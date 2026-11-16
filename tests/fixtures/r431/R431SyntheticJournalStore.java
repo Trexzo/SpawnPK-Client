@@ -224,8 +224,11 @@ final class R431SyntheticJournalStore implements R427AsyncDeleteCoordinator.Stor
             // R415 synthetic sequence: forced staged image, forced v1
             // intent.tmp, no-clobber hard-link publication, strict atomic
             // stage-to-history replace, preserve final intent forever.
-            forceNew(root.resolve(STAGE), AFTER);
+            // A CREATE_NEW/force failure can occur after creating or
+            // partially writing the stage. Mark ambiguity BEFORE attempting
+            // this first persistent operation, not only after it succeeds.
             attemptedPersistentChange = true;
+            forceNew(root.resolve(STAGE), AFTER);
             hook.reached("AFTER_HISTORY_STAGE_FORCE");
             String oldHash = sha(original);
             String newHash = sha(AFTER);
@@ -282,12 +285,13 @@ final class R431SyntheticJournalStore implements R427AsyncDeleteCoordinator.Stor
             throw new IllegalStateException("R431_CLOSE_ON_EDT");
         if (busy)
             throw new IllegalStateException("R431_RELEASE_OVERRAN_COMMIT");
-        if (released.compareAndSet(false, true)) {
-            try {
-                lease.release();
-            } finally {
-                channel.close();
-            }
+        if (!released.get()) {
+            // Do not claim successful release before both operations
+            // actually complete. An exception means ownership is UNKNOWN
+            // even if closing the channel may have released the OS lock.
+            lease.release();
+            channel.close();
+            released.set(true);
         }
     }
 
