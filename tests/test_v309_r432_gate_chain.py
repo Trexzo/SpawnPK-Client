@@ -96,9 +96,14 @@ class R432GateTests(unittest.TestCase):
             self.gate425()
 
     def test_04_r425_wrong_or_missing_source_class_scope_refused(self):
-        self.r425receipt["class_scope"]["modified_existing_classes"] = []
+        # Do not mutate the expected scope through a shared nested dict.
+        corrupted = dict(self.r425receipt)
+        corrupted["class_scope"] = {
+            **self.fake_class_scope,
+            "modified_existing_classes": [],
+        }
         with self.assertRaisesRegex(r432.Refused, "CLASS_SCOPE"):
-            self.gate425()
+            self.gate425(corrupted)
 
     def test_05_r425_release_or_auto_cleanup_flags_must_be_false(self):
         for field in ("release_authorized", "merge_authorized",
@@ -355,7 +360,8 @@ class R432WholeMockGateTests(unittest.TestCase):
         self.write(self.new_cls,r425.EXPECTED_CHANGED_EXISTING_CLASS,
                    self.old_class)
         with self.fixture_patch(), patch.object(r432.subprocess,"run") as mock:
-            with self.assertRaises(r432.Refused):
+            with self.assertRaisesRegex(
+                    r425.Refused, "R425_EXISTING_PRIVATE_CLASS_DELTA_UNEXPECTED"):
                 r432.run(self.args)
         mock.assert_not_called()
 
