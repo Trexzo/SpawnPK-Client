@@ -213,13 +213,18 @@ public final class R431JournalBoundAsyncHarness {
         // Hook is invoked only after submit; use a stable holder so the
         // lambda does not capture a local fixture before initialization.
         final Fixture[] holder = new Fixture[1];
+        final CountDownLatch invalidated = new CountDownLatch(1);
         Fixture f = new Fixture(root, stage -> {
-            if ("BEFORE_PERSISTENCE".equals(stage))
+            if ("BEFORE_PERSISTENCE".equals(stage)) {
                 holder[0].session.invalidate();
+                invalidated.countDown();
+            }
         });
         holder[0] = f;
         try {
             yes(f.submit(), "CANCEL_SUBMITTED");
+            yes(invalidated.await(WAIT, TimeUnit.SECONDS),
+                "STALE_SESSION_HOOK_MUST_ACTUALLY_EXECUTE");
             // Callback is suppressed after invalidation: ensure worker drained
             // using close rather than waiting for an obsolete panel receipt.
         } finally {
