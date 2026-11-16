@@ -284,6 +284,15 @@ class R431JournalBoundAsyncTests(unittest.TestCase):
         self.assertEqual(self.history.read_bytes(), AFTER)
         self.inspect(legacy.COMMITTED)
 
+    def test_21_foreign_stage_created_after_prefight_never_overwritten(self):
+        self.run_mode("foreign-stage-race")
+        self.assertEqual(self.history.read_bytes(), ORIGINAL)
+        self.assertEqual(
+            (self.root / legacy.HISTORY_TMP).read_bytes(),
+            b"R431-FOREIGN-DO-NOT-OVERWRITE")
+        self.assertFalse(self.intent.exists())
+        self.inspect(legacy.QUARANTINED)
+
 
 if __name__ == "__main__":
     unittest.main()
