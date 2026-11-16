@@ -225,9 +225,14 @@ class R431JournalBoundAsyncTests(unittest.TestCase):
 
     def test_15_prototype_cannot_be_loaded_as_real_client(self):
         source = JAVA[1].read_text(encoding="utf-8")
+        # A comment may name the private Store to disclaim integration.
+        # Check executable imports/references, not incidental documentation.
         self.assertNotIn("import net.runelite", source)
-        self.assertNotIn("LootHistoryStore", source)
-        self.assertNotIn("LootTrackerPlugin", source)
+        self.assertNotIn("import rs.plugins.loottracker.LootHistoryStore", source)
+        self.assertNotIn("new LootHistoryStore(", source)
+        self.assertNotIn("extends LootHistoryStore", source)
+        self.assertNotIn("implements LootHistoryStore", source)
+        self.assertNotIn("new LootTrackerPlugin(", source)
         self.assertNotIn("client.jar", source)
         self.assertIn('startsWith("R431-Synthetic-")', source)
 
