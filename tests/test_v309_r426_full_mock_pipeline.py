@@ -40,7 +40,9 @@ import java.nio.file.Path;
 
 final class LootHistoryStore {
     static final String FILE_NAME = "loot-history.json";
-    enum R411StageState { CLEAR, UNSAFE }
+    // Unrelated type keeps class-count baseline constant while the
+    // invented StageState enum is deliberately absent.
+    static final class UnrelatedMetadata { }
     static final class TestLog {
         void warn(String text, Object data) { }
         void info(String text, Object data) { }
@@ -72,19 +74,16 @@ final class LootHistoryStore {
         return true;
     }
     synchronized void r419CloseOwner() { owner = false; }
-    R411StageState r411StageState() {
+    boolean r411RefuseUnresolvedStage(String reason) {
         for (String marker : new String[] {
             "loot-history.json.tmp", "loot-history.delete.intent",
             "loot-history.delete.intent.tmp", "loot-history.delete.ack",
             "loot-history.delete.ack.tmp"}) {
             if (Files.exists(file.getParentFile().toPath().resolve(marker),
                              LinkOption.NOFOLLOW_LINKS))
-                return R411StageState.UNSAFE;
+                return true;
         }
-        return R411StageState.CLEAR;
-    }
-    boolean r411RefuseUnresolvedStage(String reason) {
-        return r411StageState() != R411StageState.CLEAR;
+        return false;
     }
     void deleteStale() {
         if (owner) r419DeleteStaleLeased();
@@ -188,6 +187,8 @@ class R426FullSyntheticPipeline(unittest.TestCase):
         self.class_count = len(runner.sha_inventory(self.prior_classes, ".class"))
         self.assertEqual(len(list(self.source.rglob("*.java"))), 2)
         self.assertEqual(self.class_count, 4)
+        self.assertNotIn("R411StageState", FAKE_STORE)
+        self.assertNotIn("r411StageState(", FAKE_STORE)
 
         deps = base / "safe-empty-jars"
         deps.mkdir()
