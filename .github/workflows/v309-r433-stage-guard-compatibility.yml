@@ -43,3 +43,5 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v
       - name: R432 exact prior receipt and cross-process gate contract
         run: python -m unittest discover -s tests -p 'test_v309_r432_*.py' -v
+      - name: R433 AST cross-check of REAL R422/R425 receipt producers
+        run: python -m unittest discover -s tests -p 'test_v309_r433_*.py' -v
