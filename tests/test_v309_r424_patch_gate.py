@@ -27,7 +27,6 @@ import java.io.File;
 import java.nio.file.Files;
 import java.io.IOException;
 class LootHistoryStore {
-   enum R411StageState { CLEAR, UNSAFE }
    private final File file;
    private static final TestLog log = new TestLog();
    static class TestLog {
@@ -36,7 +35,6 @@ class LootHistoryStore {
    }
    LootHistoryStore(File root) { this.file = new File(root, "loot-history.json"); }
    boolean r411RefuseUnresolvedStage(String reason) { return false; }
-   R411StageState r411StageState() { return R411StageState.CLEAR; }
    void deleteStale() { r419DeleteStaleLeased(); }
    private void r419DeleteStaleLeased()
    {
@@ -145,6 +143,52 @@ class R424PatchGate(unittest.TestCase):
         s=self.patch()
         self.assertIn('false); // R424:',s)
         self.assertNotIn('true); // R424:',s)
+
+    def test_29_compiles_without_unverified_stage_enum(self):
+        # The only known owner-private API evidence is the boolean
+        # r411RefuseUnresolvedStage(...) used by the old cleanup itself.
+        # Deliberately omit R411StageState from invented Store and require
+        # both source compilation and a synthetic non-deleting startup.
+        source=self.patch()
+        self.assertNotIn("R411StageState", FAKE_PRIOR)
+        self.assertNotIn("r411StageState", FAKE_PRIOR)
+        self.assertNotIn("R411StageState", source)
+        self.assertNotIn("r411StageState()", source)
+        self.assertIn(
+            '() -> !r411RefuseUnresolvedStage("legacy cleanup")', source)
+        with tempfile.TemporaryDirectory(prefix="r433-compile-no-enum-") as d:
+            root=Path(d)
+            store=root/"LootHistoryStore.java"
+            store.write_text(source, encoding="utf-8")
+            harness=root/"R424PatchedStoreAcceptance.java"
+            harness.write_text(FAKE_ACCEPTANCE, encoding="utf-8")
+            build=subprocess.run([
+                "javac", "--release", "11", "-proc:none",
+                "-d", d, str(HELPER), str(store), str(harness)],
+                capture_output=True, text=True, timeout=55)
+            self.assertEqual(build.returncode, 0, build.stderr)
+            scratch=root/"R424-Synthetic-Store"
+            scratch.mkdir()
+            runtime=subprocess.run([
+                "java", "-Djava.awt.headless=true", "-cp", d,
+                "rs.plugins.loottracker.R424PatchedStoreAcceptance",
+                str(scratch)], capture_output=True, text=True, timeout=25)
+            self.assertEqual(runtime.returncode, 0, runtime.stderr)
+            self.assertIn(
+                "R424_SYNTHETIC_PRIVATE_PATCH_DRY_RUN_PASS",
+                runtime.stdout)
+
+    def test_30_boolean_admission_can_refuse_when_stage_is_unsafe(self):
+        # A guard that rejects an unresolved stage must never be converted
+        # to an unconditional success callback.
+        modified=FAKE_PRIOR.replace(
+            'boolean r411RefuseUnresolvedStage(String reason) { return false; }',
+            'boolean r411RefuseUnresolvedStage(String reason) { return true; }')
+        self.assertNotEqual(modified, FAKE_PRIOR)
+        patched=self.patch(modified)
+        self.assertIn(
+            '() -> !r411RefuseUnresolvedStage("legacy cleanup")', patched)
+        self.assertNotIn("R411StageState", patched)
 
     def test_04_old_recursive_deletion_removed(self):
         s=self.patch()
