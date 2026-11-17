@@ -105,4 +105,7 @@ if (-not (Test-Path -LiteralPath $processReceipt -PathType Leaf)) {
     throw 'R432_REFUSED: final cross-process receipt missing.'
 }
 Write-Output ('R432_PRIVATE_CROSS_PROCESS_ACCEPTANCE_RECEIPT=' + $processReceipt)
+# Preserve the R425 release-closed receipt for older safety tooling,
+# in addition to the stricter R432 process gate.
+Write-Output 'R425_RELEASE_GATE_REMAINS_CLOSED'
 Write-Output 'R432_RELEASE_GATE_REMAINS_CLOSED'
