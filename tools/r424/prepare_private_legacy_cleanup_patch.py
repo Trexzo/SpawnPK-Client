@@ -85,7 +85,7 @@ REPLACEMENT_METHOD = '''   // R424: the prior recursive File.listFiles() deletio
       }
       final LootLegacyCleanupR424.Receipt receipt = LootLegacyCleanupR424.run(
          parent.toPath(),
-         () -> r411StageState() == R411StageState.CLEAR,
+         () -> !r411RefuseUnresolvedStage("legacy cleanup"),
          false); // R424: hard-coded non-destructive policy; do not enable.
       if (receipt.status == LootLegacyCleanupR424.Status.REFUSED ||
           receipt.status == LootLegacyCleanupR424.Status.INTERRUPTED ||
