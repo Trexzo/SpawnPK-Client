@@ -1,0 +1,45 @@
+name: v309-r433-legacy-stage-guard-compatibility
+on:
+  push:
+    branches:
+      - research/v309-r433-source-compatible-r424-stage-guard
+  pull_request:
+    paths:
+      - tools/r424/prepare_private_legacy_cleanup_patch.py
+      - tests/test_v309_r424_patch_gate.py
+      - tests/test_v309_r426_full_mock_pipeline.py
+      - tests/test_v309_r433_*.py
+      - .github/workflows/v309-r433-stage-guard-compatibility.yml
+      - docs/V309_R433_OWNER_STAGE_GUARD_COMPATIBILITY.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  enum-free-owner-source-compile-and-receipt-contract:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R424 unverified-enum-free Java11 patch compiler acceptance
+        run: python -m unittest discover -s tests -p 'test_v309_r424_patch_gate.py' -v
+      - name: R426 full fabricated source-to-class TEMP acceptance
+        run: python -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v
+      - name: R432 exact prior receipt and cross-process gate contract
+        run: python -m unittest discover -s tests -p 'test_v309_r432_*.py' -v
