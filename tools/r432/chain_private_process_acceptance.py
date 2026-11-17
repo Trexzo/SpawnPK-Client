@@ -82,7 +82,12 @@ def regular_nofollow(path: Path) -> bool:
 
 def validate_fresh_candidate(root: Path) -> Path:
     """Only exact fresh R425 owner TEMP children. No existing R432 receipt."""
-    tmp = Path(tempfile.gettempdir()).resolve()
+    # Compare like-for-like lexical absolute paths. On Windows, resolve()
+    # may expand a short-name/alias of the TEMP directory while absolute()
+    # retains the path used by mkdtemp/Join-Path. Those spellings can name
+    # the same directory but compare unequal. NOFOLLOW lstat of every
+    # ancestor below still rejects symlinked or non-directory components.
+    tmp = Path(tempfile.gettempdir()).absolute()
     raw = root.absolute()
     need(".." not in raw.parts, "R432_REFUSE_TRAVERSAL_PATH")
     need(raw.parent == tmp and
