@@ -1,0 +1,45 @@
+name: v309-r435-exact-jvm-process-protocol
+on:
+  push:
+    branches:
+      - research/v309-r435-exact-process-protocol
+  pull_request:
+    paths:
+      - tools/r422/run_private_store_acceptance.py
+      - tests/test_v309_r435_exact_process_protocol.py
+      - .github/workflows/v309-r435-exact-process-protocol.yml
+      - docs/V309_R435_EXACT_PROCESS_PROTOCOL.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-jvm-status-no-substring:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R435 exact JVM stdout handshake and negative-token regression
+        run: python -m unittest discover -s tests -p 'test_v309_r435_*.py' -v
+      - name: Inherited R434 bounded child startup and teardown tests
+        run: python -m unittest discover -s tests -p 'test_v309_r434_*.py' -v
+      - name: Inherited R433 real source producer and receipt contract tests
+        run: python -m unittest discover -s tests -p 'test_v309_r433_*.py' -v
+      - name: Inherited R432 private chain public mock tests
+        run: python -m unittest discover -s tests -p 'test_v309_r432_*.py' -v
