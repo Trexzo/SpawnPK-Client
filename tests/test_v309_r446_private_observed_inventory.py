@@ -261,6 +261,86 @@ class R446CurrentObservedInventory(unittest.TestCase):
         self.assertNotIn(str(empty), proc.stdout)
         self.assertEqual(list(empty.iterdir()), [])
 
+    def make_historical_r315(self):
+        original_store_sha = "f"*64  # deliberately differs from R421
+        old = {
+            "archive_sha256": "e"*64,
+            "classification": "owner-private; do not publish to public repository",
+            "java_count": 2,
+            "java_tree_sha256": "a"*64,
+            "source_files": {
+                "source/" + r425.STORE.as_posix(): {
+                    "sha256": original_store_sha, "size": 55},
+                "source/rs/InventedSecondary.java": {
+                    "sha256": sha256(self.src_other.read_bytes()).hexdigest(),
+                    "size": self.src_other.stat().st_size},
+            },
+            "jar_files": {
+                "dependencies/R239_filtered.jar": {
+                    "sha256": sha256(self.depa.read_bytes()).hexdigest(),
+                    "size": self.depa.stat().st_size},
+                "dependencies/R218.jar": {
+                    "sha256": sha256(self.depb.read_bytes()).hexdigest(),
+                    "size": self.depb.stat().st_size},
+                "bin/R311_SOURCE_BUILT_CLASS_ONLY.jar": {
+                    "sha256": "d"*64, "size": 35},
+            },
+            "target_branch": "synthetic/fixture-only",
+            "target_private_repository": "synthetic/fixture-only",
+        }
+        path = self.temp / "R315-invented-source-only.json"
+        path.write_text(json.dumps(old), encoding="utf-8")
+        return path, sha256(path.read_bytes()).hexdigest()
+
+    def test_21_pinned_r315_history_gives_real_aggregate_source_delta(self):
+        r315, approved = self.make_historical_r315()
+        before = self.all_input_hashes()
+        result = r446.run(older_r315=r315, approved_r315_sha=approved)
+        self.assertTrue(result["historical_r315_reference_supplied"])
+        self.assertTrue(result["historical_r315_manifest_bytes_match_supplied_sha"])
+        self.assertEqual(result["r315_to_current_source_paths_changed"], 1)
+        self.assertEqual(result["r315_to_current_source_paths_unchanged"], 1)
+        self.assertEqual(result["r315_to_current_source_paths_added"], 0)
+        self.assertEqual(result["r315_to_current_source_paths_removed"], 0)
+        self.assertTrue(result["r315_to_current_dependency_hashes_equal"])
+        self.assertFalse(result["r315_original_store_source_matches_R421_pin"])
+        self.assertFalse(result["historical_r315_custody_proven_by_tool"])
+        self.assertFalse(result["r315_to_current_compiled_class_lineage_proven"])
+        self.assertFalse(result["historical_R421_reference_proven"])
+        self.assertFalse(result["compilation_authorized"])
+        self.assertFalse(result["release_authorized"])
+        self.assertEqual(self.all_input_hashes(), before)
+        self.assertEqual(self.produced_dirs(), [])
+
+    def test_22_r315_different_deps_report_false_without_acceptance(self):
+        r315, _ = self.make_historical_r315()
+        data = json.loads(r315.read_text(encoding="utf-8"))
+        data["jar_files"]["dependencies/R218.jar"]["sha256"] = "b"*64
+        r315.write_text(json.dumps(data), encoding="utf-8")
+        trusted = sha256(r315.read_bytes()).hexdigest()
+        result = r446.run(older_r315=r315, approved_r315_sha=trusted)
+        self.assertFalse(result["r315_to_current_dependency_hashes_equal"])
+        self.assertFalse(result["compilation_authorized"])
+
+    def test_23_r315_tamper_after_reference_approval_refused(self):
+        r315, trusted = self.make_historical_r315()
+        modified = json.loads(r315.read_text(encoding="utf-8"))
+        modified["source_files"]["source/rs/InventedSecondary.java"]["sha256"] = "0"*64
+        r315.write_text(json.dumps(modified), encoding="utf-8")
+        with self.assertRaisesRegex(
+                r446.Refused, "R443_R315_REFERENCE_SHA_MISMATCH"):
+            r446.run(emit=True, older_r315=r315, approved_r315_sha=trusted)
+        self.assertEqual(self.produced_dirs(), [])
+
+    def test_24_r315_path_and_approved_sha_must_both_be_provided(self):
+        r315, trusted = self.make_historical_r315()
+        for path, digest in ((r315, None), (None, trusted)):
+            with self.subTest(path=path):
+                with self.assertRaisesRegex(
+                        r446.Refused, "R446_R315_REFERENCE_AND_SHA_MUST_BE_PAIRED"):
+                    r446.run(older_r315=path, approved_r315_sha=digest)
+        self.assertEqual(self.produced_dirs(), [])
+
     def test_20_cli_requires_explicit_observe_flag(self):
         proc = subprocess.run(
             [sys.executable, "-B", str(CLI)],
