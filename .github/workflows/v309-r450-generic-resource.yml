@@ -1,0 +1,55 @@
+name: v309-r450-generic-resource-proximity
+on:
+  push:
+    branches:
+      - research/v309-r450-generic-signatures-resource-proximity
+  pull_request:
+    paths:
+      - tools/r450/**
+      - tests/test_v309_r450_*.py
+      - docs/V309_R450_GENERIC_SIGNATURE_RESOURCE_PROXIMITY.md
+      - .github/workflows/v309-r450-generic-resource.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-r421-static-generic-resource-gaps:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R450 synthetic generic Signature grammar, bytecode boundaries and resource API proximity
+        run: python -B -m unittest discover -s tests -p 'test_v309_r450_*.py' -v
+      - name: Inherited R449 field/method descriptor and possible resource literals
+        run: python -B -m unittest discover -s tests -p 'test_v309_r449_*.py' -v
+      - name: Inherited R448 Java11 class-index linkage
+        run: python -B -m unittest discover -s tests -p 'test_v309_r448_*.py' -v
+      - name: Inherited R447 SHA-pinned original JAR resource census
+        run: python -B -m unittest discover -s tests -p 'test_v309_r447_*.py' -v
+      - name: Inherited R446 unapproved isolated R421 owner snapshot
+        run: python -B -m unittest discover -s tests -p 'test_v309_r446_*.py' -v
+      - name: Inherited R445 nofollow bounded file reads
+        run: python -B -m unittest discover -s tests -p 'test_v309_r445_*.py' -v
+      - name: Inherited R444 owner TEMP artifact discovery
+        run: python -B -m unittest discover -s tests -p 'test_v309_r444_*.py' -v
+      - name: Inherited R442 historical R421 independently SHA-pinned baseline
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v
+      - name: Inherited R426 fabricated Java11 Store compile acceptance
+        run: python -B -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v
