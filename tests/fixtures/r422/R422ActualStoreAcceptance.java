@@ -262,7 +262,22 @@ public final class R422ActualStoreAcceptance {
         if (args.length != 2)
             throw new IllegalArgumentException(
                 "<selftest|try|hold|crash> <R422-Synthetic-TEMP-root>");
-        Path root = safeRoot(args[1]);
+        Path root;
+        try {
+            root = safeRoot(args[1]);
+        } catch (IllegalArgumentException invalidRoot) {
+            // Negative test protocol: a fixed, unique exit code plus an exact
+            // stdout receipt avoids accepting a substring buried in an
+            // unrelated Java stack trace as evidence of path rejection.
+            if ("R422_REFUSE_NON_SYNTHETIC_TEMP_ROOT".equals(
+                    invalidRoot.getMessage())) {
+                System.out.println("R422_REFUSE_NON_SYNTHETIC_TEMP_ROOT");
+                System.out.flush();
+                System.exit(64);
+                return;
+            }
+            throw invalidRoot;
+        }
         if ("selftest".equals(args[0])) selftest(root);
         else if ("try".equals(args[0]) || "hold".equals(args[0]) ||
                  "crash".equals(args[0])) externalOwner(root, args[0]);
