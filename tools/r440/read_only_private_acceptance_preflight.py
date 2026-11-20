@@ -29,6 +29,9 @@ if str(ROOT) not in sys.path:
 from tools.r424 import prepare_private_legacy_cleanup_patch as r424
 from tools.r425 import compile_and_accept_private_overlay as r425
 from tools.r432 import chain_private_process_acceptance as r432
+from tools.r441.approved_full_inventory import (
+    Refused as InventoryRefused, require_approved_baselines,
+)
 
 
 class Refused(RuntimeError):
@@ -132,6 +135,7 @@ def audit(args) -> dict:
 
     baseline_source = r425.sha_inventory(args.prior_source_root, ".java")
     baseline_classes = r425.sha_inventory(args.prior_classes_root, ".class")
+    require_approved_baselines(args, baseline_source, baseline_classes)
     dependencies_before = (
         r425.hash_file(args.dependency_a), r425.hash_file(args.dependency_b))
     # Stronger than checking only the number of files: prove the known
@@ -161,6 +165,7 @@ def audit(args) -> dict:
         "r421_source_sha256_verified": True,
         "r421_class_sha256_verified": True,
         "provided_reference_dependency_digests_matched": True,
+        "provided_reference_full_source_class_inventories_matched": True,
         "public_r424_helper_verified": True,
         "r424_source_shape_checked_in_memory": True,
         "jdk21_verified": True,
@@ -182,6 +187,8 @@ def main(argv=None) -> int:
     parser.add_argument("--dependency-b", type=Path, required=True)
     parser.add_argument("--dependency-a-sha256", required=True)
     parser.add_argument("--dependency-b-sha256", required=True)
+    parser.add_argument("--approved-source-inventory-sha256", required=True)
+    parser.add_argument("--approved-class-inventory-sha256", required=True)
     parser.add_argument("--public-helper-source", type=Path, required=True)
     parser.add_argument("--public-acceptance-source", type=Path, required=True)
     parser.add_argument("--javac", type=Path, required=True)
@@ -191,10 +198,10 @@ def main(argv=None) -> int:
         result = audit(args)
         print(json.dumps(result, sort_keys=True))
         return 0
-    except (Refused, r425.Refused, r424.Refused, OSError, UnicodeError,
+    except (Refused, InventoryRefused, r425.Refused, r424.Refused, OSError, UnicodeError,
             subprocess.TimeoutExpired, ValueError, RuntimeError) as error:
         reason = (str(error) if isinstance(error,
-                    (Refused, r425.Refused, r424.Refused))
+                    (Refused, InventoryRefused, r425.Refused, r424.Refused))
                   else "R440_INVALID_PRIVATE_PREFLIGHT_INPUT")
         print(json.dumps({
             "status": "R440_OWNER_PRIVATE_READ_ONLY_PREFLIGHT_REFUSED",

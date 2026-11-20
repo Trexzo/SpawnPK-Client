@@ -19,6 +19,7 @@ from unittest.mock import patch
 from tools.r440 import read_only_private_acceptance_preflight as r440
 from tools.r424 import prepare_private_legacy_cleanup_patch as r424
 from tools.r425 import compile_and_accept_private_overlay as r425
+from tools.r441.approved_full_inventory import inventory_digest
 
 from test_v309_r426_full_mock_pipeline import FAKE_STORE
 
@@ -54,6 +55,10 @@ class R440ReadOnlyOwnerPrivatePreflight(unittest.TestCase):
             dependency_a=self.depa, dependency_b=self.depb,
             dependency_a_sha256=r425.hash_file(self.depa),
             dependency_b_sha256=r425.hash_file(self.depb),
+            approved_source_inventory_sha256=inventory_digest(
+                r425.sha_inventory(self.source, ".java"), "java"),
+            approved_class_inventory_sha256=inventory_digest(
+                r425.sha_inventory(self.classes, ".class"), "class"),
             javac=Path(sys.executable).resolve(),
             java=Path(sys.executable).resolve(),
         )
@@ -164,6 +169,8 @@ class R440ReadOnlyOwnerPrivatePreflight(unittest.TestCase):
         with patch.object(r425,"PINNED_R421_STORE_SHA",
                           r425.hash_file(self.store_file)), patch.object(
              r424,"PINNED_R421_STORE_SHA",r425.hash_file(self.store_file)):
+            self.args.approved_source_inventory_sha256 = inventory_digest(
+                r425.sha_inventory(self.source, ".java"), "java")
             self.version_pass()
             with self.assertRaisesRegex(r424.Refused, "OLD_STAGE_CHECK_CHANGED|UNSAFE_LEGACY_TREE_CALL_CHANGED"):
                 r440.audit(self.args)

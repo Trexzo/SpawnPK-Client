@@ -1,0 +1,63 @@
+name: v309-r441-approved-full-inventory-gate
+on:
+  push:
+    branches:
+      - research/v309-r441-approved-full-inventory-gate
+  pull_request:
+    paths:
+      - tools/r441/**
+      - tools/r440/read_only_private_acceptance_preflight.py
+      - tools/r425/compile_and_accept_private_overlay.py
+      - tools/r432/chain_private_process_acceptance.py
+      - tools/r425/owner_only_run_r425.ps1
+      - tests/test_v309_r441_*.py
+      - tests/test_v309_r440_*.py
+      - tests/test_v309_r432_gate_chain.py
+      - tests/test_v309_r426_full_mock_pipeline.py
+      - .github/workflows/v309-r441-approved-inventories.yml
+      - docs/V309_R441_APPROVED_FULL_INVENTORIES.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  approved-source-class-inventories:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 22
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Parse owner PowerShell script without running private stages
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $tokens = $null
+          $errors = $null
+          $script = (Resolve-Path -LiteralPath 'tools/r425/owner_only_run_r425.ps1').Path
+          [System.Management.Automation.Language.Parser]::ParseFile($script, [ref]$tokens, [ref]$errors) | Out-Null
+          if ($errors.Count -ne 0) { throw 'R441_OWNER_POWERSHELL_SYNTAX_REFUSED' }
+      - name: R441 full-baseline SHA and malicious same-count mutation tests
+        run: python -B -m unittest discover -s tests -p 'test_v309_r441_*.py' -v
+      - name: Inherited R440 no-write owner readiness tests
+        run: python -B -m unittest discover -s tests -p 'test_v309_r440_*.py' -v
+      - name: Inherited R432 complete invented owner-chain and safety gates
+        run: python -B -m unittest discover -s tests -p 'test_v309_r432_*.py' -v
+      - name: Inherited R426 complete fabricated javac and Store acceptance
+        run: python -B -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v
+      - name: Inherited R439 failed JVM process cleanup
+        run: python -B -m unittest discover -s tests -p 'test_v309_r439_*.py' -v

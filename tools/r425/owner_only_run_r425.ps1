@@ -7,6 +7,8 @@ param(
     [switch]$AuditOnly,
     [string]$ApprovedDependencyASha256,
     [string]$ApprovedDependencyBSha256,
+    [string]$ApprovedSourceInventorySha256,
+    [string]$ApprovedClassInventorySha256,
     [string]$PythonExe = 'C:\Users\Felix\AppData\Local\Programs\Python\Python312\python.exe',
     [string]$JdkHome = 'C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot'
 )
@@ -22,10 +24,11 @@ if (-not $RunOwnerPrivateAcceptance) {
 if ($RunOwnerPrivateAcceptance -and $AuditOnly) {
     throw 'R440_REFUSED: -AuditOnly and -RunOwnerPrivateAcceptance are mutually exclusive.'
 }
-foreach ($approved in @($ApprovedDependencyASha256, $ApprovedDependencyBSha256)) {
+foreach ($approved in @($ApprovedDependencyASha256, $ApprovedDependencyBSha256,
+                        $ApprovedSourceInventorySha256, $ApprovedClassInventorySha256)) {
     if ([string]::IsNullOrWhiteSpace($approved) -or
         $approved -cnotmatch '^[0-9a-f]{64}$') {
-        throw 'R440_REFUSED: provide two independently reviewed lowercase SHA256 values via -ApprovedDependencyASha256 and -ApprovedDependencyBSha256. Current file hashes are NOT independent approval.'
+        throw 'R441_REFUSED: supply four independently reviewed lowercase SHA256 references for both dependency JARs and full Java/class inventories. Self-measured hashes are not approval.'
     }
 }
 if ([string]::IsNullOrWhiteSpace($env:TEMP)) {
@@ -82,6 +85,8 @@ $preflightArgs = @(
     '--dependency-b', $depB,
     '--dependency-a-sha256', $depAHash,
     '--dependency-b-sha256', $depBHash,
+    '--approved-source-inventory-sha256', $ApprovedSourceInventorySha256,
+    '--approved-class-inventory-sha256', $ApprovedClassInventorySha256,
     '--javac', $javac,
     '--java', $java
 )
@@ -111,6 +116,8 @@ $arguments = @(
     '--dependency-b', $depB,
     '--dependency-a-sha256', $depAHash,
     '--dependency-b-sha256', $depBHash,
+    '--approved-source-inventory-sha256', $ApprovedSourceInventorySha256,
+    '--approved-class-inventory-sha256', $ApprovedClassInventorySha256,
     '--javac', $javac,
     '--java', $java,
     '--fresh-temp-destination', $destination
@@ -137,6 +144,8 @@ $secondArgs = @(
     '--dependency-b', $depB,
     '--dependency-a-sha256', $depAHash,
     '--dependency-b-sha256', $depBHash,
+    '--approved-source-inventory-sha256', $ApprovedSourceInventorySha256,
+    '--approved-class-inventory-sha256', $ApprovedClassInventorySha256,
     '--javac', $javac,
     '--java', $java
 )
