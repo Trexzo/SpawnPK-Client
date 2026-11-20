@@ -18,7 +18,7 @@ R451 adds a *narrow* symbolic JVM operand stack tracker for **fully modeled, str
 - `ldc` and `ldc_w` actual `CONSTANT_String` constants, reference local `aload*` / `astore*`, `aload_0`, null and selected primitive constants.
 - `pop`, `dup`, `swap`, `checkcast`, and modeled JVM method calls. It consumes the correct receiver and method parameters for known, parsed invocation descriptors and pushes unknown return values.
 - At an allowlisted resource API invocation, the top method parameter must symbolically be a literal `String` read from a real `CONSTANT_String`; arbitrary `CONSTANT_Utf8` values cannot be promoted to arguments. Static `ClassLoader.getSystemResource*` calls are supported without a receiver.
-- Entire methods are excluded from attributable output when they contain branches/switches/exception handlers, any unmodeled opcode, an unmodeled category-two `long`/`double` value, an empty operand stack, excessive locals/stack/calls, or any other uncertain JVM stack effect. Such a method contributes **no proven-argument candidates**, even if earlier instructions looked convincing. Unknown source expressions and dynamically produced strings also stay unknown.
+- Entire methods are excluded from attributable output when they contain branches/switches/exception handlers, any unmodeled opcode, an unmodeled category-two `long`/`double` value, an empty operand stack, excessive locals/stack/calls, or any other uncertain JVM stack effect. Such a method contributes **no proven-argument candidates**, even if earlier instructions looked convincing. Methods with a return before their final instruction are also excluded to avoid counting unreachable bytecode tails. Unknown source expressions and dynamically produced strings also stay unknown.
 
 `tools/r451/audit_resource_operand_arguments.py` inherits R450→R449→R448→R447→R446 owner-only admission:
 - Exactly SHA-pinned original v309 `client.jar`, SHA256 `ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38`, 10,502 classes and 419 original non-class resources.
@@ -44,6 +44,6 @@ This symbolic model excludes branching, exceptions and unmodeled instructions. T
 
 The original private JAR, private Store source/class, original assets, actual v312 startup, login, rendering/Swing, FPS and player history were **not accessed in hosted CI**. Owner PC `DESKTOP-LTXXO4K` remains offline. R442 independently approved historical full R421 inventory, R440/R425/R432 actual Store compile/acceptance, and R427–R431 actual async persistence integration are still pending. R415/R417 deletion-intent and acknowledgment markers remain untouched and writes stay fenced.
 
-Public tests use invented Java 11 bytecode/ZIPs only. The Windows/Ubuntu × Python 3.11/3.13 matrix runs **32 new synthetic tests** plus inherited R450–R445, R442 and R426 suites; all are offline.
+Public tests use invented Java 11 bytecode/ZIPs only. The Windows/Ubuntu × Python 3.11/3.13 matrix runs **33 new synthetic tests** plus inherited R450–R445, R442 and R426 suites; all are offline.
 
 **Do not merge or install. No live JAR changes, production history reads/writes, journal cleanup, write unlock, or release authorized.**
