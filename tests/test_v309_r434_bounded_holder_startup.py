@@ -105,10 +105,11 @@ class R434BoundedHolderStartup(unittest.TestCase):
         self.assertNotIn("holder.stdout.readline()", main)
         self.assertIn("if holder.poll() is None:", main)
         self.assertIn("holder.kill()", main)
-        self.assertIn("holder.wait(timeout=5)", main)
+        self.assertIn("holder.communicate(timeout=5)", main)
         self.assertIn("stream.close()", main)
-        self.assertIn("holder.stdin.write", main)
-        self.assertIn("holder.wait(timeout=10)", main)
+        self.assertIn("release_holder_and_collect(holder)", main)
+        self.assertIn("holder.communicate(timeout=5)", main)
+        self.assertNotIn("holder.wait(timeout=10)", main)
 
 
 if __name__ == "__main__":
