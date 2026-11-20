@@ -31,7 +31,9 @@ if str(REPO_ROOT) not in sys.path:
 from tools.r424.prepare_private_legacy_cleanup_patch import (
     HELPER, STORE, PINNED_R421_STORE_SHA, stage as prepare_r424,
 )
-from tools.r441.approved_full_inventory import require_approved_baselines
+from tools.r441.approved_full_inventory import (
+    Refused as InventoryRefused, require_approved_baselines,
+)
 
 PINNED_R421_STORE_CLASS = (
     "65272371272fdcf9142095880a042aa007a9a088f93c969a57878188fae37a09"
@@ -354,9 +356,9 @@ def main() -> int:
         result = run(args)
         print(json.dumps(result, sort_keys=True))
         return 0
-    except (Refused, OSError, subprocess.TimeoutExpired, ValueError,
+    except (Refused, InventoryRefused, OSError, subprocess.TimeoutExpired, ValueError,
             RuntimeError, UnicodeError, KeyError) as e:
-        reason = str(e) if isinstance(e, Refused) else (
+        reason = str(e) if isinstance(e, (Refused, InventoryRefused)) else (
             "R425_ACCEPTANCE_FAILED_OR_INCOMPLETE_SEE_OWNER_TEMP_LOCAL_LOGS")
         print(json.dumps({"status": "R425_PRIVATE_ACCEPTANCE_REFUSED",
                           "reason": reason,
