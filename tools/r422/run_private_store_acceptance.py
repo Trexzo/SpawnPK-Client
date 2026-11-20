@@ -111,6 +111,9 @@ def read_holder_announcement(holder: subprocess.Popen, timeout: float = 10.0) ->
 
     reader = Thread(target=read_line, daemon=True,
                     name="R422-holder-announcement-reader")
+    # Final cleanup must not communicate() against stdout while this thread
+    # still owns a blocking read (e.g. a descendant inherited the pipe).
+    holder._r422_announcement_reader = reader
     reader.start()
     try:
         kind, line = events.get(timeout=timeout)
@@ -168,18 +171,29 @@ def reap_synthetic_holder(holder: subprocess.Popen,
     initial-read timeout. Never touches a real Store or history evidence.
     """
     require(timeout > 0, "R422_INVALID_HOLDER_REAP_DEADLINE")
+    reader = getattr(holder, "_r422_announcement_reader", None)
     try:
         if holder.poll() is None:
             try:
                 holder.kill()
             except ProcessLookupError:
                 pass  # Child may exit between poll and kill.
+        if reader is not None and reader.is_alive():
+            # Do not run communicate()/close() on a TextIOWrapper while
+            # another thread is still blocked in its readline().
+            reader.join(timeout=timeout)
+            if reader.is_alive():
+                holder.wait(timeout=timeout)
+                raise RuntimeError("R422_HOLDER_READER_NOT_REAPED")
         # Draining BOTH pipes avoids wait-before-read deadlocks.
         holder.communicate(timeout=timeout)
     except subprocess.TimeoutExpired:
         raise RuntimeError("R422_HOLDER_REAP_UNCONFIRMED") from None
     finally:
         for stream in (holder.stdin, holder.stdout, holder.stderr):
+            if (stream is holder.stdout and reader is not None
+                    and reader.is_alive()):
+                continue  # A still-active reader owns this pipe; fail closed.
             if stream is not None and not stream.closed:
                 stream.close()
 
