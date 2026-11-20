@@ -114,7 +114,9 @@ def resource_literal(value: str) -> str | None:
     if type(value) is not str or not (3 <= len(value) <= 512):
         return None
     normalized = value[1:] if value.startswith("/") else value
-    if not normalized or any(ord(c) < 33 or ord(c) > 126 for c in normalized):
+    if (not normalized or ":" in normalized
+            or any(ord(c) < 33 or ord(c) > 126 for c in normalized)):
+        # File/HTTP URIs and drive-qualified paths are not archive members.
         return None
     try:
         r447.zip_path(normalized)
