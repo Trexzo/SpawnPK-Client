@@ -55,6 +55,29 @@ def exact_stdout_protocol(output: str, *expected: str) -> bool:
                       "".join(t + "\r\n" for t in expected))
 
 
+def parse_r422_selftest_assertions(output: str) -> int | None:
+    """Parse the entire R422 Java self-test stdout, never a substring.
+
+    The public Java harness can legitimately emit exactly one optional
+    symlink-unavailable warning before its final assertion receipt. All
+    other stdout, missing final newlines and malformed counts fail closed.
+    Python text subprocesses normalize platform line endings, but direct
+    callers can supply either complete LF or CRLF records.
+    """
+    if type(output) is not str:
+        return None
+    for eol in ("\n", "\r\n"):
+        match = re.fullmatch(
+            r"(?:R422_OPTIONAL_SYMLINK_UNAVAILABLE" + re.escape(eol) + r")?"
+            r"R422_ACTUAL_PRIVATE_STORE_PASS assertions=([1-9][0-9]{0,5})"
+            + re.escape(eol),
+            output,
+        )
+        if match is not None:
+            return int(match.group(1))
+    return None
+
+
 def read_holder_announcement(holder: subprocess.Popen, timeout: float = 10.0) -> str:
     """Wait at most timeout seconds for a held owner to announce its state.
 
@@ -141,9 +164,8 @@ def main(argv=None):
         cases.append(label)
 
     selftest = run(command("selftest", workspace), timeout=50)
-    m = re.search(r"R422_ACTUAL_PRIVATE_STORE_PASS assertions=(\d+)",
-                  selftest.stdout)
-    if selftest.returncode != 0 or m is None or int(m.group(1)) < 73:
+    assertions = parse_r422_selftest_assertions(selftest.stdout)
+    if selftest.returncode != 0 or assertions is None or assertions < 73:
         raise RuntimeError(
             "R422_SELFTEST_DIAGNOSTIC:"
             + "exit=" + str(selftest.returncode)
@@ -225,7 +247,7 @@ def main(argv=None):
     print(json.dumps({
         "status": "R422_OWNER_PRIVATE_ACTUAL_STORE_PROCESS_ACCEPTANCE_PASS",
         "checks": len(cases),
-        "real_store_assertions": int(m.group(1)),
+        "real_store_assertions": assertions,
         "class_sha256_verified": args.expected_store_class_sha256,
         "synthetic_workspace": str(workspace),
         "synthetic_lock_root": str(lock_root),

@@ -1,0 +1,50 @@
+name: v309-r436-strict-selftest-assertion-receipts
+on:
+  push:
+    branches:
+      - research/v309-r436-strict-selftest-assertion-receipts
+  pull_request:
+    paths:
+      - tools/r422/run_private_store_acceptance.py
+      - tools/r425/compile_and_accept_private_overlay.py
+      - tests/test_v309_r436_strict_assertion_receipts.py
+      - .github/workflows/v309-r436-strict-assertions.yml
+      - docs/V309_R436_STRICT_ASSERTION_RECEIPTS.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reject-ambiguous-assertion-counts:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R436 strict R422 and R425 self-test assertion receipts
+        run: python -m unittest discover -s tests -p 'test_v309_r436_*.py' -v
+      - name: Inherited R435 JVM ownership protocol
+        run: python -m unittest discover -s tests -p 'test_v309_r435_*.py' -v
+      - name: Inherited R434 bounded startup
+        run: python -m unittest discover -s tests -p 'test_v309_r434_*.py' -v
+      - name: Inherited R433 real producer/consumer contract
+        run: python -m unittest discover -s tests -p 'test_v309_r433_*.py' -v
+      - name: Inherited R432 owner-private gate public mocks
+        run: python -m unittest discover -s tests -p 'test_v309_r432_*.py' -v
+      - name: Inherited R426 fabricated full source-to-class build
+        run: python -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v

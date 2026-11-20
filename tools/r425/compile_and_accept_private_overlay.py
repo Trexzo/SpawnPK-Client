@@ -213,6 +213,27 @@ def java11_compiler(args, source_tree: Path, compiled: Path,
     need(p.returncode == 0, "R425_PRIVATE_JAVAC_FAILED_SEE_OWNER_LOCAL_LOG")
 
 
+def parse_r425_selftest_assertions(output: str) -> int | None:
+    """Require the exact full R425 synthetic Store success receipt.
+
+    Java may print exactly one optional symlink-unavailable warning. Accept
+    that line only before a full, bounded numeric receipt; reject unrelated
+    text, duplicate receipts, leading zeros and missing final terminators.
+    """
+    if type(output) is not str:
+        return None
+    for eol in ("\n", "\r\n"):
+        match = re.fullmatch(
+            r"(?:R425_OPTIONAL_SYMLINK_UNAVAILABLE" + re.escape(eol) + r")?"
+            r"R425_ACTUAL_PATCHED_PRIVATE_STORE_PASS assertions=([1-9][0-9]{0,5})"
+            + re.escape(eol),
+            output,
+        )
+        if match is not None:
+            return int(match.group(1))
+    return None
+
+
 def execute_actual_class_acceptance(args, compiled: Path,
                                     deps: str, dest: Path) -> dict:
     harness_classes = dest / "R425-Harness-Classes"
@@ -242,12 +263,11 @@ def execute_actual_class_acceptance(args, compiled: Path,
         "EXIT=" + str(proc.returncode) +
         "\nSTDOUT:\n" + proc.stdout + "\nSTDERR:\n" + proc.stderr,
         encoding="utf-8")
-    match = re.search(r"R425_ACTUAL_PATCHED_PRIVATE_STORE_PASS assertions=(\d+)",
-                      proc.stdout)
-    need(proc.returncode == 0 and match is not None and int(match.group(1)) >= 39,
+    assertions = parse_r425_selftest_assertions(proc.stdout)
+    need(proc.returncode == 0 and assertions is not None and assertions >= 39,
          "R425_REAL_PRIVATE_STORE_ACCEPTANCE_FAILED_SEE_LOCAL_LOG")
     return {"status": "R425_ACTUAL_PRIVATE_STORE_DRY_RUN_TEMP_PASS",
-            "real_class_assertions": int(match.group(1)),
+            "real_class_assertions": assertions,
             "scratch_directory": str(scratch),
             "real_game_client_started": False,
             "real_player_history_accessed": False}
