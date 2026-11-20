@@ -186,13 +186,13 @@ class R446CurrentObservedInventory(unittest.TestCase):
 
     def test_13_source_directory_entry_budget_refusal(self):
         with patch.object(r446, "MAX_MEMBERS", 1):
-            with self.assertRaisesRegex(r446.Refused, "R446_DIRECTORY_ENTRY_LIMIT"):
+            with self.assertRaisesRegex(r446.scanner.Refused, "R446_DIRECTORY_ENTRY_LIMIT"):
                 r446.run()
 
     def test_14_large_file_or_total_budget_refusal(self):
         self.src_other.write_bytes(b"x"*200)
         with patch.object(r446, "MAX_FILE_BYTES", 64):
-            with self.assertRaisesRegex(r446.Refused, "R446_CODE_FILE_TOO_LARGE"):
+            with self.assertRaisesRegex(r446.scanner.Refused, "R446_CODE_FILE_TOO_LARGE"):
                 r446.run()
         with patch.object(r446, "MAX_TOTAL_BYTES", 70):
             with self.assertRaisesRegex(r446.Refused, "R446_CODE_TOTAL_BYTES_EXCEEDED"):
