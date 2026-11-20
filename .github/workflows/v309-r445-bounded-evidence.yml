@@ -1,0 +1,52 @@
+name: v309-r445-bounded-owner-evidence-scan
+on:
+  push:
+    branches:
+      - research/v309-r445-bounded-owner-evidence-scan
+  pull_request:
+    paths:
+      - tools/r444/scan_owner_r421_artifacts.py
+      - tests/test_v309_r445_*.py
+      - tests/test_v309_r444_*.py
+      - docs/V309_R445_BOUNDED_OWNER_EVIDENCE.md
+      - .github/workflows/v309-r445-bounded-evidence.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  owner-temporary-evidence-scan-no-client-io:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R445 bounded TEMP, stable Store reads, and no private output
+        run: python -B -m unittest discover -s tests -p 'test_v309_r445_*.py' -v
+      - name: Inherited R444 owner TEMP discovery behavior
+        run: python -B -m unittest discover -s tests -p 'test_v309_r444_*.py' -v
+      - name: Inherited R443 synthetic historical source transition safety
+        run: python -B -m unittest discover -s tests -p 'test_v309_r443_*.py' -v
+      - name: Inherited R442 approved historical R421 manifest verification
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v
+      - name: Inherited R441 exact source/class SHA identities
+        run: python -B -m unittest discover -s tests -p 'test_v309_r441_*.py' -v
+      - name: Inherited R440 original private preflight fabricated tests
+        run: python -B -m unittest discover -s tests -p 'test_v309_r440_*.py' -v
+      - name: Inherited R426 full invented javac compile acceptance
+        run: python -B -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v
