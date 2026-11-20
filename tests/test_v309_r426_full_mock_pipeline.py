@@ -22,6 +22,7 @@ from unittest.mock import patch
 
 from tools.r424 import prepare_private_legacy_cleanup_patch as patcher
 from tools.r425 import compile_and_accept_private_overlay as runner
+from tools.r441.approved_full_inventory import inventory_digest
 
 ROOT = Path(__file__).resolve().parents[1]
 STORE = runner.STORE
@@ -206,6 +207,10 @@ class R426FullSyntheticPipeline(unittest.TestCase):
             dependency_a=self.deps[0], dependency_b=self.deps[1],
             dependency_a_sha256=runner.hash_file(self.deps[0]),
             dependency_b_sha256=runner.hash_file(self.deps[1]),
+            approved_source_inventory_sha256=inventory_digest(
+                runner.sha_inventory(self.source, ".java"), "java"),
+            approved_class_inventory_sha256=inventory_digest(
+                runner.sha_inventory(self.prior_classes, ".class"), "class"),
             javac=Path(self.javac),
             java=Path(self.java),
             fresh_temp_destination=Path(tempfile.gettempdir()) /
