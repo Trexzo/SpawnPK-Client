@@ -202,7 +202,8 @@ def resource_extension_counts(names: set[str]) -> dict[str, int]:
         # Name is a ZIP entry from R447's already path-checked original jar.
         file = name.rsplit("/", 1)[-1]
         ext = file.rsplit(".", 1)[-1].lower() if "." in file else "<no extension>"
-        if not ext or len(ext) > 12 or not ext.isascii() or not ext.isalnum():
+        if ext != "<no extension>" and (not ext or len(ext) > 12 or
+                                        not ext.isascii() or not ext.isalnum()):
             ext = "<other>"
         counts[ext] += 1
     return dict(sorted(counts.items()))
