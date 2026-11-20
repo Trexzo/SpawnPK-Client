@@ -360,8 +360,7 @@ class R450OwnerOfflinePipeline(unittest.TestCase):
             n[0]+=1
             if n[0]==1:
                 (self.compiled/"rs/Bridge.class").write_bytes(
-                    preceding.r448_test_fixture.fake_java11_class(
-                        "rs/Bridge",("rs/OutOfBand",)))
+                    invented_classfile(name="rs/Bridge"))
             return result
         with patch.object(r450,"inspect",side_effect=changed):
             with self.assertRaises(r450.Refused):
