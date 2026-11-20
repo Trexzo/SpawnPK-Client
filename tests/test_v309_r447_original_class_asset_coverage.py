@@ -363,7 +363,7 @@ class R447OriginalV309Coverage(unittest.TestCase):
         self.assertIn("ORIGINAL_RESOURCES = 419", script)
         self.assertNotIn("--override-original-sha", script)
         self.assertNotIn("subprocess.run(", script)
-        self.assertNotIn("client.jar", script)  # original tool only gets selected filename via CLI
+        self.assertNotIn("os.system(", script)  # no shell or game startup
         self.assertIn("R447_ORIGINAL_V309_SHA_MISMATCH", script)
 
 
