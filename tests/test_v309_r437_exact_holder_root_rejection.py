@@ -203,9 +203,11 @@ class R437ExactHolderAndNegativeRoot(unittest.TestCase):
         self.assertIn('line == "ACQUIRED"', body)
         self.assertIn("exact_invalid_root_refusal(outside)", body)
         self.assertNotIn("outside.stderr", body)
-        self.assertIn("holder.kill()", body)
-        self.assertIn("holder.communicate(timeout=5)", body)
+        self.assertIn("reap_synthetic_holder(holder)", body)
         self.assertIn("release_holder_and_collect(holder)", body)
+        cleanup = inspect.getsource(r422.reap_synthetic_holder)
+        self.assertIn("holder.kill()", cleanup)
+        self.assertIn("holder.communicate(timeout=timeout)", cleanup)
         self.assertIn("holder.stdout.readline(64)", helper)
         self.assertNotIn("line.strip()", helper)
 
