@@ -31,6 +31,7 @@ from tools.r441.approved_full_inventory import (
     Refused as InventoryRefused, inventory_digest,
 )
 from tools.r444 import scan_owner_r421_artifacts as scanner
+from tools.r443 import compare_r315_r421_references as r443
 
 SCHEMA = "SpawnPK-R446-current-observation-UNAPPROVED-v1"
 STATUS = "UNAPPROVED_CURRENT_OBSERVATION_NOT_HISTORICAL_EVIDENCE"
@@ -171,6 +172,8 @@ def observe() -> tuple[dict, dict]:
         "total_class_bytes_hashed": class_bytes,
         "independent_prior_manifest_custody_approved": False,
         "historical_R421_reference_proven": False,
+        "historical_r315_reference_supplied": False,
+        "compilation_authorized": False,
         "private_observation_file_created": False,
         "private_javac_executed": False,
         "client_started": False,
@@ -211,8 +214,43 @@ def emit_quarantined(candidate: dict) -> str:
     return directory.name
 
 
-def run(emit: bool = False) -> dict:
+def compare_older_r315(candidate: dict, path: Path, approved_sha: str) -> dict:
+    """Aggregate historical source-only differences; not R421 certification."""
+    old = r443.read_r315_source_manifest(path, approved_sha)
+    older = old["sources"]
+    current = candidate["source_inventory"]
+    old_names, new_names = set(older), set(current)
+    common = old_names & new_names
+    changed = sum(older[name] != current[name] for name in common)
+    return {
+        "historical_r315_reference_supplied": True,
+        "historical_r315_manifest_bytes_match_supplied_sha": True,
+        "historical_r315_custody_proven_by_tool": False,
+        "r315_original_store_source_matches_R421_pin":
+            old["source_store_matches_r421_pin"],
+        "r315_to_current_source_paths_unchanged": len(common) - changed,
+        "r315_to_current_source_paths_changed": changed,
+        "r315_to_current_source_paths_added": len(new_names - old_names),
+        "r315_to_current_source_paths_removed": len(old_names - new_names),
+        "r315_to_current_dependency_hashes_equal":
+            old["dependencies"] == candidate["dependency_sha256"],
+        "r315_to_current_compiled_class_lineage_proven": False,
+        "compilation_authorized": False,
+        "release_authorized": False,
+    }
+
+
+def run(emit: bool = False, older_r315: Path | None = None,
+        approved_r315_sha: str | None = None) -> dict:
+    need((older_r315 is None) == (approved_r315_sha is None),
+         "R446_R315_REFERENCE_AND_SHA_MUST_BE_PAIRED")
     candidate, receipt = observe()
+    if older_r315 is not None:
+        try:
+            receipt.update(compare_older_r315(
+                candidate, older_r315, approved_r315_sha))
+        except r443.Refused as error:
+            raise Refused(str(error)) from None
     if emit:
         # Re-read all original inputs before any new output file is created.
         # Prevent accidental promotion of a moving observed state.
@@ -229,9 +267,14 @@ def main(argv=None) -> int:
                         required=True)
     parser.add_argument("--emit-owner-private-unapproved-candidate",
                         action="store_true")
+    parser.add_argument("--historical-r315-manifest", type=Path)
+    parser.add_argument("--approved-historical-r315-manifest-sha256")
     args = parser.parse_args(argv)
     try:
-        result = run(emit=args.emit_owner_private_unapproved_candidate)
+        result = run(
+            emit=args.emit_owner_private_unapproved_candidate,
+            older_r315=args.historical_r315_manifest,
+            approved_r315_sha=args.approved_historical_r315_manifest_sha256)
         print(json.dumps(result, sort_keys=True))
         return 0
     except (Refused, r440.Refused, scanner.Refused, OSError, ValueError,
