@@ -3,7 +3,8 @@
 
 This does not patch, compile, execute game code, create a TEMP candidate,
 read player history, or generate a success file. It refuses unapproved
-dependency hashes and requires the exact owner-private R421 source/class
+dependency hashes and compares *user-supplied reference* hashes (whose trusted origin must
+be reviewed independently); it requires exact R421 source/class
 and safe R424 public patch shape before R425/R432 can be attempted.
 
 Use with Python -B. No private source content, full inventory or local
@@ -159,7 +160,7 @@ def audit(args) -> dict:
         "class_count": len(baseline_classes),
         "r421_source_sha256_verified": True,
         "r421_class_sha256_verified": True,
-        "independently_approved_dependency_digests_matched": True,
+        "provided_reference_dependency_digests_matched": True,
         "public_r424_helper_verified": True,
         "r424_source_shape_checked_in_memory": True,
         "jdk21_verified": True,
