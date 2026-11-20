@@ -34,6 +34,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from tools.r425 import compile_and_accept_private_overlay as r425
 from tools.r424 import prepare_private_legacy_cleanup_patch as r424
+from tools.r441.approved_full_inventory import require_approved_baselines
 
 R422_PROGRAM = REPO_ROOT / "tools/r422/run_private_store_acceptance.py"
 R422_HARNESS = REPO_ROOT / "tests/fixtures/r422/R422ActualStoreAcceptance.java"
@@ -118,6 +119,8 @@ def validate_owner_references(args) -> SimpleNamespace:
         dependency_b=args.dependency_b,
         dependency_a_sha256=args.dependency_a_sha256,
         dependency_b_sha256=args.dependency_b_sha256,
+        approved_source_inventory_sha256=args.approved_source_inventory_sha256,
+        approved_class_inventory_sha256=args.approved_class_inventory_sha256,
         javac=args.javac,
         java=args.java,
     )
@@ -221,6 +224,8 @@ def run(args) -> dict:
          "R432_OVERSIZE_ACCEPTANCE_RECEIPT")
     original_receipt = json.loads(existing.read_text("utf-8"))
     before = fresh_snapshots(args, candidate)
+    require_approved_baselines(
+        args, before["baseline_source"], before["baseline_class"])
     s = r425.gate_source_inventory(
         before["baseline_source"], before["source"])
     c = r425.gate_class_inventory(
@@ -268,6 +273,8 @@ def run(args) -> dict:
     # all separate JVMs exited; do not grant a pass for source/class drift.
     after = fresh_snapshots(args, candidate)
     need(before == after, "R432_INPUT_OR_CANDIDATE_CHANGED_DURING_PROCESS_TESTS")
+    require_approved_baselines(
+        args, after["baseline_source"], after["baseline_class"])
     need(r425.hash_file(args.prior_source_root / r425.STORE) ==
          r425.PINNED_R421_STORE_SHA,
          "R432_ORIGINAL_PRIVATE_SOURCE_SHA_CHANGED")
@@ -306,6 +313,8 @@ def main() -> int:
     parser.add_argument("--dependency-b", type=Path, required=True)
     parser.add_argument("--dependency-a-sha256", required=True)
     parser.add_argument("--dependency-b-sha256", required=True)
+    parser.add_argument("--approved-source-inventory-sha256", required=True)
+    parser.add_argument("--approved-class-inventory-sha256", required=True)
     parser.add_argument("--java", type=Path, required=True)
     parser.add_argument("--javac", type=Path, required=True)
     args = parser.parse_args()
