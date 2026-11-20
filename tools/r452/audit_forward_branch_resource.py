@@ -118,9 +118,7 @@ def aggregate(
     for cls, method, pc, path in sites_found:
         values_by_resource[path].add(cls + "#" + method)
 
-    prior = previous_private[
-        "owner_private_resource_argument_worklist"][
-        "modeled_static_literal_call_arguments"]
+    prior = previous_private["modeled_static_literal_call_arguments"]
     prior_signals = {
         (caller, item["possible_resource_path"])
         for item in prior
