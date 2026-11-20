@@ -1,0 +1,59 @@
+name: v309-r453-member-reference-coverage
+on:
+  push:
+    branches:
+      - research/v309-r453-member-reference-coverage
+  pull_request:
+    paths:
+      - tools/r453/**
+      - tests/test_v309_r453_*.py
+      - docs/V309_R453_CLASS_MEMBER_REFERENCE_COVERAGE.md
+      - .github/workflows/v309-r453-member-references.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-r421-java-member-signatures:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R453 invented JVM Fieldref/Methodref/InterfaceMethodref and exact declaration coverage
+        run: python -B -m unittest discover -s tests -p 'test_v309_r453_*.py' -v
+      - name: Inherited R452 DAG CFG resource arguments and input custody tests
+        run: python -B -m unittest discover -s tests -p 'test_v309_r452_*.py' -v
+      - name: Inherited R451 straight-line String resource operand tests
+        run: python -B -m unittest discover -s tests -p 'test_v309_r451_*.py' -v
+      - name: Inherited R450 generic Signature and Code method proximity tests
+        run: python -B -m unittest discover -s tests -p 'test_v309_r450_*.py' -v
+      - name: Inherited R449 field and method descriptor class references
+        run: python -B -m unittest discover -s tests -p 'test_v309_r449_*.py' -v
+      - name: Inherited R448 class-index reference name coverage
+        run: python -B -m unittest discover -s tests -p 'test_v309_r448_*.py' -v
+      - name: Inherited R447 original v309 JAR and resource inventory
+        run: python -B -m unittest discover -s tests -p 'test_v309_r447_*.py' -v
+      - name: Inherited R446 current isolated owner source-class SHA inventory
+        run: python -B -m unittest discover -s tests -p 'test_v309_r446_*.py' -v
+      - name: Inherited R445 bounded nofollow file inspection
+        run: python -B -m unittest discover -s tests -p 'test_v309_r445_*.py' -v
+      - name: Inherited R442 prior independent historical R421 baseline schema
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v
+      - name: Inherited R426 Java11 fabricated Store compile acceptance
+        run: python -B -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v
