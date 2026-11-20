@@ -85,7 +85,7 @@ class R451StraightlinePureTests(unittest.TestCase):
 
     def test_08_dup_and_pop_symbolically_preserve_operand(self):
         code = b"\x2a\x12\x01\x59\x57\xb6\x00\x08\x57\xb1"
-        self.assertEqual(trace(code), (["images/logo.png"], 1))
+        self.assertEqual(trace(code, max_stack=3), (["images/logo.png"], 1))
 
     def test_09_swap_rearranges_reference_and_argument_correctly(self):
         # ldc string, aload_0, swap -> receiver then literal
