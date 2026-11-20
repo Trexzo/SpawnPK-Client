@@ -267,11 +267,17 @@ def write_private(detail: dict) -> str:
 
 def run(original: Path, companion: Path | None = None,
         save: bool = False) -> dict:
+    # An aggregate result could remain equal even if an unrelated class
+    # changes between scans. Capture exact per-member source/class/dependency
+    # SHA evidence before the first pass, and require identity afterward.
+    baseline = r446.observe()[0] if save else None
     report, details = inspect(original, companion)
     if save:
         after, rechecked = inspect(original, companion)
         need(after == report and rechecked == details,
              "R451_INPUT_CHANGED_BEFORE_PRIVATE_WORKLIST")
+        need(r446.observe()[0] == baseline,
+             "R451_ORIGINAL_INVENTORY_CHANGED_BETWEEN_PRIVATE_SCANS")
         report["owner_private_report_directory"] = write_private(details)
         report["private_worklist_saved"] = True
     else:
