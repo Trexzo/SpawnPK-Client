@@ -107,6 +107,10 @@ def source_class_count(root: Path, suffix: str, max_files: int = 2500) -> int | 
                 stack.append((child, depth + 1))
                 continue
             if not regular(child):
+                if child.is_symlink() or getattr(
+                        child, "is_junction", lambda: False)():
+                    raise Refused(
+                        "R444_SOURCE_CLASS_TREE_LINK_OR_NONDIR_REFUSED")
                 raise Refused("R444_SOURCE_CLASS_TREE_NONREGULAR_REFUSED")
             if child.suffix == suffix:
                 found += 1
