@@ -34,9 +34,9 @@ def resource(name: str):
     return r451_fixture.resource_filter(name)
 
 
-def inspect_code(code: bytes, *, stack: int=3, locals: int=2, exceptions: int=0):
+def inspect_code(code: bytes, *, max_stack: int=3, locals: int=2, exceptions: int=0):
     return flow.analyze_method(
-        code, stack, locals, exceptions, literal, refs, resource)
+        code, max_stack, locals, exceptions, literal, refs, resource)
 
 
 def diamond(first: int=1, second: int=1) -> bytes:
@@ -156,7 +156,7 @@ class R452PureAcyclicFlow(unittest.TestCase):
         self.assertIsNone(inspect_code(b"\x57\xb1"))
 
     def test_16_excessive_stack_excludes_without_false_argument(self):
-        self.assertIsNone(inspect_code(diamond(),stack=1))
+        self.assertIsNone(inspect_code(diamond(),max_stack=1))
 
     def test_17_static_resource_call_tracks_argument_across_forward_goto(self):
         code=b"\xa7\x00\x04\x00\x12\x01\xb8\x00\x09\x57\xb1"
@@ -167,7 +167,7 @@ class R452PureAcyclicFlow(unittest.TestCase):
         code=(b"\x12\x01\x4c"      # save literal in local 1
               b"\x2a\x03\x99\x00\x03"  # ifeq pc5+3->pc8
               b"\x2b\xb6\x00\x08\x57\xb1")
-        result=inspect_code(code,stack=2,locals=2)
+        result=inspect_code(code,max_stack=2,locals=2)
         self.assertEqual(result.attributed,((9,"images/logo.png"),))
 
     def test_19_string_local_overwrite_on_branch_causes_ambiguity(self):
@@ -177,7 +177,7 @@ class R452PureAcyclicFlow(unittest.TestCase):
         code=(b"\x12\x01\x4c\x2a\x03\x99\x00\x08"
               b"\x01\x4c\xa7\x00\x03"
               b"\x2b\xb6\x00\x08\x57\xb1")
-        result=inspect_code(code,stack=2)
+        result=inspect_code(code,max_stack=2)
         self.assertEqual(result.attributed,())
         self.assertEqual(result.ambiguous_resource_call_sites,1)
 
