@@ -38,6 +38,23 @@ def run(command: list[str], timeout: float = 30) -> subprocess.CompletedProcess:
                           timeout=timeout, check=False)
 
 
+def exact_stdout_protocol(output: str, *expected: str) -> bool:
+    """Accept only complete, ordered stdout records from a child JVM.
+
+    Java uses LF/CRLF platform newline conventions. We accept either while
+    rejecting substring matches, prefixes, suffixes, extra lines, embedded
+    carriage returns, and missing final line terminators. All negative and
+    ambiguous output must fail closed; stderr remains diagnostic only.
+    """
+    if type(output) is not str or not expected:
+        return False
+    if any(type(token) is not str or not token or "\n" in token
+           or "\r" in token for token in expected):
+        return False
+    return output in ("".join(t + "\n" for t in expected),
+                      "".join(t + "\r\n" for t in expected))
+
+
 def read_holder_announcement(holder: subprocess.Popen, timeout: float = 10.0) -> str:
     """Wait at most timeout seconds for a held owner to announce its state.
 
@@ -145,7 +162,7 @@ def main(argv=None):
         contender = run(command("try", lock_root))
         passed("actual_store_second_process_refused",
                contender.returncode == 0 and
-               contender.stdout.strip() == "REFUSED_OWNER")
+               exact_stdout_protocol(contender.stdout, "REFUSED_OWNER"))
         passed("actual_store_contender_did_not_create_history",
                not (lock_root / "loot-history.json").exists())
         holder.stdin.write("\n")
@@ -153,7 +170,7 @@ def main(argv=None):
         holder.wait(timeout=10)
         passed("owner_release_terminates_normally", holder.returncode == 0)
         released_stdout = holder.stdout.read()
-        passed("owner_release_receipt", "RELEASED" in released_stdout)
+        passed("owner_release_receipt", exact_stdout_protocol(released_stdout, "RELEASED"))
     finally:
         if holder.poll() is None:
             holder.kill()
@@ -164,26 +181,28 @@ def main(argv=None):
 
     reacquired = run(command("try", lock_root))
     passed("actual_store_reacquire_after_shutdown",
-           reacquired.returncode == 0 and "ACQUIRED" in reacquired.stdout
-           and "RELEASED" in reacquired.stdout)
+           reacquired.returncode == 0 and exact_stdout_protocol(reacquired.stdout,
+                                     "ACQUIRED", "RELEASED"))
     passed("real_os_lock_path_persists_after_release",
            (lock_root / "loot-history.writer.lock").is_file())
 
     crash_root = Path(tempfile.mkdtemp(prefix="R422-Synthetic-Crash-",dir=str(temp_parent)))
     crash = run(command("crash", crash_root))
     passed("actual_store_crash_exit", crash.returncode == 77 and
-           "ACQUIRED" in crash.stdout)
+           exact_stdout_protocol(crash.stdout, "ACQUIRED"))
     passed("crash_keeps_inert_lock_file",
            (crash_root / "loot-history.writer.lock").is_file())
     after_crash = run(command("try", crash_root))
     passed("actual_store_reacquire_after_jvm_halt",
-           after_crash.returncode == 0 and "ACQUIRED" in after_crash.stdout)
+           after_crash.returncode == 0 and exact_stdout_protocol(after_crash.stdout,
+                                              "ACQUIRED", "RELEASED"))
 
     new_leaf = workspace / "R422-Synthetic-NewLeaf"
     passed("new_leaf_absent_before", not new_leaf.exists())
     new_leaf_try = run(command("try", new_leaf))
     passed("actual_store_first_run_creates_leaf_and_acquires",
-           new_leaf_try.returncode == 0 and "ACQUIRED" in new_leaf_try.stdout
+           new_leaf_try.returncode == 0 and exact_stdout_protocol(new_leaf_try.stdout,
+                                           "ACQUIRED", "RELEASED")
            and new_leaf.is_dir())
     passed("first_run_does_not_create_history", not (new_leaf/"loot-history.json").exists())
 
@@ -192,7 +211,8 @@ def main(argv=None):
     marker_before = marker.read_bytes()
     marker_probe = run(command("try", lock_root))
     passed("lease_try_does_not_repair_unresolved_marker",
-           marker_probe.returncode == 0 and "ACQUIRED" in marker_probe.stdout
+           marker_probe.returncode == 0 and exact_stdout_protocol(marker_probe.stdout,
+                                         "ACQUIRED", "RELEASED")
            and marker.read_bytes() == marker_before)
     passed("pinned_real_class_unchanged_by_acceptance",
            sha_file(pinned_class) == args.expected_store_class_sha256)
