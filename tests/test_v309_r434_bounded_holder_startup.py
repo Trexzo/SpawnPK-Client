@@ -103,12 +103,13 @@ class R434BoundedHolderStartup(unittest.TestCase):
         main = inspect.getsource(runner.main)
         self.assertIn("line = read_holder_announcement(holder)", main)
         self.assertNotIn("holder.stdout.readline()", main)
-        self.assertIn("if holder.poll() is None:", main)
-        self.assertIn("holder.kill()", main)
-        self.assertIn("holder.communicate(timeout=5)", main)
-        self.assertIn("stream.close()", main)
+        self.assertIn("reap_synthetic_holder(holder)", main)
         self.assertIn("release_holder_and_collect(holder)", main)
-        self.assertIn("holder.communicate(timeout=5)", main)
+        helper = inspect.getsource(runner.reap_synthetic_holder)
+        self.assertIn("if holder.poll() is None:", helper)
+        self.assertIn("holder.kill()", helper)
+        self.assertIn("holder.communicate(timeout=timeout)", helper)
+        self.assertIn("stream.close()", helper)
         self.assertNotIn("holder.wait(timeout=10)", main)
 
 
