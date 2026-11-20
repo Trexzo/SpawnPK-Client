@@ -1,0 +1,63 @@
+name: v309-r440-owner-private-readonly-preflight
+on:
+  push:
+    branches:
+      - research/v309-r440-owner-private-readonly-preflight
+  pull_request:
+    paths:
+      - tools/r440/**
+      - tools/r425/owner_only_run_r425.ps1
+      - tests/test_v309_r440_*.py
+      - tests/test_v309_r439_*.py
+      - .github/workflows/v309-r440-owner-preflight.yml
+      - docs/V309_R440_OWNER_PRIVATE_PREFLIGHT.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  read-only-private-gate-invented-inputs:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 22
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Parse owner PowerShell entrypoint without executing it
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $tokens = $null
+          $parseErrors = $null
+          $file = (Resolve-Path -LiteralPath 'tools/r425/owner_only_run_r425.ps1').Path
+          [System.Management.Automation.Language.Parser]::ParseFile($file, [ref]$tokens, [ref]$parseErrors) | Out-Null
+          if ($parseErrors.Count -gt 0) {
+            $parseErrors | Format-List | Out-String | Write-Output
+            throw 'R440_OWNER_POWERSHELL_SYNTAX_REFUSED'
+          }
+      - name: R440 read-only owner-specific preflight on invented source/class/JARs
+        run: python -B -m unittest discover -s tests -p 'test_v309_r440_*.py' -v
+      - name: Inherited R439 bounded synthetic holder failure path
+        run: python -B -m unittest discover -s tests -p 'test_v309_r439_*.py' -v
+      - name: Inherited R432 owner PowerShell mandatory two-stage checks
+        run: python -B -m unittest discover -s tests -p 'test_v309_r432_owner_entrypoint.py' -v
+      - name: Inherited R424 public non-destructive patch tests
+        run: python -B -m unittest discover -s tests -p 'test_v309_r424_patch_gate.py' -v
+      - name: Inherited R426 real javac full fabricated Store compile and acceptance
+        run: python -B -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v
+      - name: Inherited R433 actual public R422/R425 producer contract
+        run: python -B -m unittest discover -s tests -p 'test_v309_r433_*.py' -v
