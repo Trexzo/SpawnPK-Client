@@ -15,9 +15,7 @@ import sys
 import unittest
 from unittest.mock import patch
 
-from test_v309_r448_rebuilt_bytecode_linkage import (
-    R448InventedStaticGaps, fake_java11_class, fake_zip,
-)
+import test_v309_r448_rebuilt_bytecode_linkage as r448_test_fixture
 from tools.r425 import compile_and_accept_private_overlay as r425
 from tools.r449 import audit_descriptor_resource_gaps as r449
 
@@ -88,14 +86,14 @@ class R449DescriptorResourceRegression(unittest.TestCase):
     def setUp(self):
         # Reuse synthetic owner TEMP layout, pinned fingerprints and dummy JAR
         # from R448 without inheriting its tests (which run separately in CI).
-        R448InventedStaticGaps.setUp(self)
+        r448_test_fixture.R448InventedStaticGaps.setUp(self)
         self.described = described_class(
             "rs/plugins/loottracker/LootHistoryStore")
         self.store_class.write_bytes(self.described)
         self.original_entries.pop("rs/Extra.class")
         self.original_entries["rs/DescriptorMissing.class"] = (
             b"R449 invented original-only class, not JVM bytecode")
-        self.original_jar.write_bytes(fake_zip(self.original_entries))
+        self.original_jar.write_bytes(r448_test_fixture.fake_zip(self.original_entries))
         for obj, prop, value in (
             (r425, "PINNED_R421_STORE_CLASS",
              sha256(self.described).hexdigest()),
@@ -192,13 +190,15 @@ class R449DescriptorResourceRegression(unittest.TestCase):
         self.assertEqual(
             r449.descriptor_classes("([I[[Lrs/A;Ljava/lang/String;)Lrs/B;"),
             {"rs/A.class", "java/lang/String.class", "rs/B.class"})
+        self.assertEqual(r449.descriptor_classes("([[Lrs/Foo;)V"),
+                         {"rs/Foo.class"})
         self.assertEqual(r449.descriptor_classes("()V"), set())
         self.assertEqual(r449.descriptor_classes("I"), set())
 
     def test_07_invalid_descriptor_shapes_refuse(self):
         for value in ("", "Lrs/Missing", "L../Secret;", "[V", "V",
                       "()Lrs/Foo;extra", "(Lrs/Foo;)Q",
-                      "([[Lrs/Foo;)V", "(I", "Lrs\\Bad;",
+                      "([[Lrs/Foo)V", "(I", "Lrs\\Bad;",
                       "Lrs/./Foo;", "[", "(V)V"):
             with self.subTest(descriptor=value):
                 with self.assertRaises(r449.Refused):
@@ -282,7 +282,7 @@ class R449DescriptorResourceRegression(unittest.TestCase):
     def test_19_current_observation_changed_before_class_read_refused(self):
         observed, _ = r449.r446.observe()
         bridge = self.compiled / "rs/Bridge.class"
-        bridge.write_bytes(fake_java11_class(
+        bridge.write_bytes(r448_test_fixture.fake_java11_class(
             "rs/Bridge", ("rs/TamperedClass",)))
         with self.assertRaisesRegex(
                 r449.Refused, "R449_COMPILED_CLASS_CHANGED_DURING_AUDIT"):
