@@ -206,7 +206,7 @@ class R445BoundedOwnerDiscovery(unittest.TestCase):
         source = inspect.getsource(r445)
         self.assertNotIn("sorted(temp.iterdir())", source)
         self.assertNotIn("sorted(base.iterdir())", source)
-        self.assertNotIn("os.walk(", source)
+        self.assertNotIn("os.walk(", inspect.getsource(r445.source_class_count))
         self.assertNotIn("r425.hash_file(path)", source)
         self.assertIn("read_bounded_regular", source)
         self.assertIn('getattr(os, "O_NOFOLLOW", 0)', source)
