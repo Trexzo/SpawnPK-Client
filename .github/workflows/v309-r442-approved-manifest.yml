@@ -1,0 +1,60 @@
+name: v309-r442-approved-r421-manifest
+on:
+  push:
+    branches:
+      - research/v309-r442-approved-r421-manifest
+  pull_request:
+    paths:
+      - tools/r442/**
+      - tools/r425/owner_only_run_r425.ps1
+      - tests/test_v309_r442_*.py
+      - .github/workflows/v309-r442-approved-manifest.yml
+      - docs/V309_R442_APPROVED_R421_MANIFEST.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  previously-approved-inventory-manifest:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 22
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Parse the Windows owner PowerShell entrypoint without running private stages
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $tokens = $null
+          $errors = $null
+          $target = (Resolve-Path -LiteralPath 'tools/r425/owner_only_run_r425.ps1').Path
+          [System.Management.Automation.Language.Parser]::ParseFile($target, [ref]$tokens, [ref]$errors) | Out-Null
+          if ($errors.Count -ne 0) {
+            $errors | Format-List | Out-String | Write-Output
+            throw 'R442_OWNER_POWERSHELL_SYNTAX_REFUSED'
+          }
+      - name: R442 prior whole-tree SHA-approved manifest and live synthetic CLI
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v
+      - name: Inherited R441 full-tree digest and source/class gate tests
+        run: python -B -m unittest discover -s tests -p 'test_v309_r441_*.py' -v
+      - name: Inherited R440 no-write private preflight invented tests
+        run: python -B -m unittest discover -s tests -p 'test_v309_r440_*.py' -v
+      - name: Inherited R432 exact private-process chain fabricated tests
+        run: python -B -m unittest discover -s tests -p 'test_v309_r432_*.py' -v
+      - name: Inherited R426 invented full source-to-class compilation
+        run: python -B -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v

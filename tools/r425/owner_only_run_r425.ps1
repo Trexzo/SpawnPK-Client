@@ -9,6 +9,8 @@ param(
     [string]$ApprovedDependencyBSha256,
     [string]$ApprovedSourceInventorySha256,
     [string]$ApprovedClassInventorySha256,
+    [string]$ApprovedR421ManifestPath,
+    [string]$ApprovedR421ManifestSha256,
     [string]$PythonExe = 'C:\Users\Felix\AppData\Local\Programs\Python\Python312\python.exe',
     [string]$JdkHome = 'C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot'
 )
@@ -24,12 +26,12 @@ if (-not $RunOwnerPrivateAcceptance) {
 if ($RunOwnerPrivateAcceptance -and $AuditOnly) {
     throw 'R440_REFUSED: -AuditOnly and -RunOwnerPrivateAcceptance are mutually exclusive.'
 }
-foreach ($approved in @($ApprovedDependencyASha256, $ApprovedDependencyBSha256,
-                        $ApprovedSourceInventorySha256, $ApprovedClassInventorySha256)) {
-    if ([string]::IsNullOrWhiteSpace($approved) -or
-        $approved -cnotmatch '^[0-9a-f]{64}$') {
-        throw 'R441_REFUSED: supply four independently reviewed lowercase SHA256 references for both dependency JARs and full Java/class inventories. Self-measured hashes are not approval.'
-    }
+# The four optional R440/R441 parameters are consistency cross-checks,
+# not authorities. They must all derive from a separately SHA-approved R421
+# reference manifest verified BEFORE any private source or JAR admission.
+if ([string]::IsNullOrWhiteSpace($ApprovedR421ManifestPath) -or
+    $ApprovedR421ManifestSha256 -cnotmatch '^[0-9a-f]{64}$') {
+    throw 'R442_REFUSED: a prior R421 manifest path and independently approved lowercase manifest SHA256 are mandatory.'
 }
 if ([string]::IsNullOrWhiteSpace($env:TEMP)) {
     throw 'R425_REFUSED: TEMP is not available.'
@@ -47,12 +49,13 @@ $depB = Join-Path $dependencies 'R218.jar'
 $runner = Join-Path $repositoryRoot 'tools\r425\compile_and_accept_private_overlay.py'
 $r432Gate = Join-Path $repositoryRoot 'tools\r432\chain_private_process_acceptance.py'
 $r440Audit = Join-Path $repositoryRoot 'tools\r440\read_only_private_acceptance_preflight.py'
+$r442Verify = Join-Path $repositoryRoot 'tools\r442\verify_prior_r421_manifest.py'
 $helper = Join-Path $repositoryRoot 'tests\fixtures\r424\LootLegacyCleanupR424.java'
 $acceptance = Join-Path $repositoryRoot 'tests\fixtures\r425\R425ActualPrivateOverlayAcceptance.java'
 $javac = Join-Path $JdkHome 'bin\javac.exe'
 $java = Join-Path $JdkHome 'bin\java.exe'
 
-foreach ($path in @($PythonExe, $javac, $java, $runner, $r432Gate, $r440Audit, $helper, $acceptance, $depA, $depB)) {
+foreach ($path in @($PythonExe, $javac, $java, $runner, $r432Gate, $r440Audit, $r442Verify, $helper, $acceptance, $depA, $depB, $ApprovedR421ManifestPath)) {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
         throw "R425_REFUSED: required owner-local test input not found: $path"
     }
@@ -62,6 +65,55 @@ foreach ($path in @($sourceRoot, $classesRoot)) {
         throw "R425_REFUSED: isolated R421 source/classes directory not found: $path"
     }
 }
+
+# Validate an independently reviewed historical R421 manifest. A freshly
+# hashed current tree or manifest is NOT independent approval. The externally
+# supplied SHA256 binds the entire prior per-file inventory byte-for-byte.
+$referenceArgs = @(
+    $r442Verify,
+    '--manifest-path', $ApprovedR421ManifestPath,
+    '--approved-manifest-sha256', $ApprovedR421ManifestSha256
+)
+$referenceOutput = & $PythonExe -B @referenceArgs
+$referenceExit = $LASTEXITCODE
+if ($referenceExit -ne 0 -or @($referenceOutput).Count -ne 1) {
+    throw 'R442_REFERENCE_BASELINE_REFUSED: no validated prior R421 manifest; no compile authorized.'
+}
+try {
+    $reference = ($referenceOutput | ConvertFrom-Json)
+} catch {
+    throw 'R442_REFERENCE_BASELINE_REFUSED: invalid reference receipt JSON.'
+}
+if ($reference.status -cne 'R442_PRIOR_R421_REFERENCE_BYTES_VERIFIED' -or
+    $reference.approved_manifest_sha256 -cne $ApprovedR421ManifestSha256 -or
+    $reference.baseline_java_sources -ne 1277 -or
+    $reference.baseline_compiled_classes -ne 1394 -or
+    $reference.release_authorized -ne $false -or
+    $reference.reference_origin_independently_verified -ne $false) {
+    throw 'R442_REFERENCE_BASELINE_REFUSED: inconsistent or unsafe manifest receipt.'
+}
+
+# Cross-check any legacy caller-supplied hashes against the verified reference.
+# Empty legacy parameters are permitted; the verified reference alone fills
+# all four pins. No hash is calculated from current private files to approve.
+$approvedReferenceHashes = @{
+    ApprovedDependencyASha256 = [string]$reference.approved_dependency_a_sha256
+    ApprovedDependencyBSha256 = [string]$reference.approved_dependency_b_sha256
+    ApprovedSourceInventorySha256 = [string]$reference.approved_source_inventory_sha256
+    ApprovedClassInventorySha256 = [string]$reference.approved_class_inventory_sha256
+}
+foreach ($entry in $approvedReferenceHashes.GetEnumerator()) {
+    if ($entry.Value -cnotmatch '^[0-9a-f]{64}$') {
+        throw 'R442_REFERENCE_BASELINE_REFUSED: malformed manifest-derived SHA256.'
+    }
+    $callerValue = [string](Get-Variable -Name $entry.Key -ValueOnly)
+    if (-not [string]::IsNullOrWhiteSpace($callerValue) -and
+        $callerValue -cne $entry.Value) {
+        throw 'R442_REFERENCE_BASELINE_REFUSED: caller-provided SHA disagrees with approved manifest.'
+    }
+    Set-Variable -Name $entry.Key -Value $entry.Value
+}
+Write-Output 'R442_R421_REFERENCE_MANIFEST_SHA_MATCHED - provenance requires independent owner review'
 
 # Observed hashes do not approve themselves. They must match the
 # independently reviewed, externally supplied known-good reference hashes.
