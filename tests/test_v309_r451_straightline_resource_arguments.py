@@ -156,6 +156,12 @@ class R451StraightlinePureTests(unittest.TestCase):
         code = b"\x2a\x12\x01\x60\xb6\x00\x08\x57\xb1"
         self.assertIsNone(trace(code))
 
+    def test_22a_unreachable_code_after_return_is_never_attributed(self):
+        # A parseable dead tail is not a feasible straight-line method.
+        code = (b"\xb1" + b"\x2a\x12\x01\xb6\x00\x08\x57\xb1")
+        self.assertIsNone(trace(code))
+        self.assertIsNone(trace(b"\x2a\x12\x01\xb6\x00\x08\x57"))
+
     def test_22_two_resource_calls_track_separate_literals(self):
         code = (b"\x2a\x12\x01\xb6\x00\x08\x57"
                 b"\x2a\x12\x02\xb6\x00\x08\x57\xb1")
