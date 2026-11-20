@@ -16,6 +16,8 @@ from pathlib import Path
 import re
 import subprocess
 import tempfile
+from queue import Empty, Queue
+from threading import Thread
 
 
 CLASS_REL = Path("rs/plugins/loottracker/LootHistoryStore.class")
@@ -34,6 +36,35 @@ def sha_file(path: Path) -> str:
 def run(command: list[str], timeout: float = 30) -> subprocess.CompletedProcess:
     return subprocess.run(command, capture_output=True, text=True,
                           timeout=timeout, check=False)
+
+
+def read_holder_announcement(holder: subprocess.Popen, timeout: float = 10.0) -> str:
+    """Wait at most timeout seconds for a held owner to announce its state.
+
+    A daemon reader thread is necessary because pipe.readline() has no
+    portable timeout (select on Windows anonymous pipes is not supported).
+    The caller MUST retain its existing try/finally that kills/reaps the
+    holder and closes its pipes on timeout or any other refusal.
+    """
+    require(timeout > 0, "R422_INVALID_HOLDER_STARTUP_DEADLINE")
+    require(holder.stdout is not None, "R422_HOLDER_STDOUT_NOT_CAPTURED")
+    events = Queue(maxsize=1)
+
+    def read_line() -> None:
+        try:
+            events.put(("line", holder.stdout.readline()))
+        except (OSError, ValueError):
+            events.put(("error", ""))
+
+    Thread(target=read_line, daemon=True,
+           name="R422-holder-announcement-reader").start()
+    try:
+        kind, line = events.get(timeout=timeout)
+    except Empty:
+        raise RuntimeError("R422_OWNER_HOLDER_STARTUP_TIMEOUT") from None
+    require(kind == "line", "R422_OWNER_HOLDER_STDOUT_READ_FAILED")
+    require(bool(line), "R422_OWNER_HOLDER_EXITED_BEFORE_ANNOUNCEMENT")
+    return line.strip()
 
 
 def main(argv=None):
@@ -109,7 +140,7 @@ def main(argv=None):
                               stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE, text=True, bufsize=1)
     try:
-        line = holder.stdout.readline().strip()
+        line = read_holder_announcement(holder)
         passed("actual_store_first_process_acquired", line == "ACQUIRED")
         contender = run(command("try", lock_root))
         passed("actual_store_second_process_refused",
