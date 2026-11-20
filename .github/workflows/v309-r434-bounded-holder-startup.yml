@@ -1,0 +1,42 @@
+name: v309-r434-bounded-owner-holder-startup
+on:
+  push:
+    branches:
+      - research/v309-r434-bounded-owner-holder-startup
+  pull_request:
+    paths:
+      - tools/r422/run_private_store_acceptance.py
+      - tests/test_v309_r434_bounded_holder_startup.py
+      - .github/workflows/v309-r434-bounded-holder-startup.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  holder-startup-bounded-across-os:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R434 real OS child process bounded holder-startup regressions
+        run: python -m unittest discover -s tests -p 'test_v309_r434_*.py' -v
+      - name: Inherited R433 real producer/consumer contract checks
+        run: python -m unittest discover -s tests -p 'test_v309_r433_*.py' -v
+      - name: Inherited R432 two-stage gate safety checks
+        run: python -m unittest discover -s tests -p 'test_v309_r432_*.py' -v
