@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import os
+from hashlib import sha256
 from pathlib import Path
 import stat
 import sys
@@ -33,6 +34,14 @@ MAX_JSON_BYTES = r442.MAX_MANIFEST_BYTES
 MAX_CANDIDATE_DIRS = 24
 MAX_SCANNED_ENTRIES = 600
 MAX_DEPTH = 4
+# R445: independent enumeration and stable-file-read budgets. The R444
+# MAX_SCANNED_ENTRIES limit alone did not bound the initial TEMP listing or
+# the os.walk() source/class directory enumeration.
+MAX_TEMP_TOP_LEVEL_ENTRIES = 6000
+MAX_SOURCE_CLASS_TREE_ENTRIES = 7500
+MAX_SOURCE_CLASS_DIRECTORIES = 1800
+MAX_SOURCE_CLASS_DEPTH = 36
+MAX_STORE_BYTES = 2 * 1024 * 1024
 KEYWORDS = ("r421", "inventory", "manifest", "receipt", "acceptance",
             "baseline", "sha256")
 SKIP_FOLDERS = {"source", "dependencies", "R421-Compiled-Classes",
@@ -61,52 +70,106 @@ def directory(path: Path) -> bool:
             and not getattr(path, "is_junction", lambda: False)())
 
 
+def bounded_children(root: Path, limit: int, refusal: str) -> list[Path]:
+    """Bound iteration BEFORE sorting; do not materialize an unbounded TEMP."""
+    children: list[Path] = []
+    for child in root.iterdir():
+        children.append(child)
+        if len(children) > limit:
+            raise Refused(refusal)
+    return sorted(children, key=lambda item: item.name)
+
+
 def source_class_count(root: Path, suffix: str, max_files: int = 2500) -> int | None:
-    """Count only regular members, never follow links into external trees."""
+    """Bound files, directories, depth and directory listing; never follow links."""
     if not directory(root):
         return None
     found = 0
-    visited = 0
-    for current, dirs, files in os.walk(root, followlinks=False):
-        safe = []
-        for name in dirs:
-            path = Path(current) / name
-            if not directory(path):
-                raise Refused("R444_SOURCE_CLASS_TREE_LINK_OR_NONDIR_REFUSED")
-            safe.append(name)
-        dirs[:] = safe
-        for name in files:
-            file = Path(current) / name
-            if not regular(file):
+    visited_entries = 0
+    visited_directories = 0
+    stack = [(root, 0)]
+    while stack:
+        current, depth = stack.pop()
+        visited_directories += 1
+        if visited_directories > MAX_SOURCE_CLASS_DIRECTORIES:
+            raise Refused("R445_SOURCE_CLASS_DIR_BUDGET_EXCEEDED")
+        if depth > MAX_SOURCE_CLASS_DEPTH or not directory(current):
+            raise Refused("R445_SOURCE_CLASS_DEPTH_OR_ALIAS_REFUSED")
+        # Preserve R444's mandatory fail-closed link/special-member behavior.
+        children = bounded_children(
+            current, MAX_SOURCE_CLASS_TREE_ENTRIES,
+            "R445_SOURCE_CLASS_DIRECTORY_ENTRY_LIMIT")
+        for child in children:
+            visited_entries += 1
+            if visited_entries > MAX_SOURCE_CLASS_TREE_ENTRIES:
+                raise Refused("R445_SOURCE_CLASS_TREE_ENTRY_LIMIT")
+            if directory(child):
+                stack.append((child, depth + 1))
+                continue
+            if not regular(child):
                 raise Refused("R444_SOURCE_CLASS_TREE_NONREGULAR_REFUSED")
-            visited += 1
-            if visited > max_files * 3:
-                raise Refused("R444_SOURCE_CLASS_TREE_TOO_LARGE")
-            if file.suffix == suffix:
+            if child.suffix == suffix:
                 found += 1
                 if found > max_files:
                     raise Refused("R444_SOURCE_CLASS_COUNT_TOO_LARGE")
     return found
 
 
-def exact_store_pin_matches(path: Path, expected: str) -> bool | None:
-    """A checked SHA is an observation, NOT a signed source provenance proof."""
+def read_bounded_regular(path: Path, maximum: int,
+                         oversize_reason: str | None = None) -> bytes | None:
+    """Read an identity-stable, size-limited regular file without link follow.
+
+    The opened fd is checked against lstat() before any content is read.
+    O_NOFOLLOW is applied where the OS provides it. Report only safe error
+    codes, not filenames, read bytes, or original private filesystem paths.
+    """
     if not regular(path):
         return None
-    return r425.hash_file(path) == expected
+    before = path.lstat()
+    if before.st_size > maximum:
+        if oversize_reason:
+            raise Refused(oversize_reason)
+        return None
+    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0)
+    flags |= getattr(os, "O_NOFOLLOW", 0)
+    flags |= getattr(os, "O_NONBLOCK", 0)
+    fd = os.open(path, flags)
+    try:
+        opened = os.fstat(fd)
+        identity = lambda st: (st.st_dev, st.st_ino, st.st_size,
+                               st.st_mtime_ns)
+        if not stat.S_ISREG(opened.st_mode) or identity(opened) != identity(before):
+            raise Refused("R445_FILE_IDENTITY_CHANGED_BEFORE_READ")
+        data = bytearray()
+        while True:
+            chunk = os.read(fd, min(65536, maximum + 1 - len(data)))
+            if not chunk:
+                break
+            data.extend(chunk)
+            if len(data) > maximum:
+                raise Refused("R445_FILE_GREW_OVER_READ_LIMIT")
+        after = path.lstat()
+        if (not stat.S_ISREG(after.st_mode) or
+                identity(after) != identity(before) or
+                len(data) != before.st_size):
+            raise Refused("R445_FILE_IDENTITY_CHANGED_DURING_READ")
+        return bytes(data)
+    finally:
+        os.close(fd)
+
+
+def exact_store_pin_matches(path: Path, expected: str) -> bool | None:
+    """A bounded observed SHA, never evidence of independent approval."""
+    raw = read_bounded_regular(path, MAX_STORE_BYTES,
+                               "R445_STORE_PIN_FILE_TOO_LARGE")
+    return None if raw is None else sha256(raw).hexdigest() == expected
 
 
 def candidate_shape(path: Path) -> bool:
     """Recognize, never approve, a *possible* R442 full manifest."""
     try:
-        if not regular(path):
-            return False
-        size = path.stat().st_size
-        if size <= 0 or size > MAX_JSON_BYTES:
-            return False
-        with path.open("rb") as stream:
-            raw = stream.read(MAX_JSON_BYTES + 1)
-        if len(raw) != size:
+        raw = read_bounded_regular(path, MAX_JSON_BYTES)
+        if not raw:
             return False
         payload = json.loads(raw.decode("utf-8"),
                              object_pairs_hook=r442.unique_pairs)
@@ -127,7 +190,7 @@ def candidate_shape(path: Path) -> bool:
                 or cls.get(STORE_CLASS) != r425.PINNED_R421_STORE_CLASS):
             return False
         return set(deps) == {"R239_filtered.jar", "R218.jar"}
-    except (OSError, ValueError, UnicodeError, TypeError, r442.Refused):
+    except (ValueError, UnicodeError, TypeError, r442.Refused):
         return False
 
 
@@ -141,12 +204,14 @@ def evidence_dirs(temp: Path):
         if directory(target):
             yield target
         # Adjacent known R421 evidence directories; never scan unrelated.
-        for child in sorted(base.iterdir()):
+        for child in bounded_children(base, MAX_TEMP_TOP_LEVEL_ENTRIES,
+                                      "R445_ISOLATED_ROOT_LISTING_TOO_LARGE"):
             if (child.name.startswith("R421-") and child != target
                     and directory(child)):
                 yield child
     # R425 candidate receipts are saved under disposable TEMP roots.
-    for child in sorted(temp.iterdir()):
+    for child in bounded_children(temp, MAX_TEMP_TOP_LEVEL_ENTRIES,
+                                  "R445_TEMP_TOP_LEVEL_LISTING_TOO_LARGE"):
         if (child.name.startswith("R424-Private-Candidate-R425-")
                 and directory(child)):
             yield child
@@ -197,7 +262,9 @@ def scan_owner_temp(temp: Path) -> dict:
                 continue
             if not directory(current):
                 raise Refused("R444_HISTORICAL_CANDIDATE_LINK_REFUSED")
-            for child in current.iterdir():
+            for child in bounded_children(
+                    current, MAX_SCANNED_ENTRIES,
+                    "R445_HISTORICAL_DIRECTORY_LISTING_TOO_LARGE"):
                 inspected += 1
                 if inspected > MAX_SCANNED_ENTRIES:
                     raise Refused("R444_HISTORICAL_CANDIDATE_SCAN_TOO_LARGE")
