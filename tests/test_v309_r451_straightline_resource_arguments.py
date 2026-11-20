@@ -262,6 +262,23 @@ class R451OwnerFakeIsolatedPipeline(unittest.TestCase):
                 r451.run(self.original_jar, save=True)
         self.assertEqual(self.folders(), [])
 
+    def test_29a_unrelated_java_source_mutation_same_summary_refused(self):
+        original_inspect = r451.inspect
+        count = [0]
+        def mutate_source(*args, **kwargs):
+            report = original_inspect(*args, **kwargs)
+            count[0] += 1
+            if count[0] == 1:
+                source = self.source / "rs/Bridge.java"
+                source.write_bytes(source.read_bytes() + b" - changed unrelated comment")
+            return report
+        with patch.object(r451, "inspect", side_effect=mutate_source):
+            with self.assertRaisesRegex(
+                    r451.Refused,
+                    "R451_ORIGINAL_INVENTORY_CHANGED_BETWEEN_PRIVATE_SCANS"):
+                r451.run(self.original_jar, save=True)
+        self.assertEqual(self.folders(), [])
+
     def test_30_private_report_size_cap(self):
         with patch.object(r451, "MAX_PRIVATE_REPORT_BYTES", 30):
             with self.assertRaisesRegex(
