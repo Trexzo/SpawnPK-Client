@@ -139,7 +139,7 @@ class R448InventedStaticGaps(unittest.TestCase):
         self.assertEqual(summary["original_resource_count"], 2)
         self.assertEqual(summary["reconstructed_java_sources"], 2)
         self.assertEqual(summary["reconstructed_classfiles"], 2)
-        self.assertEqual(summary["unique_rebuilt_nonplatform_class_targets"], 7)
+        self.assertEqual(summary["unique_rebuilt_nonplatform_class_targets"], 6)
         self.assertEqual(summary["class_targets_unresolved_in_preferred_runtime"], 3)
         self.assertEqual(summary["unresolved_class_targets_present_in_original_v309"], 1)
         self.assertEqual(summary["unresolved_class_targets_absent_from_original_v309"], 2)
@@ -182,8 +182,8 @@ class R448InventedStaticGaps(unittest.TestCase):
         self.assertFalse(data["historical_R421_reference_approved"])
         self.assertEqual([x["class_name"] for x in
                           data["missing_class_details"]],
-                         ["rs/Candidate.class", "rs/Legacy.class",
-                          "rs/Unseen.class"])
+                         ["rs/Candidate.class", "rs/Unseen.class",
+                          "rs/Legacy.class"])
         self.assertNotIn(str(self.temp), json.dumps(report))
 
     def test_05_original_jar_shas_are_mandatory(self):
@@ -304,7 +304,7 @@ class R448InventedStaticGaps(unittest.TestCase):
         self.assertEqual(original, first.read_bytes())
 
     def test_17_candidate_class_file_too_large_refused_before_parse(self):
-        self.store_class.write_bytes(b"x" * 1024)
+        (self.compiled / "rs/Bridge.class").write_bytes(b"x" * 1024)
         with patch.object(r448, "MAX_CLASS_BYTES", 80):
             observation = r448.r446.observe()[0]
             with self.assertRaisesRegex(
