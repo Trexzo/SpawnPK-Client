@@ -31,6 +31,7 @@ if str(REPO_ROOT) not in sys.path:
 from tools.r424.prepare_private_legacy_cleanup_patch import (
     HELPER, STORE, PINNED_R421_STORE_SHA, stage as prepare_r424,
 )
+from tools.r441.approved_full_inventory import require_approved_baselines
 
 PINNED_R421_STORE_CLASS = (
     "65272371272fdcf9142095880a042aa007a9a088f93c969a57878188fae37a09"
@@ -163,6 +164,9 @@ def validate_inputs(args) -> None:
     need(len(source) == BASELINE_SOURCE_COUNT and
          len(classes) == BASELINE_CLASS_COUNT,
          "R425_PRIVATE_INPUT_INVENTORY_DRIFT")
+    # Counts plus Store SHA alone cannot identify the other 1,276 sources
+    # and 1,393 classes. Require an independently reviewed full-tree pin.
+    require_approved_baselines(args, source, classes)
 
 
 def verify_unchanged_build_inputs(
@@ -180,6 +184,8 @@ def verify_unchanged_build_inputs(
     need(sha_inventory(args.prior_source_root, ".java") ==
          original_source_snapshot,
          "R426_PRIOR_SOURCE_CHANGED_DURING_BUILD")
+    require_approved_baselines(
+        args, original_source_snapshot, original_class_snapshot)
     need(sha_inventory(args.prior_classes_root, ".class") ==
          original_class_snapshot,
          "R426_PRIOR_CLASSES_CHANGED_DURING_BUILD")
@@ -338,6 +344,8 @@ def main() -> int:
     parser.add_argument("--dependency-b", type=Path, required=True)
     parser.add_argument("--dependency-a-sha256", required=True)
     parser.add_argument("--dependency-b-sha256", required=True)
+    parser.add_argument("--approved-source-inventory-sha256", required=True)
+    parser.add_argument("--approved-class-inventory-sha256", required=True)
     parser.add_argument("--javac", type=Path, required=True)
     parser.add_argument("--java", type=Path, required=True)
     parser.add_argument("--fresh-temp-destination", type=Path, required=True)
