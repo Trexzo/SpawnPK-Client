@@ -180,6 +180,10 @@ class R446CurrentObservedInventory(unittest.TestCase):
 
     def test_12_casefold_source_path_collision_refused(self):
         extra = self.src / "rs/inventedsecondary.java"
+        # Windows' normal case-insensitive filesystem aliases this to the
+        # existing InventedSecondary.java; no second directory entry exists.
+        if extra.exists() and extra.samefile(self.src_other):
+            self.skipTest("Filesystem cannot represent distinct casefold-colliding names")
         extra.write_bytes(b"not the same file")
         with self.assertRaisesRegex(r446.Refused, "R446_SOURCE_OR_CLASS_CASE_COLLISION"):
             r446.run()
