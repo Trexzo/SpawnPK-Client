@@ -108,7 +108,7 @@ class R440ReadOnlyOwnerPrivatePreflight(unittest.TestCase):
         self.assertEqual(result["source_count"], 1)
         self.assertEqual(result["class_count"], 1)
         self.assertTrue(result["r424_source_shape_checked_in_memory"])
-        self.assertTrue(result["independently_approved_dependency_digests_matched"])
+        self.assertTrue(result["provided_reference_dependency_digests_matched"])
         self.assertFalse(result["candidate_created"])
         self.assertFalse(result["private_java_compiled"])
         self.assertFalse(result["release_authorized"])
