@@ -36,7 +36,7 @@ python -B tools\r451\audit_resource_operand_arguments.py --original-v309-jar '<o
 
 An optional `--resource-companion-root` invokes inherited SHA byte comparisons against an **already existing** isolated private resource companion. This does **not** package a playable client.
 
-The explicit `--save-private-unapproved-worklist` option repeats the complete audit and only when both reports agree creates one **new**, exclusive, owner-TEMP quarantine file `R451-UNAPPROVED-RESOURCE-ARGUMENT-WORKLIST.json`. The private report contains only class/method/resource *names*, explanatory booleans and per-method candidate/refusal summaries; never recovered source, bytecode, or player histories. Do not upload private worklists into public GitHub.
+The explicit `--save-private-unapproved-worklist` option repeats the complete audit and only when both reports agree creates one **new**, exclusive, owner-TEMP quarantine file `R451-UNAPPROVED-RESOURCE-ARGUMENT-WORKLIST.json`. The private report contains only class/method/resource *names*, explanatory booleans and per-method candidate/refusal summaries; never recovered source, bytecode, or player histories. Because aggregate summaries can be unchanged after an unrelated source file is edited, the tool also requires the **entire owner-isolated current source/class/dependency SHA inventory** to match across both private output passes. Do not upload private worklists into public GitHub.
 
 ## Limits: no runtime certainty
 
@@ -44,6 +44,6 @@ This symbolic model excludes branching, exceptions and unmodeled instructions. T
 
 The original private JAR, private Store source/class, original assets, actual v312 startup, login, rendering/Swing, FPS and player history were **not accessed in hosted CI**. Owner PC `DESKTOP-LTXXO4K` remains offline. R442 independently approved historical full R421 inventory, R440/R425/R432 actual Store compile/acceptance, and R427–R431 actual async persistence integration are still pending. R415/R417 deletion-intent and acknowledgment markers remain untouched and writes stay fenced.
 
-Public tests use invented Java 11 bytecode/ZIPs only. The Windows/Ubuntu × Python 3.11/3.13 matrix runs **33 new synthetic tests** plus inherited R450–R445, R442 and R426 suites; all are offline.
+Public tests use invented Java 11 bytecode/ZIPs only. The Windows/Ubuntu × Python 3.11/3.13 matrix runs **34 new synthetic tests** plus inherited R450–R445, R442 and R426 suites; all are offline.
 
 **Do not merge or install. No live JAR changes, production history reads/writes, journal cleanup, write unlock, or release authorized.**
