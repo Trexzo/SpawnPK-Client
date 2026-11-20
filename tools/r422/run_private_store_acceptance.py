@@ -55,6 +55,19 @@ def exact_stdout_protocol(output: str, *expected: str) -> bool:
                       "".join(t + "\r\n" for t in expected))
 
 
+def exact_invalid_root_refusal(process: subprocess.CompletedProcess) -> bool:
+    """Evidence of the public Java harness's explicit invalid-root exit.
+
+    Do not infer a negative-test pass from arbitrary stderr/stacktrace text.
+    Exit 64 and the one complete refusal record must both be present.
+    """
+    return (
+        process.returncode == 64
+        and exact_stdout_protocol(
+            process.stdout, "R422_REFUSE_NON_SYNTHETIC_TEMP_ROOT")
+    )
+
+
 def parse_r422_selftest_assertions(output: str) -> int | None:
     """Parse the entire R422 Java self-test stdout, never a substring.
 
@@ -92,7 +105,7 @@ def read_holder_announcement(holder: subprocess.Popen, timeout: float = 10.0) ->
 
     def read_line() -> None:
         try:
-            events.put(("line", holder.stdout.readline()))
+            events.put(("line", holder.stdout.readline(64)))
         except (OSError, ValueError):
             events.put(("error", ""))
 
@@ -104,7 +117,15 @@ def read_holder_announcement(holder: subprocess.Popen, timeout: float = 10.0) ->
         raise RuntimeError("R422_OWNER_HOLDER_STARTUP_TIMEOUT") from None
     require(kind == "line", "R422_OWNER_HOLDER_STDOUT_READ_FAILED")
     require(bool(line), "R422_OWNER_HOLDER_EXITED_BEFORE_ANNOUNCEMENT")
-    return line.strip()
+    # No strip(): " ACQUIRED", "ACQUIRED " or an unterminated line must
+    # never count as acquiring the JVM ownership lease.
+    require(
+        exact_stdout_protocol(line, "ACQUIRED")
+        or exact_stdout_protocol(line, "REFUSED_OWNER")
+        or exact_stdout_protocol(line, "REFUSED_PREPARE"),
+        "R422_HOLDER_MALFORMED_ANNOUNCEMENT",
+    )
+    return line[:-2] if line.endswith("\r\n") else line[:-1]
 
 
 def main(argv=None):
@@ -241,8 +262,7 @@ def main(argv=None):
 
     outside = run(command("try", temp_parent))
     passed("non_synthetic_temp_root_is_rejected",
-           outside.returncode != 0 and
-           "R422_REFUSE_NON_SYNTHETIC_TEMP_ROOT" in outside.stderr)
+           exact_invalid_root_refusal(outside))
 
     print(json.dumps({
         "status": "R422_OWNER_PRIVATE_ACTUAL_STORE_PROCESS_ACCEPTANCE_PASS",
