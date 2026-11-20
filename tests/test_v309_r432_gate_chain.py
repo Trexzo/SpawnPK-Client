@@ -20,6 +20,7 @@ import uuid
 
 from tools.r425 import compile_and_accept_private_overlay as r425
 from tools.r432 import chain_private_process_acceptance as r432
+from tools.r441.approved_full_inventory import inventory_digest
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -243,6 +244,10 @@ class R432WholeMockGateTests(unittest.TestCase):
             dependency_b=self.d2,
             dependency_a_sha256=r425.hash_file(self.d1),
             dependency_b_sha256=r425.hash_file(self.d2),
+            approved_source_inventory_sha256=inventory_digest(
+                r425.sha_inventory(self.original_src, ".java"), "java"),
+            approved_class_inventory_sha256=inventory_digest(
+                r425.sha_inventory(self.original_cls, ".class"), "class"),
             javac=Path(sys.executable).resolve(),
             java=Path(sys.executable).resolve(),
         )
