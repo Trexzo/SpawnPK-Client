@@ -8,6 +8,7 @@ on:
       - tools/r440/**
       - tools/r425/owner_only_run_r425.ps1
       - tests/test_v309_r440_*.py
+      - tests/test_v309_r439_*.py
       - .github/workflows/v309-r440-owner-preflight.yml
       - docs/V309_R440_OWNER_PRIVATE_PREFLIGHT.md
   workflow_dispatch:
@@ -50,6 +51,8 @@ jobs:
           }
       - name: R440 read-only owner-specific preflight on invented source/class/JARs
         run: python -B -m unittest discover -s tests -p 'test_v309_r440_*.py' -v
+      - name: Inherited R439 bounded synthetic holder failure path
+        run: python -B -m unittest discover -s tests -p 'test_v309_r439_*.py' -v
       - name: Inherited R432 owner PowerShell mandatory two-stage checks
         run: python -B -m unittest discover -s tests -p 'test_v309_r432_owner_entrypoint.py' -v
       - name: Inherited R424 public non-destructive patch tests
