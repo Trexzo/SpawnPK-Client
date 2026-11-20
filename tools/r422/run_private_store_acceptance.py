@@ -55,6 +55,19 @@ def exact_stdout_protocol(output: str, *expected: str) -> bool:
                       "".join(t + "\r\n" for t in expected))
 
 
+def exact_invalid_root_refusal(process: subprocess.CompletedProcess) -> bool:
+    """Evidence of the public Java harness's explicit invalid-root exit.
+
+    Do not infer a negative-test pass from arbitrary stderr/stacktrace text.
+    Exit 64 and the one complete refusal record must both be present.
+    """
+    return (
+        process.returncode == 64
+        and exact_stdout_protocol(
+            process.stdout, "R422_REFUSE_NON_SYNTHETIC_TEMP_ROOT")
+    )
+
+
 def parse_r422_selftest_assertions(output: str) -> int | None:
     """Parse the entire R422 Java self-test stdout, never a substring.
 
@@ -249,9 +262,7 @@ def main(argv=None):
 
     outside = run(command("try", temp_parent))
     passed("non_synthetic_temp_root_is_rejected",
-           outside.returncode == 64 and
-           exact_stdout_protocol(outside.stdout,
-                                 "R422_REFUSE_NON_SYNTHETIC_TEMP_ROOT"))
+           exact_invalid_root_refusal(outside))
 
     print(json.dumps({
         "status": "R422_OWNER_PRIVATE_ACTUAL_STORE_PROCESS_ACCEPTANCE_PASS",
