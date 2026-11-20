@@ -411,9 +411,9 @@ def classfile_evidence(raw: bytes, resource_filter, code_observer=None) -> tuple
                 if (owner, name, signature) not in RESOURCE_APIS:
                     continue
                 api_calls += 1
-                for prior_offset, literal in string_sites:
+                for prior_offset, resource_name in string_sites:
                     if (0 < offset-prior_offset <= MAX_RESOURCE_WINDOW_BYTES):
-                        proximity.append((method_label, literal))
+                        proximity.append((method_label, resource_name))
 
     def attributes(kind: str, method_label: str = "") -> None:
         number = two()
