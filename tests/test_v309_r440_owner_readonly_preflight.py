@@ -54,8 +54,8 @@ class R440ReadOnlyOwnerPrivatePreflight(unittest.TestCase):
             dependency_a=self.depa, dependency_b=self.depb,
             dependency_a_sha256=r425.hash_file(self.depa),
             dependency_b_sha256=r425.hash_file(self.depb),
-            javac=Path(sys.executable),
-            java=Path(sys.executable),
+            javac=Path(sys.executable).resolve(),
+            java=Path(sys.executable).resolve(),
         )
         self.context = ExitStack()
         self.addCleanup(self.context.close)
