@@ -1,0 +1,53 @@
+name: v309-r449-descriptor-resource-gaps
+on:
+  push:
+    branches:
+      - research/v309-r449-descriptor-resource-references
+  pull_request:
+    paths:
+      - tools/r449/**
+      - tests/test_v309_r449_*.py
+      - docs/V309_R449_DESCRIPTOR_RESOURCE_GAPS.md
+      - .github/workflows/v309-r449-descriptor-resource.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-java-descriptor-and-resource-candidate-analysis:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R449 synthetic Java11 descriptors, class refs, resource literals, private quarantine
+        run: python -B -m unittest discover -s tests -p 'test_v309_r449_*.py' -v
+      - name: Inherited R448 Java11 class-index reference gap inventory
+        run: python -B -m unittest discover -s tests -p 'test_v309_r448_*.py' -v
+      - name: Inherited R447 original v309 class names and resources
+        run: python -B -m unittest discover -s tests -p 'test_v309_r447_*.py' -v
+      - name: Inherited R446 owner-isolated source/class current-observation trust boundary
+        run: python -B -m unittest discover -s tests -p 'test_v309_r446_*.py' -v
+      - name: Inherited R445 bounded TEMP and nofollow reads
+        run: python -B -m unittest discover -s tests -p 'test_v309_r445_*.py' -v
+      - name: Inherited R444 private artifact discovery
+        run: python -B -m unittest discover -s tests -p 'test_v309_r444_*.py' -v
+      - name: Inherited R442 prior-R421 independently pinned SHA schema
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v
+      - name: Inherited R426 fabricated javac Store acceptance
+        run: python -B -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v
