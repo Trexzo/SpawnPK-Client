@@ -1,0 +1,53 @@
+name: v309-r438-drained-holder-shutdown
+on:
+  push:
+    branches:
+      - research/v309-r438-drained-holder-shutdown
+  pull_request:
+    paths:
+      - tools/r422/run_private_store_acceptance.py
+      - tests/test_v309_r434_bounded_holder_startup.py
+      - tests/test_v309_r437_exact_holder_root_rejection.py
+      - tests/test_v309_r438_drained_holder_shutdown.py
+      - .github/workflows/v309-r438-drained-holder-shutdown.yml
+      - docs/V309_R438_DRAINED_HOLDER_SHUTDOWN.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  drains-pipes-and-reaps-holder:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R438 real OS pipe saturation and bounded owner shutdown
+        run: python -m unittest discover -s tests -p 'test_v309_r438_*.py' -v
+      - name: Inherited R437 exact owner and negative-root gates
+        run: python -m unittest discover -s tests -p 'test_v309_r437_*.py' -v
+      - name: Inherited R436 exact assertion counts
+        run: python -m unittest discover -s tests -p 'test_v309_r436_*.py' -v
+      - name: Inherited R435 exact process status responses
+        run: python -m unittest discover -s tests -p 'test_v309_r435_*.py' -v
+      - name: Inherited R434 bounded startup and cleanup
+        run: python -m unittest discover -s tests -p 'test_v309_r434_*.py' -v
+      - name: Inherited R433 real producer/consumer source contracts
+        run: python -m unittest discover -s tests -p 'test_v309_r433_*.py' -v
+      - name: Inherited R432 private chain public mocks
+        run: python -m unittest discover -s tests -p 'test_v309_r432_*.py' -v
