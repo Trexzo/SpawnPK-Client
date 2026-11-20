@@ -34,7 +34,9 @@ if str(REPO_ROOT) not in sys.path:
 
 from tools.r425 import compile_and_accept_private_overlay as r425
 from tools.r424 import prepare_private_legacy_cleanup_patch as r424
-from tools.r441.approved_full_inventory import require_approved_baselines
+from tools.r441.approved_full_inventory import (
+    Refused as InventoryRefused, require_approved_baselines,
+)
 
 R422_PROGRAM = REPO_ROOT / "tools/r422/run_private_store_acceptance.py"
 R422_HARNESS = REPO_ROOT / "tests/fixtures/r422/R422ActualStoreAcceptance.java"
@@ -322,11 +324,11 @@ def main() -> int:
         result = run(args)
         print(json.dumps(result, sort_keys=True))
         return 0
-    except (Refused, OSError, ValueError, RuntimeError, KeyError, TypeError,
+    except (Refused, InventoryRefused, OSError, ValueError, RuntimeError, KeyError, TypeError,
             subprocess.TimeoutExpired) as error:
         print(json.dumps({
             "status": "R432_PRIVATE_CROSS_PROCESS_CHAIN_REFUSED",
-            "reason": str(error)[:200] if isinstance(error, Refused)
+            "reason": str(error)[:200] if isinstance(error, (Refused, InventoryRefused))
                       else "R432_INVALID_OR_UNVERIFIED_PRIVATE_ACCEPTANCE",
             "release_authorized": False,
             "merge_authorized": False,
