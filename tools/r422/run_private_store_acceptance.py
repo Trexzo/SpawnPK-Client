@@ -109,12 +109,24 @@ def read_holder_announcement(holder: subprocess.Popen, timeout: float = 10.0) ->
         except (OSError, ValueError):
             events.put(("error", ""))
 
-    Thread(target=read_line, daemon=True,
-           name="R422-holder-announcement-reader").start()
+    reader = Thread(target=read_line, daemon=True,
+                    name="R422-holder-announcement-reader")
+    reader.start()
     try:
         kind, line = events.get(timeout=timeout)
     except Empty:
+        # A timed-out reader still owns stdout's TextIOWrapper. Stop the
+        # synthetic child, then join the reader BEFORE communicate() reads.
+        if holder.poll() is None:
+            try:
+                holder.kill()
+            except ProcessLookupError:
+                pass  # The child exited between poll() and kill().
+        reader.join(timeout=3)
+        require(not reader.is_alive(), "R422_OWNER_HOLDER_READER_NOT_REAPED")
         raise RuntimeError("R422_OWNER_HOLDER_STARTUP_TIMEOUT") from None
+    reader.join(timeout=3)
+    require(not reader.is_alive(), "R422_OWNER_HOLDER_READER_NOT_REAPED")
     require(kind == "line", "R422_OWNER_HOLDER_STDOUT_READ_FAILED")
     require(bool(line), "R422_OWNER_HOLDER_EXITED_BEFORE_ANNOUNCEMENT")
     # No strip(): " ACQUIRED", "ACQUIRED " or an unterminated line must
@@ -146,6 +158,30 @@ def release_holder_and_collect(holder: subprocess.Popen,
     holder.stdin = None
     stdout, _stderr = holder.communicate(timeout=timeout)
     return stdout
+
+
+def reap_synthetic_holder(holder: subprocess.Popen,
+                          timeout: float = 5.0) -> None:
+    """Idempotently terminate/reap only the disposable holder process.
+
+    Used on success, initial refusal, interrupted release and after an
+    initial-read timeout. Never touches a real Store or history evidence.
+    """
+    require(timeout > 0, "R422_INVALID_HOLDER_REAP_DEADLINE")
+    try:
+        if holder.poll() is None:
+            try:
+                holder.kill()
+            except ProcessLookupError:
+                pass  # Child may exit between poll and kill.
+        # Draining BOTH pipes avoids wait-before-read deadlocks.
+        holder.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        raise RuntimeError("R422_HOLDER_REAP_UNCONFIRMED") from None
+    finally:
+        for stream in (holder.stdin, holder.stdout, holder.stderr):
+            if stream is not None and not stream.closed:
+                stream.close()
 
 
 def main(argv=None):
@@ -233,15 +269,7 @@ def main(argv=None):
         passed("owner_release_receipt",
                exact_stdout_protocol(released_stdout, "RELEASED"))
     finally:
-        if holder.poll() is None:
-            # A timeout or failed handshake cannot leave a synthetic JVM
-            # holding the OS lease in the background. A second communicate
-            # after TimeoutExpired is supported and drains both pipes.
-            holder.kill()
-            holder.communicate(timeout=5)
-        for stream in (holder.stdin, holder.stdout, holder.stderr):
-            if stream is not None:
-                stream.close()
+        reap_synthetic_holder(holder)
 
     reacquired = run(command("try", lock_root))
     passed("actual_store_reacquire_after_shutdown",
