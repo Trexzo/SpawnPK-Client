@@ -189,7 +189,11 @@ class R439FailureCleanup(unittest.TestCase):
         cleanup = inspect.getsource(r422.reap_synthetic_holder)
         self.assertIn("holder.communicate(timeout=timeout)", cleanup)
         self.assertIn("except ProcessLookupError:", cleanup)
-        self.assertNotIn("holder.wait(", cleanup)
+        # An unjoinable stdout reader is the only valid reason to wait()
+        # before drain, and that guarded path must refuse success.
+        self.assertIn('if reader.is_alive():', cleanup)
+        self.assertIn('holder.wait(timeout=timeout)', cleanup)
+        self.assertIn('raise RuntimeError("R422_HOLDER_READER_NOT_REAPED")', cleanup)
         main = inspect.getsource(r422.main)
         self.assertIn("finally:\n        reap_synthetic_holder(holder)", main)
         self.assertIn("release_holder_and_collect(holder)", main)
