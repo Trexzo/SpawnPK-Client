@@ -1,0 +1,56 @@
+name: v309-r451-straightline-resource-operands
+on:
+  push:
+    branches:
+      - research/v309-r451-straightline-resource-arguments
+  pull_request:
+    paths:
+      - tools/r451/**
+      - tools/r450/classfile_signature_resource.py
+      - tests/test_v309_r451_*.py
+      - docs/V309_R451_STRAIGHTLINE_RESOURCE_ARGUMENTS.md
+      - .github/workflows/v309-r451-straightline-operands.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-java11-resource-argument-trace:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R451 straight-line symbolic resource API String operand tests
+        run: python -B -m unittest discover -s tests -p 'test_v309_r451_*.py' -v
+      - name: Inherited R450 Java generic Signature and opcode/proximity parse
+        run: python -B -m unittest discover -s tests -p 'test_v309_r450_*.py' -v
+      - name: Inherited R449 descriptor/resource-string candidate scan
+        run: python -B -m unittest discover -s tests -p 'test_v309_r449_*.py' -v
+      - name: Inherited R448 original-vs-rebuilt class reference graph
+        run: python -B -m unittest discover -s tests -p 'test_v309_r448_*.py' -v
+      - name: Inherited R447 original SHA-pinned class and asset inventory
+        run: python -B -m unittest discover -s tests -p 'test_v309_r447_*.py' -v
+      - name: Inherited R446 isolated owner-only current inventory gate
+        run: python -B -m unittest discover -s tests -p 'test_v309_r446_*.py' -v
+      - name: Inherited R445 bounded nofollow input gate
+        run: python -B -m unittest discover -s tests -p 'test_v309_r445_*.py' -v
+      - name: Inherited R442 approved historical R421 schema rejection
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v
+      - name: Inherited R426 fabricated Java11 Store compile
+        run: python -B -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v

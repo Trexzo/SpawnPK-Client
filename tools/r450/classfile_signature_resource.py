@@ -273,7 +273,7 @@ def instructions(code: bytes) -> list[tuple[int, int, bytes]]:
     return answer
 
 
-def classfile_evidence(raw: bytes, resource_filter) -> tuple[
+def classfile_evidence(raw: bytes, resource_filter, code_observer=None) -> tuple[
         set[str], list[tuple[str, str]], int]:
     """Returns (generic types, [(method, resource literal)], API call count).
 
@@ -350,6 +350,12 @@ def classfile_evidence(raw: bytes, resource_filter) -> tuple[
     proximity: list[tuple[str, str]] = []
     api_calls = 0
 
+    def literal(index: int) -> str | None:
+        """An actual CONSTANT_String value; never arbitrary CP Utf8."""
+        require(type(index) is int and 1 <= index < cp_count,
+                "R451_LITERAL_INDEX_INVALID")
+        return utf(cp[index]) if tags[index] == 8 else None
+
     def code_attribute(data: bytes, method_label: str) -> None:
         nonlocal api_calls
         p = 0
@@ -367,8 +373,8 @@ def classfile_evidence(raw: bytes, resource_filter) -> tuple[
         def integer() -> int:
             return int.from_bytes(consume(4), "big")
 
-        short()  # max_stack
-        short()  # max_locals
+        max_stack = short()
+        max_locals = short()
         code_size = integer()
         require(code_size <= MAX_CODE_BYTES,
                 "R450_EXCESSIVE_METHOD_CODE_LENGTH")
@@ -381,6 +387,13 @@ def classfile_evidence(raw: bytes, resource_filter) -> tuple[
             utf(short())
             consume(integer())
         require(p == len(data), "R450_CODE_ATTRIBUTE_TRAILING_DATA")
+        if code_observer is not None:
+            # Read-only extension point for R451. Give only method-local
+            # bytecode and typed constant-pool resolvers, not filesystem
+            # paths, mutable CP arrays or real Java class execution.
+            code_observer(
+                method_label, method_code, max_stack, max_locals,
+                exceptions, literal, methodref, resource_filter)
 
         string_sites: list[tuple[int, str]] = []
         for offset, opcode, operand in instructions(method_code):
@@ -389,18 +402,18 @@ def classfile_evidence(raw: bytes, resource_filter) -> tuple[
                     operand, "big")
                 require(1 <= index < cp_count, "R450_LDC_INDEX_INVALID")
                 if tags[index] == 8:
-                    literal = resource_filter(utf(cp[index]))
-                    if literal is not None:
-                        string_sites.append((offset, literal))
+                    possible_resource = resource_filter(utf(cp[index]))
+                    if possible_resource is not None:
+                        string_sites.append((offset, possible_resource))
             if opcode in (0xb6, 0xb7, 0xb8, 0xb9):
                 idx = int.from_bytes(operand[:2], "big")
                 owner, name, signature = methodref(idx)
                 if (owner, name, signature) not in RESOURCE_APIS:
                     continue
                 api_calls += 1
-                for prior_offset, literal in string_sites:
+                for prior_offset, resource_name in string_sites:
                     if (0 < offset-prior_offset <= MAX_RESOURCE_WINDOW_BYTES):
-                        proximity.append((method_label, literal))
+                        proximity.append((method_label, resource_name))
 
     def attributes(kind: str, method_label: str = "") -> None:
         number = two()
