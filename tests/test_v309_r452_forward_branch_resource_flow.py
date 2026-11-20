@@ -185,7 +185,7 @@ class R452PureAcyclicFlow(unittest.TestCase):
         with patch.object(flow,"MAX_STATES",4):
             self.assertIsNone(inspect_code(diamond()))
 
-    def test_21_branch_budget_refuses_excessive CFG_nodes(self):
+    def test_21_branch_budget_refuses_excessive_cfg_nodes(self):
         with patch.object(flow,"MAX_BRANCHES",1):
             self.assertIsNone(inspect_code(diamond()))
 
