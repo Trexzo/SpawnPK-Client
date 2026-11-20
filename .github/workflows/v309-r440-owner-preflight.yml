@@ -36,6 +36,18 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - name: Parse owner PowerShell entrypoint without executing it
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $tokens = $null
+          $parseErrors = $null
+          $file = (Resolve-Path -LiteralPath 'tools/r425/owner_only_run_r425.ps1').Path
+          [System.Management.Automation.Language.Parser]::ParseFile($file, [ref]$tokens, [ref]$parseErrors) | Out-Null
+          if ($parseErrors.Count -gt 0) {
+            $parseErrors | Format-List | Out-String | Write-Output
+            throw 'R440_OWNER_POWERSHELL_SYNTAX_REFUSED'
+          }
       - name: R440 read-only owner-specific preflight on invented source/class/JARs
         run: python -B -m unittest discover -s tests -p 'test_v309_r440_*.py' -v
       - name: Inherited R432 owner PowerShell mandatory two-stage checks
