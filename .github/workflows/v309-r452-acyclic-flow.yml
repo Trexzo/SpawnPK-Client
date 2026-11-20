@@ -1,0 +1,57 @@
+name: v309-r452-acyclic-resource-flow
+on:
+  push:
+    branches:
+      - research/v309-r452-forward-branch-resource-flow
+  pull_request:
+    paths:
+      - tools/r452/**
+      - tests/test_v309_r452_*.py
+      - docs/V309_R452_ACYCLIC_RESOURCE_FLOW.md
+      - .github/workflows/v309-r452-acyclic-flow.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-java11-acyclic-cfg-resource-arguments:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R452 synthetic forward-only conditional/goto all-path literal resource arguments
+        run: python -B -m unittest discover -s tests -p 'test_v309_r452_*.py' -v
+      - name: Inherited R451 actual invocation argument under straightline symbolic stack
+        run: python -B -m unittest discover -s tests -p 'test_v309_r451_*.py' -v
+      - name: Inherited R450 generic Signature and resource method proximity
+        run: python -B -m unittest discover -s tests -p 'test_v309_r450_*.py' -v
+      - name: Inherited R449 declared methods/descriptors and resource literal census
+        run: python -B -m unittest discover -s tests -p 'test_v309_r449_*.py' -v
+      - name: Inherited R448 reconstructed class index refs and linkage
+        run: python -B -m unittest discover -s tests -p 'test_v309_r448_*.py' -v
+      - name: Inherited R447 pinned original JAR resource count and ZIP admission
+        run: python -B -m unittest discover -s tests -p 'test_v309_r447_*.py' -v
+      - name: Inherited R446 owner-isolated unapproved source and class inventory
+        run: python -B -m unittest discover -s tests -p 'test_v309_r446_*.py' -v
+      - name: Inherited R445 bounded nofollow source/class/dependency reads
+        run: python -B -m unittest discover -s tests -p 'test_v309_r445_*.py' -v
+      - name: Inherited R442 independently approved R421 source/class gate controls
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v
+      - name: Inherited R426 fabricated Java11 Store private pipeline acceptance
+        run: python -B -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v
