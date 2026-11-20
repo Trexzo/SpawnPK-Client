@@ -1,0 +1,53 @@
+name: v309-r446-private-observed-inventory
+on:
+  push:
+    branches:
+      - research/v309-r446-private-observed-inventory
+  pull_request:
+    paths:
+      - tools/r446/**
+      - tests/test_v309_r446_*.py
+      - docs/V309_R446_PRIVATE_UNAPPROVED_OBSERVATION.md
+      - .github/workflows/v309-r446-private-observation.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  owner-isolated-current-observation-no-trust-promotion:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R446 current R421 full source/class observed SHA and explicit private quarantine
+        run: python -B -m unittest discover -s tests -p 'test_v309_r446_*.py' -v
+      - name: Inherited R445 bounded original data and TEMP scan
+        run: python -B -m unittest discover -s tests -p 'test_v309_r445_*.py' -v
+      - name: Inherited R444 TEMP discovery safety and no-leak guarantees
+        run: python -B -m unittest discover -s tests -p 'test_v309_r444_*.py' -v
+      - name: Inherited R443 older R315 source-only lineage SHA checks
+        run: python -B -m unittest discover -s tests -p 'test_v309_r443_*.py' -v
+      - name: Inherited R442 approved historical R421 reference rejection
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v
+      - name: Inherited R441 whole source/class digests
+        run: python -B -m unittest discover -s tests -p 'test_v309_r441_*.py' -v
+      - name: Inherited R440 owner read-only private preflight test
+        run: python -B -m unittest discover -s tests -p 'test_v309_r440_*.py' -v
+      - name: Inherited R426 invented JVM Store compile and acceptance
+        run: python -B -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v
