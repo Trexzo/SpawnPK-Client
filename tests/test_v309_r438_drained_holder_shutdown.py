@@ -139,9 +139,11 @@ class R438DrainedHolderShutdown(unittest.TestCase):
         self.assertLess(third, fourth)
         self.assertNotIn("holder.wait(timeout=10)", body)
         self.assertNotIn("holder.stdout.read()", body)
-        self.assertIn("holder.kill()", body)
-        self.assertIn("holder.communicate(timeout=5)", body)
-        self.assertIn("stream.close()", body)
+        self.assertIn("reap_synthetic_holder(holder)", body)
+        cleanup = inspect.getsource(r422.reap_synthetic_holder)
+        self.assertIn("holder.kill()", cleanup)
+        self.assertIn("holder.communicate(timeout=timeout)", cleanup)
+        self.assertIn("stream.close()", cleanup)
 
     def test_08_collector_drains_both_pipes_before_lease_acceptance(self):
         helper = inspect.getsource(r422.release_holder_and_collect)
