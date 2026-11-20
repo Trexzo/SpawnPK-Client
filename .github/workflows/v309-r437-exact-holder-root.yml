@@ -1,0 +1,50 @@
+name: v309-r437-exact-holder-and-root-rejection
+on:
+  push:
+    branches:
+      - research/v309-r437-exact-holder-and-root-rejection
+  pull_request:
+    paths:
+      - tools/r422/run_private_store_acceptance.py
+      - tests/fixtures/r422/R422ActualStoreAcceptance.java
+      - tests/test_v309_r437_exact_holder_root_rejection.py
+      - .github/workflows/v309-r437-exact-holder-root.yml
+      - docs/V309_R437_EXACT_HOLDER_ROOT_REJECTION.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  holder-and-negative-root-exact-receipts:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R437 bounded exact holder announcement and public Java refusal tests
+        run: python -m unittest discover -s tests -p 'test_v309_r437_*.py' -v
+      - name: Inherited R436 strict R422 and R425 counts
+        run: python -m unittest discover -s tests -p 'test_v309_r436_*.py' -v
+      - name: Inherited R435 exact OS process receipt protocol
+        run: python -m unittest discover -s tests -p 'test_v309_r435_*.py' -v
+      - name: Inherited R434 OS process timeouts and reaping
+        run: python -m unittest discover -s tests -p 'test_v309_r434_*.py' -v
+      - name: Inherited R433 R422/R425 producer compatibility
+        run: python -m unittest discover -s tests -p 'test_v309_r433_*.py' -v
+      - name: Inherited R432 closed owner gate public contract
+        run: python -m unittest discover -s tests -p 'test_v309_r432_*.py' -v
