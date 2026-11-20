@@ -1,0 +1,51 @@
+name: v309-r448-rebuilt-bytecode-linkage
+on:
+  push:
+    branches:
+      - research/v309-r448-rebuilt-bytecode-linkage-gaps
+  pull_request:
+    paths:
+      - tools/r448/**
+      - tests/test_v309_r448_*.py
+      - docs/V309_R448_REBUILT_BYTECODE_LINKAGE.md
+      - .github/workflows/v309-r448-bytecode-linkage.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-rebuilt-classfile-reference-worklist:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R448 source-free real Java11 class constant pool linkage tests
+        run: python -B -m unittest discover -s tests -p 'test_v309_r448_*.py' -v
+      - name: Inherited R447 original JAR class and resource coverage
+        run: python -B -m unittest discover -s tests -p 'test_v309_r447_*.py' -v
+      - name: Inherited R446 isolated current inventory and private quarantine
+        run: python -B -m unittest discover -s tests -p 'test_v309_r446_*.py' -v
+      - name: Inherited R445 bounded original Store and root scan
+        run: python -B -m unittest discover -s tests -p 'test_v309_r445_*.py' -v
+      - name: Inherited R444 historical owner-TEMP discovery
+        run: python -B -m unittest discover -s tests -p 'test_v309_r444_*.py' -v
+      - name: Inherited R442 historical full baseline gate
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v
+      - name: Inherited R426 invented javac Store acceptance
+        run: python -B -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v
