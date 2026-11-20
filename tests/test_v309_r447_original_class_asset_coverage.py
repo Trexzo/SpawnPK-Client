@@ -220,7 +220,16 @@ class R447OriginalV309Coverage(unittest.TestCase):
                      "sub\\windows.class", "sub//double.class",
                      "sub/./dot.class", "sub/../traversal.class"):
             with self.subTest(path=name):
+                # zipfile.writestr converts host path separators on
+                # Windows, so a literal backslash is sanitized before it
+                # reaches the ZIP central directory on that platform.
+                with self.assertRaisesRegex(r447.Refused, "R447_UNSAFE_ZIP_ENTRY_PATH"):
+                    r447.zip_path(name)
                 data = zip_bytes({name: b"unsafe"})
+                with zipfile.ZipFile(io.BytesIO(data)) as generated:
+                    actual_name = generated.namelist()[0]
+                if actual_name != name:
+                    continue
                 with self.assertRaisesRegex(r447.Refused, "R447_UNSAFE_ZIP_ENTRY_PATH"):
                     r447.archive(data, "original")
 
