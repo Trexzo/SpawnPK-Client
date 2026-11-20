@@ -201,6 +201,42 @@ class R439FailureCleanup(unittest.TestCase):
                   if t.name == "R422-holder-announcement-reader" and t.is_alive()]
         self.assertEqual(active, [])
 
+    def test_15_unjoinable_reader_never_competes_for_stdout(self):
+        class BusyReader:
+            def is_alive(self):
+                return True
+            def join(self, timeout):
+                self.waited = timeout
+        class ChildWithInheritedPipe:
+            def __init__(self):
+                self.stdin = io.StringIO()
+                self.stdout = io.StringIO()
+                self.stderr = io.StringIO()
+                self._r422_announcement_reader = BusyReader()
+                self.killed = False
+                self.waited = False
+                self.communicated = False
+            def poll(self):
+                return None
+            def kill(self):
+                self.killed = True
+            def wait(self, timeout):
+                self.waited = True
+                return 0
+            def communicate(self, timeout):
+                self.communicated = True
+                raise AssertionError("Cannot race with active stdout reader")
+        proc = ChildWithInheritedPipe()
+        with self.assertRaisesRegex(RuntimeError,
+                                    "R422_HOLDER_READER_NOT_REAPED"):
+            r422.reap_synthetic_holder(proc, 0.1)
+        self.assertTrue(proc.killed)
+        self.assertTrue(proc.waited)
+        self.assertFalse(proc.communicated)
+        self.assertFalse(proc.stdout.closed)
+        self.assertTrue(proc.stdin.closed)
+        self.assertTrue(proc.stderr.closed)
+
     def test_14_r432_cross_process_acceptance_contract_stays_fixed(self):
         from tools.r432.chain_private_process_acceptance import REQUIRED_R422_CHECKS
         tree = ast.parse(inspect.getsource(r422.main))
