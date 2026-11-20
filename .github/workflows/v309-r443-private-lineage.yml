@@ -1,0 +1,49 @@
+name: v309-r443-private-lineage-reconciliation
+on:
+  push:
+    branches:
+      - research/v309-r443-private-lineage-reconciliation
+  pull_request:
+    paths:
+      - tools/r443/**
+      - tests/test_v309_r443_*.py
+      - docs/V309_R443_PRIVATE_SOURCE_LINEAGE.md
+      - .github/workflows/v309-r443-private-lineage.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  historical-r315-to-r421-readonly-compare:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 22
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R443 invented R315 to R421 SHA-pinned source reconciliation and no-release checks
+        run: python -B -m unittest discover -s tests -p 'test_v309_r443_*.py' -v
+      - name: Inherited R442 historically approved manifest shape and CLI
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v
+      - name: Inherited R441 full-tree source and class inventory digest gates
+        run: python -B -m unittest discover -s tests -p 'test_v309_r441_*.py' -v
+      - name: Inherited R440 owner read-only SHA and JDK preflight
+        run: python -B -m unittest discover -s tests -p 'test_v309_r440_*.py' -v
+      - name: Inherited R432 owner class/process acceptance public mocks
+        run: python -B -m unittest discover -s tests -p 'test_v309_r432_*.py' -v
+      - name: Inherited R426 fabricated javac compile and exact Store receipt
+        run: python -B -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v
