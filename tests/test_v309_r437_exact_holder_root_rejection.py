@@ -204,7 +204,8 @@ class R437ExactHolderAndNegativeRoot(unittest.TestCase):
         self.assertIn("exact_invalid_root_refusal(outside)", body)
         self.assertNotIn("outside.stderr", body)
         self.assertIn("holder.kill()", body)
-        self.assertIn("holder.wait(timeout=5)", body)
+        self.assertIn("holder.communicate(timeout=5)", body)
+        self.assertIn("release_holder_and_collect(holder)", body)
         self.assertIn("holder.stdout.readline(64)", helper)
         self.assertNotIn("line.strip()", helper)
 
