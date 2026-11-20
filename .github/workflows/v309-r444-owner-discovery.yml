@@ -1,0 +1,49 @@
+name: v309-r444-owner-r421-evidence-discovery
+on:
+  push:
+    branches:
+      - research/v309-r444-owner-r421-evidence-discovery
+  pull_request:
+    paths:
+      - tools/r444/**
+      - tests/test_v309_r444_*.py
+      - docs/V309_R444_OWNER_R421_EVIDENCE_DISCOVERY.md
+      - .github/workflows/v309-r444-owner-discovery.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  no-leak-readonly-owner-evidence-discovery:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 22
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R444 read-only synthetic owner TEMP R421 discovery and failures
+        run: python -B -m unittest discover -s tests -p 'test_v309_r444_*.py' -v
+      - name: Inherited R443 R315/R421 history and no-client-binaries tests
+        run: python -B -m unittest discover -s tests -p 'test_v309_r443_*.py' -v
+      - name: Inherited R442 historical manifest SHA approval tests
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v
+      - name: Inherited R441 full source/class inventory identity checks
+        run: python -B -m unittest discover -s tests -p 'test_v309_r441_*.py' -v
+      - name: Inherited R440 read-only owner source tests
+        run: python -B -m unittest discover -s tests -p 'test_v309_r440_*.py' -v
+      - name: Inherited R426 complete invented Store compiler test
+        run: python -B -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v
