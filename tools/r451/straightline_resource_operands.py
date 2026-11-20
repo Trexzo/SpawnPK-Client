@@ -122,6 +122,15 @@ def trace_method(
         raise Refused("R451_MALFORMED_INSTRUCTION_STREAM") from None
     if any(opcode in CONTROL_FLOW for _, opcode, _ in instructions):
         return None
+    # A method that returns before its last decoded instruction can contain
+    # unreachable but parseable bytecode. Do not attribute arguments from
+    # those dead tails or from a method without a modeled terminal return.
+    terminals = {0xac, 0xad, 0xae, 0xaf, 0xb0, 0xb1}
+    if (not instructions
+            or instructions[-1][1] not in (0xb0, 0xb1)
+            or any(opcode in terminals
+                   for _, opcode, _ in instructions[:-1])):
+        return None
 
     stack: list[object] = []
     locals_known: dict[int, object] = {}
