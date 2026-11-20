@@ -111,6 +111,7 @@ def generic_signature_refs(signature: str, kind: str) -> set[str]:
             if ch() in "+-":
                 take(ch())
             reference()
+        require(num > 0, "R450_EMPTY_GENERIC_ARGUMENT_LIST")
         take(">")
 
     def class_type() -> None:
@@ -168,6 +169,7 @@ def generic_signature_refs(signature: str, kind: str) -> set[str]:
             while ch() == ":":
                 take(":")
                 reference()
+        require(num > 0, "R450_EMPTY_TYPE_PARAMETER_LIST")
         take(">")
 
     if kind == "field":
