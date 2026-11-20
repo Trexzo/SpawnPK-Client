@@ -158,7 +158,10 @@ class R441ApprovedFullInventory(unittest.TestCase):
             self.assertEqual(code.count("--approved-" +
                             ("source" if "Source" in item else "class")
                             + "-inventory-sha256"), 3)
-        self.assertIn("R441_REFUSED:", code)
+        # R442 now requires the historic manifest first; the four former
+        # R441 SHA arguments remain mandatory derived pins in all stages.
+        self.assertIn("R442_REFUSED:", code)
+        self.assertIn("ApprovedR421ManifestSha256", code)
         self.assertLess(code.index("@preflightArgs"), code.index("@arguments"))
         self.assertLess(code.index("@arguments"), code.index("@secondArgs"))
         self.assertNotIn("ApprovedSourceInventorySha256 = (Get-FileHash", code)
