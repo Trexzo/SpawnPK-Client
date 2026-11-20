@@ -1,0 +1,51 @@
+name: v309-r447-original-class-asset-coverage
+on:
+  push:
+    branches:
+      - research/v309-r447-original-class-asset-coverage
+  pull_request:
+    paths:
+      - tools/r447/**
+      - tests/test_v309_r447_*.py
+      - docs/V309_R447_ORIGINAL_CLASS_ASSET_COVERAGE.md
+      - .github/workflows/v309-r447-class-asset.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  original-v309-classpath-and-assets-coverage:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R447 fake original-JAR classpath and resource companion byte coverage
+        run: python -B -m unittest discover -s tests -p 'test_v309_r447_*.py' -v
+      - name: Inherited R446 real-current-observation shape and private quarantine
+        run: python -B -m unittest discover -s tests -p 'test_v309_r446_*.py' -v
+      - name: Inherited R445 bounded source/class read and nofollow
+        run: python -B -m unittest discover -s tests -p 'test_v309_r445_*.py' -v
+      - name: Inherited R444 owner TEMP evidence enumeration
+        run: python -B -m unittest discover -s tests -p 'test_v309_r444_*.py' -v
+      - name: Inherited R442 old-reference refusal and historic manifest check
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v
+      - name: Inherited R441 full 1277/1394 source/class digest gate
+        run: python -B -m unittest discover -s tests -p 'test_v309_r441_*.py' -v
+      - name: Inherited R426 fabricated Java Store compiler acceptance
+        run: python -B -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v
