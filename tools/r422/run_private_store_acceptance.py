@@ -128,6 +128,26 @@ def read_holder_announcement(holder: subprocess.Popen, timeout: float = 10.0) ->
     return line[:-2] if line.endswith("\r\n") else line[:-1]
 
 
+def release_holder_and_collect(holder: subprocess.Popen,
+                               timeout: float = 10.0) -> str:
+    """Release a held synthetic owner and drain both pipes before waiting.
+
+    Waiting on the process without reading stderr can deadlock when its
+    stderr pipe fills. communicate() drains stdout and stderr concurrently.
+    The first ACQUIRED line was consumed by read_holder_announcement().
+    Caller retains the exact RELEASED and successful exit checks.
+    """
+    require(timeout > 0, "R422_INVALID_HOLDER_RELEASE_DEADLINE")
+    require(holder.stdin is not None, "R422_HOLDER_STDIN_NOT_AVAILABLE")
+    holder.stdin.write("\n")
+    holder.stdin.flush()
+    holder.stdin.close()
+    # A closed stdin object would otherwise be flushed again by communicate.
+    holder.stdin = None
+    stdout, _stderr = holder.communicate(timeout=timeout)
+    return stdout
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--java", type=Path, required=True)
@@ -208,18 +228,19 @@ def main(argv=None):
                exact_stdout_protocol(contender.stdout, "REFUSED_OWNER"))
         passed("actual_store_contender_did_not_create_history",
                not (lock_root / "loot-history.json").exists())
-        holder.stdin.write("\n")
-        holder.stdin.flush()
-        holder.wait(timeout=10)
+        released_stdout = release_holder_and_collect(holder)
         passed("owner_release_terminates_normally", holder.returncode == 0)
-        released_stdout = holder.stdout.read()
-        passed("owner_release_receipt", exact_stdout_protocol(released_stdout, "RELEASED"))
+        passed("owner_release_receipt",
+               exact_stdout_protocol(released_stdout, "RELEASED"))
     finally:
         if holder.poll() is None:
+            # A timeout or failed handshake cannot leave a synthetic JVM
+            # holding the OS lease in the background. A second communicate
+            # after TimeoutExpired is supported and drains both pipes.
             holder.kill()
-            holder.wait(timeout=5)
+            holder.communicate(timeout=5)
         for stream in (holder.stdin, holder.stdout, holder.stderr):
-            if stream:
+            if stream is not None:
                 stream.close()
 
     reacquired = run(command("try", lock_root))
