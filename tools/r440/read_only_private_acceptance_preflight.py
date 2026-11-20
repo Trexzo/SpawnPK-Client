@@ -29,7 +29,9 @@ if str(ROOT) not in sys.path:
 from tools.r424 import prepare_private_legacy_cleanup_patch as r424
 from tools.r425 import compile_and_accept_private_overlay as r425
 from tools.r432 import chain_private_process_acceptance as r432
-from tools.r441.approved_full_inventory import require_approved_baselines
+from tools.r441.approved_full_inventory import (
+    Refused as InventoryRefused, require_approved_baselines,
+)
 
 
 class Refused(RuntimeError):
@@ -196,10 +198,10 @@ def main(argv=None) -> int:
         result = audit(args)
         print(json.dumps(result, sort_keys=True))
         return 0
-    except (Refused, r425.Refused, r424.Refused, OSError, UnicodeError,
+    except (Refused, InventoryRefused, r425.Refused, r424.Refused, OSError, UnicodeError,
             subprocess.TimeoutExpired, ValueError, RuntimeError) as error:
         reason = (str(error) if isinstance(error,
-                    (Refused, r425.Refused, r424.Refused))
+                    (Refused, InventoryRefused, r425.Refused, r424.Refused))
                   else "R440_INVALID_PRIVATE_PREFLIGHT_INPUT")
         print(json.dumps({
             "status": "R440_OWNER_PRIVATE_READ_ONLY_PREFLIGHT_REFUSED",
