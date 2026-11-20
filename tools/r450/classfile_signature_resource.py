@@ -402,9 +402,9 @@ def classfile_evidence(raw: bytes, resource_filter, code_observer=None) -> tuple
                     operand, "big")
                 require(1 <= index < cp_count, "R450_LDC_INDEX_INVALID")
                 if tags[index] == 8:
-                    literal = resource_filter(utf(cp[index]))
-                    if literal is not None:
-                        string_sites.append((offset, literal))
+                    possible_resource = resource_filter(utf(cp[index]))
+                    if possible_resource is not None:
+                        string_sites.append((offset, possible_resource))
             if opcode in (0xb6, 0xb7, 0xb8, 0xb9):
                 idx = int.from_bytes(operand[:2], "big")
                 owner, name, signature = methodref(idx)
