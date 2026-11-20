@@ -13,7 +13,7 @@ This is **public acceptance-harness** code; no claim that real SpawnPK hangs has
 ## Implemented correction
 
 - `read_holder_announcement()` retains the R434 ten-second deadline, the R437 64-character read cap and exact complete `ACQUIRED`/`REFUSED_OWNER`/`REFUSED_PREPARE` tokens.
-- On deadline, it explicitly kills **only the disposable synthetic holder child** (tolerating an exit race), then joins the blocked reader before allowing the outer cleanup to drain that pipe. A reader that cannot be joined refuses acceptance; it cannot issue a valid owner receipt.
+- On deadline, it explicitly kills **only the disposable synthetic holder child** (tolerating an exit race), then joins the blocked reader before allowing the outer cleanup to drain that pipe. A reader that cannot be joined refuses acceptance; it cannot issue a valid owner receipt. If a pipe is inherited by a descendant and the reader remains alive even after the direct child exits, cleanup does **not** concurrently read or close the reader-owned stdout stream; it leaves the result unconfirmed rather than deadlocking on that pipe.
 - The successful or refused announcement path also joins the completed reader; all the existing exact protocol and exit-code checks stay mandatory.
 - `reap_synthetic_holder()` centralizes fail-closed finalization for a synthetic child after normal release, failed contender check, malformed announcement or timeout. It tolerates a process disappearing between poll and kill, uses `communicate(timeout=5)` to drain both pipes and reap, and closes local streams. A reaping timeout emits `R422_HOLDER_REAP_UNCONFIRMED` rather than falsely claiming successful shutdown.
 - The R422 `finally` uses this helper. Inherited R434/R437/R438 static assertions now inspect it rather than assuming earlier inline cleanup implementation.
@@ -21,7 +21,7 @@ This is **public acceptance-harness** code; no claim that real SpawnPK hangs has
 
 ## Evidence plan
 
-Fourteen focused synthetic-process and mock regressions cover already-released child reaping, initial stdout silence, partial lines, stderr saturation before acquisition, malformed output, failure between acquisition and release, release timeout, early EOF, concurrent exit during kill, unreapable child refusal, and the exact R432 receipt contract. CI is Windows/Ubuntu × Python 3.11/3.13 with JDK21 and inherited R438–R432 suites. **Do not call the final commit verified until GitHub checks finish.**
+Fifteen focused synthetic-process and mock regressions cover already-released child reaping, initial stdout silence, partial lines, stderr saturation before acquisition, malformed output, failure between acquisition and release, release timeout, early EOF, concurrent exit during kill, unreapable child refusal, and the exact R432 receipt contract. CI is Windows/Ubuntu × Python 3.11/3.13 with JDK21 and inherited R438–R432 suites. **Do not call the final commit verified until GitHub checks finish.**
 
 ## Owner-private integration — next meaningful gate
 
