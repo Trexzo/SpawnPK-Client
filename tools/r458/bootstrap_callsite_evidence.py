@@ -61,6 +61,9 @@ class DynamicSite:
     bootstrap_index: int
     bootstrap: Handle
     argument_tags: tuple[int, ...]
+    # MethodHandle bootstrap arguments include lambda implementation handles.
+    # These are explicit CP identities, never executed/resolved targets.
+    bootstrap_handle_arguments: tuple[Handle, ...]
 
 
 @dataclass(frozen=True)
@@ -370,7 +373,8 @@ def scan_class(raw: bytes) -> Evidence:
         result = DynamicSite(
             method, pc, cpidx,
             "constant_dynamic" if tag == 17 else "invokedynamic",
-            name, descriptor, bsmidx, mh, tuple(tags[a] for a in args))
+            name, descriptor, bsmidx, mh, tuple(tags[a] for a in args),
+            tuple(handle(a) for a in args if tags[a] == 15))
         (constants if tag == 17 else calls).append(result)
 
     return Evidence(
