@@ -1,0 +1,68 @@
+name: v309-r457-jvm-callsite-constraints
+on:
+  push:
+    branches:
+      - research/v309-r457-jvm-invoke-constraints
+  pull_request:
+    paths:
+      - tools/r457/**
+      - tools/r456/member_opcode_evidence.py
+      - tests/test_v309_r457_*.py
+      - docs/V309_R457_JVM_CALLSITE_CONSTRAINTS.md
+      - .github/workflows/v309-r457-callsite-constraints.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-jvm-method-descriptor-and-callsite-syntax:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R457 descriptor slot count invokeinterface special-method and owner-kind tests
+        run: python -B -m unittest discover -s tests -p 'test_v309_r457_*.py' -v
+      - name: Inherited R456 actual member instruction site and staticness analysis
+        run: python -B -m unittest discover -s tests -p 'test_v309_r456_*.py' -v
+      - name: Inherited R455 selected preferred-dependency declarations/access
+        run: python -B -m unittest discover -s tests -p 'test_v309_r455_*.py' -v
+      - name: Inherited R454 reconstructed superclass/interface signature ancestry
+        run: python -B -m unittest discover -s tests -p 'test_v309_r454_*.py' -v
+      - name: Inherited R453 JVM Fieldref Methodref InterfaceMethodref metadata
+        run: python -B -m unittest discover -s tests -p 'test_v309_r453_*.py' -v
+      - name: Inherited R452 acyclic branch resource arguments
+        run: python -B -m unittest discover -s tests -p 'test_v309_r452_*.py' -v
+      - name: Inherited R451 symbolic straight-line resource operand arguments
+        run: python -B -m unittest discover -s tests -p 'test_v309_r451_*.py' -v
+      - name: Inherited R450 Java11 CP and Code parser
+        run: python -B -m unittest discover -s tests -p 'test_v309_r450_*.py' -v
+      - name: Inherited R449 descriptors and resource string evidence
+        run: python -B -m unittest discover -s tests -p 'test_v309_r449_*.py' -v
+      - name: Inherited R448 class index dependency graph
+        run: python -B -m unittest discover -s tests -p 'test_v309_r448_*.py' -v
+      - name: Inherited R447 exact v309 and dependency ZIP SHA admission
+        run: python -B -m unittest discover -s tests -p 'test_v309_r447_*.py' -v
+      - name: Inherited R446 current owner sources classes and dependency SHA inventory
+        run: python -B -m unittest discover -s tests -p 'test_v309_r446_*.py' -v
+      - name: Inherited R445 nofollow owner TEMP bounded reads
+        run: python -B -m unittest discover -s tests -p 'test_v309_r445_*.py' -v
+      - name: Inherited R442 historical full R421 custody not self-approved
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v
+      - name: Inherited R426 fake Java11 Store compile gate
+        run: python -B -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v
