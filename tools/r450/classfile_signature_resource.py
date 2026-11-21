@@ -273,7 +273,8 @@ def instructions(code: bytes) -> list[tuple[int, int, bytes]]:
     return answer
 
 
-def classfile_evidence(raw: bytes, resource_filter, code_observer=None) -> tuple[
+def classfile_evidence(raw: bytes, resource_filter, code_observer=None,
+                       member_observer=None) -> tuple[
         set[str], list[tuple[str, str]], int]:
     """Returns (generic types, [(method, resource literal)], API call count).
 
@@ -346,6 +347,18 @@ def classfile_evidence(raw: bytes, resource_filter, code_observer=None) -> tuple
         name_idx, desc_idx = cp[nat_idx]
         return class_owner(owner_idx), utf(name_idx), utf(desc_idx)
 
+    def typed_memberref(index: int) -> tuple[str, str, str, str]:
+        """Resolve a JVM CP memberref, preserving Field/Method/Interface type."""
+        require(type(index) is int and 0 < index < cp_count
+                and tags[index] in (9, 10, 11),
+                "R456_CP_MEMBERREF_INDEX_OR_KIND_INVALID")
+        owner_idx, nat_idx = cp[index]
+        require(0 < nat_idx < cp_count and tags[nat_idx] == 12,
+                "R456_CP_NAMEANDTYPE_INDEX_INVALID")
+        name_idx, desc_idx = cp[nat_idx]
+        return (class_owner(owner_idx), utf(name_idx), utf(desc_idx),
+                {9: "field", 10: "method", 11: "interface_method"}[tags[index]])
+
     generic_refs: set[str] = set()
     proximity: list[tuple[str, str]] = []
     api_calls = 0
@@ -387,6 +400,10 @@ def classfile_evidence(raw: bytes, resource_filter, code_observer=None) -> tuple
             utf(short())
             consume(integer())
         require(p == len(data), "R450_CODE_ATTRIBUTE_TRAILING_DATA")
+        if member_observer is not None:
+            # Read-only R456 observer: real decoded method Code plus a
+            # typed constant pool resolver, never Java execution.
+            member_observer(method_label, method_code, typed_memberref)
         if code_observer is not None:
             # Read-only extension point for R451. Give only method-local
             # bytecode and typed constant-pool resolvers, not filesystem

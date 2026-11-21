@@ -1,0 +1,66 @@
+name: v309-r456-bytecode-member-opcodes
+on:
+  push:
+    branches:
+      - research/v309-r456-bytecode-invocation-kind
+  pull_request:
+    paths:
+      - tools/r456/**
+      - tools/r450/classfile_signature_resource.py
+      - tests/test_v309_r456_*.py
+      - docs/V309_R456_BYTECODE_MEMBER_STATICNESS.md
+      - .github/workflows/v309-r456-member-opcodes.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-jvm-opcode-member-declarations:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R456 synthetic actual Java11 getfield putfield and invoke opcode vs member flags
+        run: python -B -m unittest discover -s tests -p 'test_v309_r456_*.py' -v
+      - name: Inherited R455 selective dependency member access and ZIP safety
+        run: python -B -m unittest discover -s tests -p 'test_v309_r455_*.py' -v
+      - name: Inherited R454 superclass and interface ancestry
+        run: python -B -m unittest discover -s tests -p 'test_v309_r454_*.py' -v
+      - name: Inherited R453 member declaration and CP signatures
+        run: python -B -m unittest discover -s tests -p 'test_v309_r453_*.py' -v
+      - name: Inherited R452 forward-branch resource control flow
+        run: python -B -m unittest discover -s tests -p 'test_v309_r452_*.py' -v
+      - name: Inherited R451 straight-line resource stack
+        run: python -B -m unittest discover -s tests -p 'test_v309_r451_*.py' -v
+      - name: Inherited R450 generic JVM signatures and code callback
+        run: python -B -m unittest discover -s tests -p 'test_v309_r450_*.py' -v
+      - name: Inherited R449 Java11 descriptors and resource literals
+        run: python -B -m unittest discover -s tests -p 'test_v309_r449_*.py' -v
+      - name: Inherited R448 classpath class references
+        run: python -B -m unittest discover -s tests -p 'test_v309_r448_*.py' -v
+      - name: Inherited R447 pinned original v309 class and resource inventory
+        run: python -B -m unittest discover -s tests -p 'test_v309_r447_*.py' -v
+      - name: Inherited R446 source/class/dependency current SHA gates
+        run: python -B -m unittest discover -s tests -p 'test_v309_r446_*.py' -v
+      - name: Inherited R445 nofollow bounded owner TEMP file verification
+        run: python -B -m unittest discover -s tests -p 'test_v309_r445_*.py' -v
+      - name: Inherited R442 historical R421 independent custody requirements
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v
+      - name: Inherited R426 mock Java11 Store compile acceptance
+        run: python -B -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v
