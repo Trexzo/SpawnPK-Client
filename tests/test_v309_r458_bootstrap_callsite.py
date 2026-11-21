@@ -79,8 +79,10 @@ class FabricatedJava11:
         mdesc = self.utf("method_desc", "()V")
         code_attr = self.utf("code_attr", "Code")
         bsm_attr = self.utf("bsm_attr", "BootstrapMethods")
-        bsm_nat = self.nat("bsm_nat", handle_name,
-                           "()Ljava/lang/invoke/CallSite;")
+        bsm_nat = self.nat(
+            "bsm_nat", handle_name,
+            "()V" if handle_name == "<init>"
+            else "()Ljava/lang/invoke/CallSite;")
         bootstrap_target = self.methodref(
             "bsm_ref", bootstrap_class, bsm_nat, handle_target_kind)
         mh = self.handle("bsm_handle", handle_kind, bootstrap_target)
