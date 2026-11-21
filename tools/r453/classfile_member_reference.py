@@ -37,6 +37,12 @@ class ClassMembers:
     declared_fields: frozenset[tuple[str, str]]
     declared_methods: frozenset[tuple[str, str]]
     references: frozenset[Member]
+    # R454: preserve declared direct interfaces and member access metadata
+    # without altering R453's positional ClassMembers fixture constructor.
+    interfaces: frozenset[str] = frozenset()
+    declared_field_access: tuple[tuple[str, str, int], ...] = ()
+    declared_method_access: tuple[tuple[str, str, int], ...] = ()
+    access_flags: int = 0
 
 
 class Refused(ValueError):
@@ -165,14 +171,18 @@ def parse_class(raw: bytes) -> ClassMembers:
             name, descriptor = nat(nat_idx, kind)
             references.add(Member(owner, name, descriptor, kind))
 
-    u2()  # access_flags
+    class_access_flags = u2()
     class_name = cls(u2())
     super_index = u2()
     superclass = cls(super_index) if super_index else None
     interfaces = u2()
     need(interfaces <= MAX_MEMBERS, "R453_INTERFACE_COUNT_LIMIT")
+    directly_implemented = set()
     for _ in range(interfaces):
-        cls(u2())
+        interface_name = cls(u2())
+        need(interface_name not in directly_implemented,
+             "R454_DUPLICATE_INTERFACE_EDGE")
+        directly_implemented.add(interface_name)
 
     def attributes() -> None:
         num = u2()
@@ -186,22 +196,28 @@ def parse_class(raw: bytes) -> ClassMembers:
 
     declared_fields: set[tuple[str, str]] = set()
     declared_methods: set[tuple[str, str]] = set()
+    field_flags: list[tuple[str, str, int]] = []
+    method_flags: list[tuple[str, str, int]] = []
     for kind, destination in (("field", declared_fields),
                               ("method", declared_methods)):
         members = u2()
         need(members <= MAX_MEMBERS, "R453_MEMBER_COUNT_LIMIT")
         for _ in range(members):
-            u2()  # access flags
+            flags = u2()
             name = valid_member_name(utf(u2()), kind)
             desc = utf(u2())
             validate_descriptor(desc, kind)
             need((name, desc) not in destination,
                  "R453_DUPLICATE_CLASS_DECLARATION")
             destination.add((name, desc))
+            (field_flags if kind == "field" else method_flags).append(
+                (name, desc, flags))
             attributes()
     attributes()
     need(pos == len(raw), "R453_TRAILING_CLASSFILE_BYTES")
     return ClassMembers(
         class_name, superclass,
         frozenset(declared_fields), frozenset(declared_methods),
-        frozenset(references))
+        frozenset(references), frozenset(directly_implemented),
+        tuple(sorted(field_flags)), tuple(sorted(method_flags)),
+        class_access_flags)
