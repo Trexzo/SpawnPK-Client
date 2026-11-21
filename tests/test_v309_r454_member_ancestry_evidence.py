@@ -123,7 +123,7 @@ class R454AcyclicInheritancePure(unittest.TestCase):
         summary, private = ancestry.analyze(records, set(), set(), set())
         self.assertEqual(summary["possible_inherited_superclass_member_signature"], 1)
         self.assertFalse(summary["bytecode_linkage_verified"])
-        self.assertFalse(private["direct_declaration_is_not_runtime_resolution"])
+        self.assertTrue(private["direct_declaration_is_not_runtime_resolution"])
 
     def test_04_multigeneration_superclass_method(self):
         records = fixture(parent_methods=(),
