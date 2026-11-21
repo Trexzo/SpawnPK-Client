@@ -91,10 +91,19 @@ def validate_descriptor(value: str, kind: str) -> None:
         raise Refused("R453_MALFORMED_MEMBER_DESCRIPTOR") from None
 
 
-def parse_class(raw: bytes) -> ClassMembers:
+def parse_class(raw: bytes, *, allowed_majors=(55,)) -> ClassMembers:
+    """Parse Java class metadata, Java11 only by default.
+
+    R455 dependency inspection may explicitly admit historical bytecode
+    majors 45..55. Every existing R453/R454 reconstructed-class caller
+    retains the strict major-55 default and unchanged behavior.
+    """
+    need(type(allowed_majors) is tuple and allowed_majors
+         and all(type(n) is int and 45 <= n <= 55 for n in allowed_majors),
+         "R455_DEPENDENCY_MAJOR_ALLOWLIST_INVALID")
     need(type(raw) is bytes and 10 <= len(raw) <= MAX_CLASS_BYTES
          and raw[:4] == b"\xca\xfe\xba\xbe"
-         and int.from_bytes(raw[6:8], "big") == 55,
+         and int.from_bytes(raw[6:8], "big") in allowed_majors,
          "R453_JAVA11_CLASSFILE_REQUIRED")
     pos = 8
 
