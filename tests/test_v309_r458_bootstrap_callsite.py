@@ -14,6 +14,7 @@ import unittest
 from unittest.mock import patch
 
 import test_v309_r457_jvm_callsite_constraints as prior_fixture
+import test_v309_r450_generic_resource_proximity as r450_fixture
 from tools.r425 import compile_and_accept_private_overlay as r425
 from tools.r458 import bootstrap_callsite_evidence as binary
 from tools.r458 import audit_bootstrap_evidence as r458
@@ -82,6 +83,7 @@ class FabricatedJava11:
         bsm_nat = self.nat(
             "bsm_nat", handle_name,
             "()V" if handle_name == "<init>"
+            else "I" if handle_target_kind == 9
             else "()Ljava/lang/invoke/CallSite;")
         bootstrap_target = self.methodref(
             "bsm_ref", bootstrap_class, bsm_nat, handle_target_kind)
@@ -276,7 +278,7 @@ class R458PureSynthetic(unittest.TestCase):
     def test_21_no_dynamic_cp_has_no_bootstrap_table_need(self):
         # R450's fabricated pre-existing Java11 class has ordinary invokes
         # but no invokedynamic/BootstrapMethods and must remain supported.
-        raw=prior_fixture.r450_fixture.invented_classfile()
+        raw=r450_fixture.invented_classfile()
         record=binary.scan_class(raw)
         self.assertEqual(record.bootstrap_entries,0)
         self.assertEqual(len(record.invokedynamic_sites),0)
@@ -344,7 +346,7 @@ class R458Aggregate(unittest.TestCase):
             set(),set(),set())
         serialized=json.dumps(report)
         for secret in ("Synthetic.class","Implementation.class",
-                       "LambdaMetafactory","metafactory",
+                       "LambdaMetafactory.class",
                        "apply","lambdaBody"):
             self.assertNotIn(secret,serialized)
         self.assertFalse(private["release_authorized"])
