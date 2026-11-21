@@ -47,6 +47,9 @@ class Site:
     operation: str
     static_opcode: bool
     target: members.Member
+    # R457: actual unsigned invokeinterface count operand, if applicable.
+    # Default retains the R456 six-argument synthetic Site constructor.
+    interface_encoded_count: int | None = None
 
 
 def require(ok: bool, reason: str) -> None:
@@ -106,7 +109,8 @@ def decoded_sites(
         members.validate_descriptor(descriptor, kind)
         sites.append(Site(
             source_class, method_label, pc, operation, static,
-            members.Member(owner_path, name, descriptor, kind)))
+            members.Member(owner_path, name, descriptor, kind),
+            interface_encoded_count=(operand[2] if op == 0xb9 else None)))
         require(len(sites) <= MAX_SITES_PER_CLASS,
                 "R456_CLASS_INVOKE_FIELD_SITE_BUDGET")
     return tuple(sites), dynamic
