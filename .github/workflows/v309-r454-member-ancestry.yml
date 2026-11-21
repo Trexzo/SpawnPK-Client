@@ -1,0 +1,62 @@
+name: v309-r454-inherited-member-ancestry
+on:
+  push:
+    branches:
+      - research/v309-r454-inherited-member-ancestry
+  pull_request:
+    paths:
+      - tools/r454/**
+      - tools/r453/classfile_member_reference.py
+      - tests/test_v309_r454_*.py
+      - docs/V309_R454_MEMBER_ANCESTRY.md
+      - .github/workflows/v309-r454-member-ancestry.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-r421-java-ancestry-signature-evidence:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R454 synthetic superclass interface and access metadata ancestry evidence
+        run: python -B -m unittest discover -s tests -p 'test_v309_r454_*.py' -v
+      - name: Inherited R453 Fieldref Methodref InterfaceMethodref and class declarations
+        run: python -B -m unittest discover -s tests -p 'test_v309_r453_*.py' -v
+      - name: Inherited R452 acyclic resource CFG all-path evidence
+        run: python -B -m unittest discover -s tests -p 'test_v309_r452_*.py' -v
+      - name: Inherited R451 straightline resource operand tests
+        run: python -B -m unittest discover -s tests -p 'test_v309_r451_*.py' -v
+      - name: Inherited R450 generic signature and method-resource proximity
+        run: python -B -m unittest discover -s tests -p 'test_v309_r450_*.py' -v
+      - name: Inherited R449 descriptor class references and resource literals
+        run: python -B -m unittest discover -s tests -p 'test_v309_r449_*.py' -v
+      - name: Inherited R448 static rebuilt class-index dependencies
+        run: python -B -m unittest discover -s tests -p 'test_v309_r448_*.py' -v
+      - name: Inherited R447 original SHA pinned v309 JAR coverage
+        run: python -B -m unittest discover -s tests -p 'test_v309_r447_*.py' -v
+      - name: Inherited R446 source class dependency current inventory SHA
+        run: python -B -m unittest discover -s tests -p 'test_v309_r446_*.py' -v
+      - name: Inherited R445 owner temporary bounded nofollow reads
+        run: python -B -m unittest discover -s tests -p 'test_v309_r445_*.py' -v
+      - name: Inherited R442 independent historical manifest admission schema
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v
+      - name: Inherited R426 fabricated Java11 Store compile acceptance
+        run: python -B -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v
