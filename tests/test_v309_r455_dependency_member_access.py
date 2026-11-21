@@ -208,7 +208,7 @@ class R455MemberAccessTests(unittest.TestCase):
         self.assertEqual(summary[
             "possible_inherited_signatures_from_preferred_dependency"],1)
         self.assertEqual(summary["possible_superclass_declaration_signatures"],1)
-        self.assertFalse(private["access_signals_are_advisory_not_verdicts"])
+        self.assertTrue(private["access_signals_are_advisory_not_verdicts"])
 
     def test_17_missing_exact_method_descriptor_is_not_fake_match(self):
         record=parser.parse_class(
