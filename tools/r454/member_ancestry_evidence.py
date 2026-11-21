@@ -259,6 +259,21 @@ def analyze(
         "references_with_rebuilt_owner_checked": len(results),
         "references_to_unparsed_platform_dependency_or_missing_owner":
             len(all_references) - len(results),
+        "nonrebuilt_owner_reference_platform": sum(
+            m.owner not in rebuilt and
+            m.owner.startswith(r388.PLATFORM_ROOTS)
+            for m in all_references),
+        "nonrebuilt_owner_reference_preferred_dependency_unchecked": sum(
+            m.owner not in rebuilt and
+            not m.owner.startswith(r388.PLATFORM_ROOTS)
+            and m.owner in preferred_names for m in all_references),
+        "nonrebuilt_owner_reference_not_on_preferred_classpath": sum(
+            m.owner not in rebuilt and
+            not m.owner.startswith(r388.PLATFORM_ROOTS)
+            and m.owner not in preferred_names for m in all_references),
+        "nonrebuilt_owner_reference_present_in_alternate_only": sum(
+            m.owner not in rebuilt and m.owner not in preferred_names
+            and m.owner in alternate_names for m in all_references),
         "exact_direct_declaration": counts["direct_declaration"],
         "possible_inherited_superclass_member_signature":
             counts["superclass_signature_candidate"],
