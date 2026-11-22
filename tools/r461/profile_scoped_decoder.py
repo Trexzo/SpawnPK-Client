@@ -24,6 +24,7 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from tools.r440 import read_only_private_acceptance_preflight as r440
 from tools.r446 import observe_owner_private_inventory as r446
 from tools.r447 import audit_original_class_asset_coverage as r447
 from tools.r450 import classfile_signature_resource as r450
@@ -217,11 +218,11 @@ def main(argv=None) -> int:
                   run(args.owner_original_v309_jar, synthetic=False))
         print(json.dumps(result, sort_keys=True))
         return 0
-    except (Refused, r446.Refused, r447.Refused, r459.Refused,
-            r450.Refused, ValueError, OSError, TypeError) as exc:
+    except (Refused, r440.Refused, r446.Refused, r447.Refused,
+            r459.Refused, r450.Refused, ValueError, OSError, TypeError) as exc:
         reason = str(exc)[:120] if isinstance(
-            exc, (Refused, r446.Refused, r447.Refused, r459.Refused,
-                  r450.Refused)) else "R461_PRIVATE_PROFILE_INPUT_REFUSED"
+            exc, (Refused, r440.Refused, r446.Refused, r447.Refused,
+                  r459.Refused, r450.Refused)) else "R461_PRIVATE_PROFILE_INPUT_REFUSED"
         print(json.dumps({
             "status": "R461_STATIC_PARSER_PROFILE_REFUSED",
             "reason": reason,
