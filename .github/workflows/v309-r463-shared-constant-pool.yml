@@ -1,0 +1,87 @@
+name: v309-r463-shared-constant-pool
+on:
+  push:
+    branches:
+      - research/v309-r463-shared-constant-pool
+  pull_request:
+    paths:
+      - tools/r463/**
+      - tools/r450/classfile_signature_resource.py
+      - tools/r453/classfile_member_reference.py
+      - tools/r458/bootstrap_callsite_evidence.py
+      - tools/r459/audit_consolidated_inspection.py
+      - tests/test_v309_r463_*.py
+      - docs/V309_R463_SHARED_CONSTANT_POOL.md
+      - .github/workflows/v309-r463-shared-constant-pool.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static-exact-class-CP-reuse-parity:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R463 invented immutable CP one-read semantics, exact output and malformed fail-closed parity
+        run: python -B -m unittest discover -s tests -p 'test_v309_r463_*.py' -v
+      - name: R462 bounded generic Signature memoization and R459 parity
+        run: python -B -m unittest discover -s tests -p 'test_v309_r462_*.py' -v
+      - name: R461 JVM Code decoder cache and profiling evidence
+        run: python -B -m unittest discover -s tests -p 'test_v309_r461_*.py' -v
+      - name: R460 paired synthetic R458/R459 wall-clock, I/O and memory benchmark
+        run: python -B -m unittest discover -s tests -p 'test_v309_r460_*.py' -v
+      - name: R459 single class evidence read and full SHA observations
+        run: python -B -m unittest discover -s tests -p 'test_v309_r459_*.py' -v
+      - name: R458 bootstrap, MethodHandle and ConstantDynamic semantics
+        run: python -B -m unittest discover -s tests -p 'test_v309_r458_*.py' -v
+      - name: R457 special invoke and descriptor slots
+        run: python -B -m unittest discover -s tests -p 'test_v309_r457_*.py' -v
+      - name: R456 real JVM Code member access instructions and staticness
+        run: python -B -m unittest discover -s tests -p 'test_v309_r456_*.py' -v
+      - name: R455 selected preferred dependency method access
+        run: python -B -m unittest discover -s tests -p 'test_v309_r455_*.py' -v
+      - name: R454 rebuilt superclass/interface ancestry
+        run: python -B -m unittest discover -s tests -p 'test_v309_r454_*.py' -v
+      - name: R453 legacy standalone Java8 dependency and Java11 member parsing
+        run: python -B -m unittest discover -s tests -p 'test_v309_r453_*.py' -v
+      - name: R452 acyclic resource argument CFG evidence
+        run: python -B -m unittest discover -s tests -p 'test_v309_r452_*.py' -v
+      - name: R451 straight-line resource argument evidence
+        run: python -B -m unittest discover -s tests -p 'test_v309_r451_*.py' -v
+      - name: R450 independent legacy Code/Signature/CP parser grammar
+        run: python -B -m unittest discover -s tests -p 'test_v309_r450_*.py' -v
+      - name: R449 descriptor and resource string validation
+        run: python -B -m unittest discover -s tests -p 'test_v309_r449_*.py' -v
+      - name: R448 rebuilt class link references
+        run: python -B -m unittest discover -s tests -p 'test_v309_r448_*.py' -v
+      - name: R447 pinned original and dependency ZIP admission
+        run: python -B -m unittest discover -s tests -p 'test_v309_r447_*.py' -v
+      - name: R446 owner source/class/dependency SHA observation
+        run: python -B -m unittest discover -s tests -p 'test_v309_r446_*.py' -v
+      - name: R445 bounded nofollow reads
+        run: python -B -m unittest discover -s tests -p 'test_v309_r445_*.py' -v
+      - name: R442 historical independently approved inventory must remain missing
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v
+      - name: R426 isolated fake Java11 Store compile safety
+        run: python -B -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v
+      - name: Synthetic Python profiling continues to match private evidence
+        run: python -B tools/r461/profile_scoped_decoder.py --synthetic
+      - name: Synthetic R460 throughput benchmark (no real owner data)
+        run: python -B tools/r460/benchmark_consolidated_inspection.py --synthetic --iterations 2 --warmups 1
