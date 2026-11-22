@@ -64,6 +64,7 @@ def need(condition: bool, code: str) -> None:
         raise Refused(code)
 
 
+@r450.scoped_instruction_cache
 def inspect(original: Path, companion: Path | None = None) -> tuple[dict, dict]:
     # R446.observe always checks exact OS TEMP roots (no aliases),
     # fixed source/class counts, per-file SHA maps and pinned Store files.
