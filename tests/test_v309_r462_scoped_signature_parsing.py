@@ -102,7 +102,8 @@ class R462SignatureCachePure(unittest.TestCase):
 
     def test_10_reference_name_budget_eviction(self):
         with patch.object(r450,"R462_MAX_CACHED_REFERENCE_NAMES",2):
-            report,_=examine((FIELD,"field"),(ANOTHER,"field"),
+            report,_=examine((FIELD,"field"),
+                             ("Ljava/util/Set<Lrs/Thing;>;","field"),
                              (FIELD,"field"))
         self.assertEqual(report["R462_generic_signature_cache_evictions"],2)
 
