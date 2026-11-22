@@ -1,0 +1,79 @@
+name: v309-r462-scoped-generic-signature-cache
+on:
+  push:
+    branches:
+      - research/v309-r462-scoped-signature-parsing
+  pull_request:
+    paths:
+      - tools/r450/classfile_signature_resource.py
+      - tests/test_v309_r462_*.py
+      - docs/V309_R462_SCOPED_GENERIC_SIGNATURE_CACHE.md
+      - .github/workflows/v309-r462-signature-cache.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  strict-bounded-scoped-generic-signature-parsing:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R462 fabricated signature cache parity limits eviction and thread isolation
+        run: python -B -m unittest discover -s tests -p 'test_v309_r462_*.py' -v
+      - name: R461 cached bytecode instruction and cProfile parity
+        run: python -B -m unittest discover -s tests -p 'test_v309_r461_*.py' -v
+      - name: R460 legacy-vs-consolidated benchmark regression
+        run: python -B -m unittest discover -s tests -p 'test_v309_r460_*.py' -v
+      - name: R459 consolidated complete-inventory validation
+        run: python -B -m unittest discover -s tests -p 'test_v309_r459_*.py' -v
+      - name: R458 bootstrap and dynamic constant metadata
+        run: python -B -m unittest discover -s tests -p 'test_v309_r458_*.py' -v
+      - name: R457 JVM callsite syntax and descriptor slots
+        run: python -B -m unittest discover -s tests -p 'test_v309_r457_*.py' -v
+      - name: R456 typed member opcode staticness
+        run: python -B -m unittest discover -s tests -p 'test_v309_r456_*.py' -v
+      - name: R455 preferred dependency fields and methods
+        run: python -B -m unittest discover -s tests -p 'test_v309_r455_*.py' -v
+      - name: R454 inherited signature ancestry
+        run: python -B -m unittest discover -s tests -p 'test_v309_r454_*.py' -v
+      - name: R453 constant pool member declarations
+        run: python -B -m unittest discover -s tests -p 'test_v309_r453_*.py' -v
+      - name: R452 branch resource attribution
+        run: python -B -m unittest discover -s tests -p 'test_v309_r452_*.py' -v
+      - name: R451 straight-line resource attribution
+        run: python -B -m unittest discover -s tests -p 'test_v309_r451_*.py' -v
+      - name: R450 legacy strict generic grammar and Code parser
+        run: python -B -m unittest discover -s tests -p 'test_v309_r450_*.py' -v
+      - name: R449 generic and descriptor type safety
+        run: python -B -m unittest discover -s tests -p 'test_v309_r449_*.py' -v
+      - name: R448 reconstructed class reference census
+        run: python -B -m unittest discover -s tests -p 'test_v309_r448_*.py' -v
+      - name: R447 original pin and dependency ZIP admission
+        run: python -B -m unittest discover -s tests -p 'test_v309_r447_*.py' -v
+      - name: R446 owner full source and class SHA observations
+        run: python -B -m unittest discover -s tests -p 'test_v309_r446_*.py' -v
+      - name: R445 nofollow safe owner TEMP reads
+        run: python -B -m unittest discover -s tests -p 'test_v309_r445_*.py' -v
+      - name: R442 historical R421 provenance remains unapproved
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v
+      - name: R426 fabricated Java11 Store compile safety gate
+        run: python -B -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v
+      - name: Synthetic cProfile with signature and opcode memoization
+        run: python -B tools/r461/profile_scoped_decoder.py --synthetic
