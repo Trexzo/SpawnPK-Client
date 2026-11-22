@@ -8,6 +8,9 @@ reflection, JNI and dynamic resource names are outside this analysis.
 """
 from __future__ import annotations
 
+from collections import OrderedDict
+from contextvars import ContextVar
+from functools import wraps
 import re
 
 MAX_SIGNATURE_CHARS = 65535
@@ -216,7 +219,7 @@ THREE_OPERANDS = frozenset({0xc5})
 FOUR_OPERANDS = frozenset({0xb9, 0xba, 0xc8, 0xc9})
 
 
-def instructions(code: bytes) -> list[tuple[int, int, bytes]]:
+def _instructions_uncached(code: bytes) -> list[tuple[int, int, bytes]]:
     """Exact opcode boundaries, including wide, switch alignment, and bounds."""
     require(type(code) is bytes and len(code) <= MAX_CODE_BYTES,
             "R450_CODE_LENGTH_INVALID")
@@ -271,6 +274,100 @@ def instructions(code: bytes) -> list[tuple[int, int, bytes]]:
         require(len(answer) <= MAX_CODE_INSTRUCTIONS,
                 "R450_BYTECODE_INSTRUCTION_BUDGET")
     return answer
+
+
+# R461: a bounded cache scoped to a SINGLE R459 inspection. The legacy
+# parser is unchanged outside the explicit owner-audit context. ContextVar
+# isolates concurrent tasks/threads and its token is always restored.
+R461_MAX_CACHED_METHODS = 64
+R461_MAX_CACHED_CODE_BYTES = 256 * 1024
+R461_MAX_CACHED_INSTRUCTIONS = 32768
+R461_MAX_METHOD_CODE_BYTES = 16384
+R461_MAX_METHOD_INSTRUCTIONS = 4096
+
+
+class _InstructionCache:
+    def __init__(self):
+        self.entries = OrderedDict()
+        self.code_bytes = 0
+        self.instructions = 0
+        self.hits = 0
+        self.misses = 0
+        self.evictions = 0
+        self.skipped_large = 0
+
+    def decode(self, code: bytes) -> list[tuple[int, int, bytes]]:
+        require(type(code) is bytes and len(code) <= MAX_CODE_BYTES,
+                "R450_CODE_LENGTH_INVALID")
+        if code in self.entries:
+            self.hits += 1
+            self.entries.move_to_end(code)
+            # Return an independent mutable list; callers cannot corrupt
+            # shared cached decoded boundaries. Operand bytes are immutable.
+            return list(self.entries[code])
+        self.misses += 1
+        result = _instructions_uncached(code)
+        n = len(result)
+        if (len(code) > R461_MAX_METHOD_CODE_BYTES or
+                n > R461_MAX_METHOD_INSTRUCTIONS):
+            self.skipped_large += 1
+            return result
+        while self.entries and (
+            len(self.entries) >= R461_MAX_CACHED_METHODS or
+            self.code_bytes + len(code) > R461_MAX_CACHED_CODE_BYTES or
+            self.instructions + n > R461_MAX_CACHED_INSTRUCTIONS
+        ):
+            old_code, old_entries = self.entries.popitem(last=False)
+            self.code_bytes -= len(old_code)
+            self.instructions -= len(old_entries)
+            self.evictions += 1
+        self.entries[code] = tuple(result)
+        self.code_bytes += len(code)
+        self.instructions += n
+        return result
+
+
+_R461_ACTIVE_CACHE: ContextVar[_InstructionCache | None] = ContextVar(
+    "r461_audit_local_jvm_instruction_cache", default=None)
+
+
+def instructions(code: bytes) -> list[tuple[int, int, bytes]]:
+    """R450 JVM instruction decoder; R461 memoizes ONLY within a scoped audit.
+
+    All default legacy callers get the original uncached fail-closed parser.
+    """
+    active = _R461_ACTIVE_CACHE.get()
+    if active is None:
+        return _instructions_uncached(code)
+    return active.decode(code)
+
+
+def scoped_instruction_cache(audit):
+    """Wrap an R459 audit in one bounded, automatically reset decode scope.
+
+    The injected aggregate metrics are deterministic for identical inputs;
+    no user-owned bytes or method names enter them.
+    """
+    @wraps(audit)
+    def run(*args, **kwargs):
+        # Nested cache scopes are deliberately forbidden, so owner custody
+        # passes cannot accidentally share stale code across audit boundaries.
+        require(_R461_ACTIVE_CACHE.get() is None,
+                "R461_NESTED_INSTRUCTION_CACHE_NOT_ALLOWED")
+        cache = _InstructionCache()
+        token = _R461_ACTIVE_CACHE.set(cache)
+        try:
+            report, private = audit(*args, **kwargs)
+            report["R461_scoped_instruction_decode_hits"] = cache.hits
+            report["R461_scoped_instruction_decode_misses"] = cache.misses
+            report["R461_cached_method_bodies_at_exit"] = len(cache.entries)
+            report["R461_instruction_decode_evictions"] = cache.evictions
+            report["R461_oversize_method_cache_skips"] = cache.skipped_large
+            report["R461_scoped_cache_does_not_persist"] = True
+            return report, private
+        finally:
+            _R461_ACTIVE_CACHE.reset(token)
+    return run
 
 
 def classfile_evidence(raw: bytes, resource_filter, code_observer=None,

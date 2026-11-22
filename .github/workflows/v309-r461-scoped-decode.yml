@@ -1,0 +1,81 @@
+name: v309-r461-scoped-jvm-decode-profiling
+on:
+  push:
+    branches:
+      - research/v309-r461-scoped-decode-profiling
+  pull_request:
+    paths:
+      - tools/r461/**
+      - tools/r450/classfile_signature_resource.py
+      - tools/r459/audit_consolidated_inspection.py
+      - tests/test_v309_r461_*.py
+      - docs/V309_R461_SCOPED_JVM_DECODE_PROFILING.md
+      - .github/workflows/v309-r461-scoped-decode.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bounded-scoped-java-bytecode-decoding:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R461 synthetic scoped-code-cache evidence parity/cProfile safety
+        run: python -B -m unittest discover -s tests -p 'test_v309_r461_*.py' -v
+      - name: R461 explicitly labeled synthetic parser cProfile hot symbols
+        run: python -B tools/r461/profile_scoped_decoder.py --synthetic
+      - name: R460 invented wall-clock and bounded scanner I/O comparison after scoped decoder
+        run: python -B tools/r460/benchmark_consolidated_inspection.py --synthetic --iterations 2 --warmups 1
+      - name: Inherited R460 legacy vs consolidated profiler and custody regressions
+        run: python -B -m unittest discover -s tests -p 'test_v309_r460_*.py' -v
+      - name: Inherited R459 single evidence class scan and full inventory checks
+        run: python -B -m unittest discover -s tests -p 'test_v309_r459_*.py' -v
+      - name: Inherited R458 bootstrap and dynamic constant metadata
+        run: python -B -m unittest discover -s tests -p 'test_v309_r458_*.py' -v
+      - name: Inherited R457 method slots and special invoke constraints
+        run: python -B -m unittest discover -s tests -p 'test_v309_r457_*.py' -v
+      - name: Inherited R456 typed member opcode and flags
+        run: python -B -m unittest discover -s tests -p 'test_v309_r456_*.py' -v
+      - name: Inherited R455 preferred dependency member visibility
+        run: python -B -m unittest discover -s tests -p 'test_v309_r455_*.py' -v
+      - name: Inherited R454 superclass and interface ancestry
+        run: python -B -m unittest discover -s tests -p 'test_v309_r454_*.py' -v
+      - name: Inherited R453 member declaration inventories
+        run: python -B -m unittest discover -s tests -p 'test_v309_r453_*.py' -v
+      - name: Inherited R452 acyclic resource literal attribution
+        run: python -B -m unittest discover -s tests -p 'test_v309_r452_*.py' -v
+      - name: Inherited R451 straightline resource argument attribution
+        run: python -B -m unittest discover -s tests -p 'test_v309_r451_*.py' -v
+      - name: Inherited R450 Code parser exact instruction boundaries
+        run: python -B -m unittest discover -s tests -p 'test_v309_r450_*.py' -v
+      - name: Inherited R449 type descriptors/resource string leads
+        run: python -B -m unittest discover -s tests -p 'test_v309_r449_*.py' -v
+      - name: Inherited R448 reconstructed class references
+        run: python -B -m unittest discover -s tests -p 'test_v309_r448_*.py' -v
+      - name: Inherited R447 pinned original v309 archive and ZIP safety
+        run: python -B -m unittest discover -s tests -p 'test_v309_r447_*.py' -v
+      - name: Inherited R446 full SHA owner inventory
+        run: python -B -m unittest discover -s tests -p 'test_v309_r446_*.py' -v
+      - name: Inherited R445 bounded nofollow owner TEMP reads
+        run: python -B -m unittest discover -s tests -p 'test_v309_r445_*.py' -v
+      - name: Inherited R442 historical R421 custody refuses automatic approval
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v
+      - name: Inherited R426 fake Java11 Store compilation acceptance
+        run: python -B -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v
