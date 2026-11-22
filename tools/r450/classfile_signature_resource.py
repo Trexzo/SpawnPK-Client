@@ -13,6 +13,8 @@ from contextvars import ContextVar
 from functools import wraps
 import re
 
+from tools.r463 import constant_pool_view as cpview
+
 MAX_SIGNATURE_CHARS = 65535
 MAX_GENERIC_DEPTH = 48
 MAX_CODE_BYTES = 65535
@@ -450,7 +452,8 @@ def scoped_instruction_cache(audit):
 
 
 def classfile_evidence(raw: bytes, resource_filter, code_observer=None,
-                       member_observer=None) -> tuple[
+                       member_observer=None,
+                       shared_pool: cpview.Pool | None = None) -> tuple[
         set[str], list[tuple[str, str]], int]:
     """Returns (generic types, [(method, resource literal)], API call count).
 
@@ -477,31 +480,43 @@ def classfile_evidence(raw: bytes, resource_filter, code_observer=None,
     def four() -> int:
         return int.from_bytes(grab(4), "big")
 
-    cp_count = two()
-    require(1 <= cp_count <= 65535, "R450_INVALID_CP_COUNT")
-    tags = [0] * cp_count
-    cp: list[object | None] = [None] * cp_count
-    i = 1
-    while i < cp_count:
-        tag = grab(1)[0]
-        tags[i] = tag
-        if tag == 1:
-            length = two()
-            cp[i] = grab(length).decode("utf-8", "replace")
-        elif tag in (3, 4):
-            grab(4)
-        elif tag in (5, 6):
-            grab(8)
+    if shared_pool is not None:
+        need_shared = type(shared_pool) is cpview.Pool
+        require(need_shared, "R450_R463_INVALID_VIEW_TYPE")
+        try:
+            shared_pool.validate_for(raw)
+        except cpview.Refused:
+            raise Refused("R450_R463_INPUT_MISMATCH") from None
+        cp_count = shared_pool.count
+        tags = shared_pool.tags
+        cp = shared_pool.entries
+        cursor = shared_pool.end
+    else:
+        cp_count = two()
+        require(1 <= cp_count <= 65535, "R450_INVALID_CP_COUNT")
+        tags = [0] * cp_count
+        cp: list[object | None] = [None] * cp_count
+        i = 1
+        while i < cp_count:
+            tag = grab(1)[0]
+            tags[i] = tag
+            if tag == 1:
+                length = two()
+                cp[i] = grab(length).decode("utf-8", "replace")
+            elif tag in (3, 4):
+                grab(4)
+            elif tag in (5, 6):
+                grab(8)
+                i += 1
+            elif tag in (7, 8, 16, 19, 20):
+                cp[i] = two()
+            elif tag in (9, 10, 11, 12, 17, 18):
+                cp[i] = (two(), two())
+            elif tag == 15:
+                cp[i] = (grab(1)[0], two())
+            else:
+                raise Refused("R450_INVALID_CP_TAG")
             i += 1
-        elif tag in (7, 8, 16, 19, 20):
-            cp[i] = two()
-        elif tag in (9, 10, 11, 12, 17, 18):
-            cp[i] = (two(), two())
-        elif tag == 15:
-            cp[i] = (grab(1)[0], two())
-        else:
-            raise Refused("R450_INVALID_CP_TAG")
-        i += 1
 
     def utf(index: int) -> str:
         require(type(index) is int and 1 <= index < cp_count
