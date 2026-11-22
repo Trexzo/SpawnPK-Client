@@ -60,7 +60,7 @@ def safe_name(name: str, *, binary: bool = True) -> str:
     return name + ".class" if binary else name
 
 
-def generic_signature_refs(signature: str, kind: str) -> set[str]:
+def _generic_signature_refs_uncached(signature: str, kind: str) -> set[str]:
     """JVMS Signature grammar for class, field, method; includes inner types.
 
     Does not interpret non-signature attributes such as annotation strings.
@@ -285,6 +285,13 @@ R461_MAX_CACHED_INSTRUCTIONS = 32768
 R461_MAX_METHOD_CODE_BYTES = 16384
 R461_MAX_METHOD_INSTRUCTIONS = 4096
 
+# R462: separate bounded LRU for already validated generic Signature grammar.
+R462_MAX_CACHED_SIGNATURES = 128
+R462_MAX_SIGNATURE_CHARS_TOTAL = 64 * 1024
+R462_MAX_SIGNATURE_CHARS_PER_ENTRY = 8192
+R462_MAX_CACHED_REFERENCE_NAMES = 2048
+R462_MAX_REFERENCES_PER_SIGNATURE = 256
+
 
 class _InstructionCache:
     def __init__(self):
@@ -295,6 +302,55 @@ class _InstructionCache:
         self.misses = 0
         self.evictions = 0
         self.skipped_large = 0
+        # R462 independent generic-signature cache, coupled only by the
+        # same automatically-reset ContextVar inspection boundary.
+        self.signature_entries = OrderedDict()
+        self.signature_chars = 0
+        self.signature_reference_names = 0
+        self.signature_hits = 0
+        self.signature_misses = 0
+        self.signature_evictions = 0
+        self.signature_skips = 0
+
+    def parse_signature(self, signature: str, kind: str) -> set[str]:
+        # Unsafe types, unknown grammars and oversize values always use the
+        # same strict original parser: they cannot reach hash/dict access.
+        if (type(signature) is not str or type(kind) is not str or
+                len(signature) > R462_MAX_SIGNATURE_CHARS_PER_ENTRY):
+            self.signature_skips += 1
+            return _generic_signature_refs_uncached(signature, kind)
+        key = (signature, kind)
+        if key in self.signature_entries:
+            self.signature_hits += 1
+            self.signature_entries.move_to_end(key)
+            # A fresh set prevents consumer mutations from altering the
+            # immutable validated frozenset held in this audit's cache.
+            return set(self.signature_entries[key])
+        self.signature_misses += 1
+        parsed = _generic_signature_refs_uncached(signature, kind)
+        nrefs = len(parsed)
+        if (nrefs > R462_MAX_REFERENCES_PER_SIGNATURE or
+                R462_MAX_CACHED_SIGNATURES < 1 or
+                len(signature) > R462_MAX_SIGNATURE_CHARS_TOTAL or
+                nrefs > R462_MAX_CACHED_REFERENCE_NAMES):
+            self.signature_skips += 1
+            return parsed
+        while self.signature_entries and (
+            len(self.signature_entries) >= R462_MAX_CACHED_SIGNATURES or
+            self.signature_chars + len(signature) >
+                R462_MAX_SIGNATURE_CHARS_TOTAL or
+            self.signature_reference_names + nrefs >
+                R462_MAX_CACHED_REFERENCE_NAMES
+        ):
+            (old_signature, _old_kind), old_refs = (
+                self.signature_entries.popitem(last=False))
+            self.signature_chars -= len(old_signature)
+            self.signature_reference_names -= len(old_refs)
+            self.signature_evictions += 1
+        self.signature_entries[key] = frozenset(parsed)
+        self.signature_chars += len(signature)
+        self.signature_reference_names += nrefs
+        return parsed
 
     def decode(self, code: bytes) -> list[tuple[int, int, bytes]]:
         require(type(code) is bytes and len(code) <= MAX_CODE_BYTES,
@@ -331,6 +387,18 @@ _R461_ACTIVE_CACHE: ContextVar[_InstructionCache | None] = ContextVar(
     "r461_audit_local_jvm_instruction_cache", default=None)
 
 
+def generic_signature_refs(signature: str, kind: str) -> set[str]:
+    """JVMS Signature references; R462 cache is opt-in per R459 audit only.
+
+    Other consumers always run the unchanged original grammar parser.
+    Invalid signatures are never cached or turned into partial evidence.
+    """
+    scope = _R461_ACTIVE_CACHE.get()
+    if scope is None:
+        return _generic_signature_refs_uncached(signature, kind)
+    return scope.parse_signature(signature, kind)
+
+
 def instructions(code: bytes) -> list[tuple[int, int, bytes]]:
     """R450 JVM instruction decoder; R461 memoizes ONLY within a scoped audit.
 
@@ -364,6 +432,17 @@ def scoped_instruction_cache(audit):
             report["R461_instruction_decode_evictions"] = cache.evictions
             report["R461_oversize_method_cache_skips"] = cache.skipped_large
             report["R461_scoped_cache_does_not_persist"] = True
+            report["R462_scoped_generic_signature_hits"] = (
+                cache.signature_hits)
+            report["R462_scoped_generic_signature_misses"] = (
+                cache.signature_misses)
+            report["R462_generic_signature_cache_evictions"] = (
+                cache.signature_evictions)
+            report["R462_uncacheable_signature_skips"] = (
+                cache.signature_skips)
+            report["R462_cached_signatures_at_exit"] = len(
+                cache.signature_entries)
+            report["R462_signature_cache_does_not_persist"] = True
             return report, private
         finally:
             _R461_ACTIVE_CACHE.reset(token)
