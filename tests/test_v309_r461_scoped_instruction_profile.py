@@ -88,14 +88,14 @@ class R461ScopedDecodePure(unittest.TestCase):
         with patch.object(r450,"R461_MAX_CACHED_METHODS",1):
             report,_=run_small_cache(b"\xb1",b"\x00\xb1",b"\xb1")
         self.assertEqual(report["R461_scoped_instruction_decode_misses"],3)
-        self.assertEqual(report["R461_scoped_instruction_decode_evictions"],2)
+        self.assertEqual(report["R461_instruction_decode_evictions"],2)
         self.assertEqual(report["R461_cached_method_bodies_at_exit"],1)
 
     def test_08_tiny_byte_budget_evicts(self):
         with patch.object(r450,"R461_MAX_CACHED_CODE_BYTES",3):
             report,_=run_small_cache(b"\x00\xb1",b"\x00\x00\xb1",b"\x00\xb1")
         self.assertEqual(report["R461_scoped_instruction_decode_misses"],3)
-        self.assertEqual(report["R461_scoped_instruction_decode_evictions"],2)
+        self.assertEqual(report["R461_instruction_decode_evictions"],2)
 
     def test_09_uncacheable_long_method_is_counted_and_still_decoded(self):
         with patch.object(r450,"R461_MAX_METHOD_CODE_BYTES",1):
