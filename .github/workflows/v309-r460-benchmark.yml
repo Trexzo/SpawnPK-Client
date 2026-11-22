@@ -1,0 +1,75 @@
+name: v309-r460-consolidated-benchmark
+on:
+  push:
+    branches:
+      - research/v309-r460-consolidated-benchmark
+  pull_request:
+    paths:
+      - tools/r460/**
+      - tests/test_v309_r460_*.py
+      - docs/V309_R460_CONSOLIDATED_BENCHMARK.md
+      - .github/workflows/v309-r460-benchmark.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-legacy-vs-consolidated-benchmark:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R460 invented owner R458/R459 IO-timing-memory and SHA parity
+        run: python -B -m unittest discover -s tests -p 'test_v309_r460_*.py' -v
+      - name: R460 synthetic benchmark emits aggregate-only JSON
+        run: python -B tools/r460/benchmark_consolidated_inspection.py --synthetic --iterations 2 --warmups 1
+      - name: Inherited R459 one-class-evidence-read and independent complete inventory
+        run: python -B -m unittest discover -s tests -p 'test_v309_r459_*.py' -v
+      - name: Inherited R458 invokedynamic bootstrap/condy metadata
+        run: python -B -m unittest discover -s tests -p 'test_v309_r458_*.py' -v
+      - name: Inherited R457 descriptor slots and callsite syntax
+        run: python -B -m unittest discover -s tests -p 'test_v309_r457_*.py' -v
+      - name: Inherited R456 member field invoke bytecode instructions
+        run: python -B -m unittest discover -s tests -p 'test_v309_r456_*.py' -v
+      - name: Inherited R455 selected preferred dependency members
+        run: python -B -m unittest discover -s tests -p 'test_v309_r455_*.py' -v
+      - name: Inherited R454 superclass/interface ancestry
+        run: python -B -m unittest discover -s tests -p 'test_v309_r454_*.py' -v
+      - name: Inherited R453 CP Fieldref Methodref signatures
+        run: python -B -m unittest discover -s tests -p 'test_v309_r453_*.py' -v
+      - name: Inherited R452 acyclic resource argument flow
+        run: python -B -m unittest discover -s tests -p 'test_v309_r452_*.py' -v
+      - name: Inherited R451 straightline resource argument flow
+        run: python -B -m unittest discover -s tests -p 'test_v309_r451_*.py' -v
+      - name: Inherited R450 Java11 Code and Signature scanner
+        run: python -B -m unittest discover -s tests -p 'test_v309_r450_*.py' -v
+      - name: Inherited R449 reference and resource name scanning
+        run: python -B -m unittest discover -s tests -p 'test_v309_r449_*.py' -v
+      - name: Inherited R448 compiled class reference census
+        run: python -B -m unittest discover -s tests -p 'test_v309_r448_*.py' -v
+      - name: Inherited R447 pinned original and ZIP gate
+        run: python -B -m unittest discover -s tests -p 'test_v309_r447_*.py' -v
+      - name: Inherited R446 owner current SHA full inventory
+        run: python -B -m unittest discover -s tests -p 'test_v309_r446_*.py' -v
+      - name: Inherited R445 bounded nofollow owner reads
+        run: python -B -m unittest discover -s tests -p 'test_v309_r445_*.py' -v
+      - name: Inherited R442 historical source custody denial
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v
+      - name: Inherited R426 invented Java11 Store compile gate
+        run: python -B -m unittest discover -s tests -p 'test_v309_r426_full_mock_pipeline.py' -v
