@@ -20,6 +20,7 @@ import test_v309_r458_bootstrap_callsite as r458_fixture
 from tools.r450 import classfile_signature_resource as r450
 from tools.r453 import classfile_member_reference as r453
 from tools.r458 import bootstrap_callsite_evidence as r458
+from tools.r449 import audit_descriptor_resource_gaps as r449
 from tools.r459 import audit_consolidated_inspection as r459
 from tools.r463 import constant_pool_view as cpview
 
@@ -247,9 +248,9 @@ class R463SharedPoolPure(unittest.TestCase):
         raw=r450_fixture.invented_classfile()
         view=cpview.parse(raw)
         self.assertEqual(
-            r450.classfile_evidence(raw,r450_fixture.r450.r449.resource_literal),
+            r450.classfile_evidence(raw,r449.resource_literal),
             r450.classfile_evidence(
-                raw,r450_fixture.r450.r449.resource_literal,
+                raw,r449.resource_literal,
                 shared_pool=view))
 
     def test_22_invokedynamic_and_condy_evidence_equal_with_shared_CP(self):
