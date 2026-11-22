@@ -169,8 +169,10 @@ class R459ConsolidatedFakeOwner(unittest.TestCase):
 
     def test_13_forced_cross_parser_dynamic_count_disagreement_refused(self):
         actual=r459.r458.scan_class
-        def altered(data):
-            record=actual(data)
+        def altered(data, **kwargs):
+            # R463 passes the immutable pool to the parser; forward any
+            # optional semantic-safe parser keyword in this mutation hook.
+            record=actual(data, **kwargs)
             target=dynamic.Handle(6,"java/lang/Object.class","run","()V",10)
             fake=dynamic.DynamicSite(
                 "synthetic()V",0,1,"invokedynamic",

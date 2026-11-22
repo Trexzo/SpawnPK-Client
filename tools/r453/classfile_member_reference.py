@@ -14,6 +14,7 @@ import re
 
 from tools.r449 import audit_descriptor_resource_gaps as r449
 from tools.r447 import audit_original_class_asset_coverage as r447
+from tools.r463 import constant_pool_view as cpview
 
 MAX_CLASS_BYTES = 32 * 1024 * 1024
 MAX_CP_ENTRIES = 65535
@@ -91,7 +92,8 @@ def validate_descriptor(value: str, kind: str) -> None:
         raise Refused("R453_MALFORMED_MEMBER_DESCRIPTOR") from None
 
 
-def parse_class(raw: bytes, *, allowed_majors=(55,)) -> ClassMembers:
+def parse_class(raw: bytes, *, allowed_majors=(55,),
+                shared_pool: cpview.Pool | None = None) -> ClassMembers:
     """Parse Java class metadata, Java11 only by default.
 
     R455 dependency inspection may explicitly admit historical bytecode
@@ -123,32 +125,44 @@ def parse_class(raw: bytes, *, allowed_majors=(55,)) -> ClassMembers:
     def u4() -> int:
         return int.from_bytes(take(4), "big")
 
-    count = u2()
-    need(1 <= count <= MAX_CP_ENTRIES, "R453_INVALID_CP_COUNT")
-    tags = [0] * count
-    cp: list[object | None] = [None] * count
-    i = 1
-    while i < count:
-        tag = u1()
-        tags[i] = tag
-        if tag == 1:
-            length = u2()
-            need(length <= MAX_UTF_BYTES, "R453_UTF_CONSTANT_TOO_LONG")
-            cp[i] = take(length).decode("utf-8", "replace")
-        elif tag in (3, 4):
-            take(4)
-        elif tag in (5, 6):
-            take(8)
+    if shared_pool is not None:
+        need_shared = type(shared_pool) is cpview.Pool
+        need(need_shared, "R453_R463_INVALID_VIEW_TYPE")
+        try:
+            shared_pool.validate_for(raw)
+        except cpview.Refused:
+            raise Refused("R453_R463_INPUT_MISMATCH") from None
+        count = shared_pool.count
+        tags = shared_pool.tags
+        cp = shared_pool.entries
+        pos = shared_pool.end
+    else:
+        count = u2()
+        need(1 <= count <= MAX_CP_ENTRIES, "R453_INVALID_CP_COUNT")
+        tags = [0] * count
+        cp: list[object | None] = [None] * count
+        i = 1
+        while i < count:
+            tag = u1()
+            tags[i] = tag
+            if tag == 1:
+                length = u2()
+                need(length <= MAX_UTF_BYTES, "R453_UTF_CONSTANT_TOO_LONG")
+                cp[i] = take(length).decode("utf-8", "replace")
+            elif tag in (3, 4):
+                take(4)
+            elif tag in (5, 6):
+                take(8)
+                i += 1
+            elif tag in (7, 8, 16, 19, 20):
+                cp[i] = u2()
+            elif tag in (9, 10, 11, 12, 17, 18):
+                cp[i] = (u2(), u2())
+            elif tag == 15:
+                cp[i] = (u1(), u2())
+            else:
+                raise Refused("R453_UNKNOWN_CONSTANT_POOL_TAG")
             i += 1
-        elif tag in (7, 8, 16, 19, 20):
-            cp[i] = u2()
-        elif tag in (9, 10, 11, 12, 17, 18):
-            cp[i] = (u2(), u2())
-        elif tag == 15:
-            cp[i] = (u1(), u2())
-        else:
-            raise Refused("R453_UNKNOWN_CONSTANT_POOL_TAG")
-        i += 1
 
     def utf(index: int) -> str:
         need(type(index) is int and 0 < index < count

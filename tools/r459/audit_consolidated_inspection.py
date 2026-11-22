@@ -44,6 +44,7 @@ from tools.r455 import dependency_member_access as r455
 from tools.r456 import member_opcode_evidence as r456
 from tools.r457 import jvm_callsite_constraints as r457
 from tools.r458 import bootstrap_callsite_evidence as r458
+from tools.r463 import constant_pool_view as cpview
 from tools.r458 import audit_bootstrap_evidence as r458_audit
 
 SCHEMA = "SpawnPK-R459-consolidated-evidence-UNAPPROVED-v1"
@@ -119,11 +120,12 @@ def inspect(original: Path, companion: Path | None = None) -> tuple[dict, dict]:
 
         # The same immutable byte string is passed to each existing parser.
         # None reopens source/class files or invokes another full audit.
-        record = r453.parse_class(data)
+        shared_pool = cpview.parse(data)
+        record = r453.parse_class(data, shared_pool=shared_pool)
         need(record.class_name == path,
              "R459_REBUILT_CLASS_INTERNAL_NAME_MISMATCH")
         class_records[path] = record
-        dynamic = r458.scan_class(data)
+        dynamic = r458.scan_class(data, shared_pool=shared_pool)
         need(dynamic.class_name == path,
              "R459_BOOTSTRAP_CLASS_INTERNAL_NAME_MISMATCH")
         dynamic_records[path] = dynamic
@@ -140,7 +142,7 @@ def inspect(original: Path, companion: Path | None = None) -> tuple[dict, dict]:
 
         generic, proximity, api_count = r450.classfile_evidence(
             data, r449.resource_literal, code_observer=resource_callback,
-            member_observer=opcode)
+            member_observer=opcode, shared_pool=shared_pool)
         methods["generic_signature_class_refs"] += len(generic)
         methods["resource_proximity_pairs"] += len(proximity)
         methods["known_resource_api_invokes"] += api_count
@@ -226,6 +228,9 @@ def inspect(original: Path, companion: Path | None = None) -> tuple[dict, dict]:
         "alternate_dependency_class_names": len(alternate_names),
         "selected_preferred_dependency_classes": len(chosen_dependencies),
         "classfile_evidence_pass_reads": class_file_reads,
+        "R463_shared_constant_pool_decodes": class_file_reads,
+        "R463_constant_pool_adapters_per_class": 3,
+        "R463_constant_pool_views_ephemeral": True,
         "classfile_evidence_pass_bytes": class_bytes_read,
         "full_R446_inventory_observations": 2,
         "recursive_legacy_owner_audits_invoked": 0,
