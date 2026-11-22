@@ -175,7 +175,7 @@ def benchmark(
     need(type(iterations) is int and 1 <= iterations <= MAX_TIMED_ITERATIONS
          and type(warmups) is int and 0 <= warmups <= MAX_WARMUPS,
          "R460_ITERATION_OR_WARMUP_LIMIT")
-    need(type(original) is Path, "R460_INVALID_ORIGINAL_PATH")
+    need(isinstance(original, Path), "R460_INVALID_ORIGINAL_PATH")
     # These full R446 observations are outside timing instrumentation;
     # both *individual* audit functions still independently re-observe.
     before, _ = r446.observe()
