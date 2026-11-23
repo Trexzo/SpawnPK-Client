@@ -24,7 +24,8 @@ class R460PairedSynthetic(unittest.TestCase):
         fixture.R459ConsolidatedFakeOwner.setUp(self)
 
     def test_01_identical_fabricated_inputs_produce_parity_and_read_reduction(self):
-        output = r460.compare(self.original_jar, pairs=1, synthetic=True)
+        output = r460.compare(self.original_jar, pairs=2, synthetic=True)
+        self.assertEqual(output["pairs"], 2)
         old = output["legacy_R458"]
         new = output["consolidated_R459"]
         self.assertTrue(output["pair_sha_inventories_consistent"])
