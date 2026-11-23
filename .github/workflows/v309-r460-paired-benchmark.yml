@@ -1,0 +1,41 @@
+name: v309-r460-paired-benchmark
+on:
+  push:
+    branches:
+      - research/v309-r460-benchmark-profiling
+  pull_request:
+    paths:
+      - tools/r460/**
+      - tests/test_v309_r460_*.py
+      - docs/V309_R460_PAIRED_BENCHMARK.md
+      - .github/workflows/v309-r460-paired-benchmark.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-paired-audit-profiling:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Synthetic R460 benchmark and no-private-data checks
+        run: python -B -m unittest discover -s tests -p 'test_v309_r460_*.py' -v
+      - name: Inherited R459 consolidated evidence safety regressions
+        run: python -B -m unittest discover -s tests -p 'test_v309_r459_*.py' -v
+      - name: Inherited R458 invokedynamic and bootstrap safety regressions
+        run: python -B -m unittest discover -s tests -p 'test_v309_r458_*.py' -v
+      - name: Historical R421 provenance gate remains blocked
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v
