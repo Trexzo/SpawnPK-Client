@@ -159,6 +159,31 @@ class R468BatchedCalibration(unittest.TestCase):
         self.assertFalse(r["original_owner_client_used"])
 
 
+    def test_16_windows_coarse_cpu_timer_zero_is_not_refused(self):
+        actual = bench.run_mode
+
+        def zero_cpu(workload, mode, *, iterations):
+            return actual(workload, mode), (0.1, 0.0)
+
+        with patch.object(bench, "one_batch", side_effect=zero_cpu):
+            result = bench.compare(
+                pairs=3, iterations=1, cases=((2, 1, True),))
+        self.assertTrue(result["all_complete_public_and_private_evidence_parity"])
+        self.assertEqual(
+            result["modeled_cases"][0]["cpu_time_by_mode"]
+                  ["independent"]["median_ms_per_complete_analysis"], 0.0)
+        self.assertTrue(result["coarse_cpu_clock_may_report_zero_on_windows"])
+
+        def invalid_wall(workload, mode, *, iterations):
+            return actual(workload, mode), (0.0, 0.0)
+
+        with patch.object(bench, "one_batch", side_effect=invalid_wall):
+            with self.assertRaisesRegex(
+                    bench.Refused, "R468_PAIRED_MEASUREMENT_OR_OUTPUT_DRIFT"):
+                bench.compare(pairs=3, iterations=1,
+                              cases=((2, 1, True),))
+
+
 class R468SyntheticOwner(unittest.TestCase):
     def setUp(self):
         owner_fixture.R459ConsolidatedFakeOwner.setUp(self)
