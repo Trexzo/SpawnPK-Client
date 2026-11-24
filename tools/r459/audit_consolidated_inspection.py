@@ -69,7 +69,10 @@ def inspect(original: Path, companion: Path | None = None,
             shared_instruction_factory=None,
             descriptor_cache_factory=None,
             reuse_opcode_summary=False,
-            hierarchy_factory=None) -> tuple[dict, dict]:
+            hierarchy_factory=None,
+            hierarchy_selector=None) -> tuple[dict, dict]:
+    need(hierarchy_selector is None or hierarchy_factory is not None,
+         "R466_HIERARCHY_SELECTOR_REQUIRES_FACTORY")
     # R446.observe always checks exact OS TEMP roots (no aliases),
     # fixed source/class counts, per-file SHA maps and pinned Store files.
     # This observation is never an independently approved R421 history.
@@ -199,8 +202,15 @@ def inspect(original: Path, companion: Path | None = None,
 
     # R464 cache applies only to the COMBINED selected+rebuilt graph.
     # R454 below intentionally analyzes the rebuilt-only graph separately.
+    reuse_hierarchy = hierarchy_factory is not None
+    if hierarchy_selector is not None:
+        hint = hierarchy_selector(
+            class_records, chosen_dependencies, member_sites)
+        need(type(hint) is bool,
+             "R466_HIERARCHY_SELECTOR_RESULT_MUST_BE_BOOL")
+        reuse_hierarchy = hint
     shared_graph = (hierarchy_factory(class_records, chosen_dependencies)
-                    if hierarchy_factory is not None else None)
+                    if reuse_hierarchy else None)
     graph_options = ({} if shared_graph is None else
                      {"shared_hierarchy": shared_graph})
 
