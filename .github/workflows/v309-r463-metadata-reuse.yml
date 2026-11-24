@@ -1,0 +1,56 @@
+name: v309-r463-shared-metadata-reuse
+on:
+  push:
+    branches: [research/v309-r463-opcode-descriptor-reuse]
+  pull_request:
+    paths:
+      - tools/r463/**
+      - tools/r459/audit_consolidated_inspection.py
+      - tools/r451/straightline_resource_operands.py
+      - tools/r452/forward_branch_resource_operands.py
+      - tools/r457/jvm_callsite_constraints.py
+      - tests/test_v309_r463_*.py
+      - docs/V309_R463_METADATA_REUSE.md
+      - .github/workflows/v309-r463-metadata-reuse.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  witnessed-classification-and-descriptor-reuse:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: R463 shared metadata regression and paired benchmark
+        run: python -B -m unittest discover -s tests -p 'test_v309_r463_*.py' -v
+      - name: Inherited R462 regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r462_*.py' -v
+      - name: Inherited R461 regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r461_*.py' -v
+      - name: Inherited R460 regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r460_*.py' -v
+      - name: Inherited R459 regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r459_*.py' -v
+      - name: Inherited R457 regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r457_*.py' -v
+      - name: Inherited R456 regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r456_*.py' -v
+      - name: Inherited R452 regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r452_*.py' -v
+      - name: Inherited R451 regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r451_*.py' -v
+      - name: Inherited R442 regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v
