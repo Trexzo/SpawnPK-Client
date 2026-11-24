@@ -8,6 +8,8 @@ target/argument identities are *reconstruction leads*, not runtime proof.
 """
 from __future__ import annotations
 
+from tools.r461 import shared_constant_pool as r461_cp
+
 from dataclasses import dataclass
 
 from tools.r450 import classfile_signature_resource as code_reader
@@ -83,7 +85,7 @@ class Evidence:
     unreferenced_bootstrap_entries: int
 
 
-def scan_class(raw: bytes) -> Evidence:
+def scan_class(raw: bytes, *, shared_pool=None) -> Evidence:
     """Strict class-file CP + BootstrapMethods + selected Code site reader."""
     need(type(raw) is bytes and 10 <= len(raw) <= MAX_CLASS
          and raw[:4] == b"\xca\xfe\xba\xbe"
@@ -107,31 +109,34 @@ def scan_class(raw: bytes) -> Evidence:
     def u4() -> int:
         return int.from_bytes(take(4), "big")
 
-    cp_count = u2()
-    need(1 <= cp_count <= 65535, "R458_CP_COUNT_INVALID")
-    tags = [0] * cp_count
-    cp: list[object | None] = [None] * cp_count
-    i = 1
-    while i < cp_count:
-        tag = u1()
-        tags[i] = tag
-        if tag == 1:
-            size = u2()
-            cp[i] = take(size).decode("utf-8", "replace")
-        elif tag in (3, 4):
-            take(4)
-        elif tag in (5, 6):
-            take(8)
+    if shared_pool is None:
+        cp_count = u2()
+        need(1 <= cp_count <= 65535, "R458_CP_COUNT_INVALID")
+        tags = [0] * cp_count
+        cp: list[object | None] = [None] * cp_count
+        i = 1
+        while i < cp_count:
+            tag = u1()
+            tags[i] = tag
+            if tag == 1:
+                size = u2()
+                cp[i] = take(size).decode("utf-8", "replace")
+            elif tag in (3, 4):
+                take(4)
+            elif tag in (5, 6):
+                take(8)
+                i += 1
+            elif tag in (7, 8, 16, 19, 20):
+                cp[i] = u2()
+            elif tag in (9, 10, 11, 12, 17, 18):
+                cp[i] = (u2(), u2())
+            elif tag == 15:
+                cp[i] = (u1(), u2())
+            else:
+                raise Refused("R458_UNKNOWN_CP_TAG")
             i += 1
-        elif tag in (7, 8, 16, 19, 20):
-            cp[i] = u2()
-        elif tag in (9, 10, 11, 12, 17, 18):
-            cp[i] = (u2(), u2())
-        elif tag == 15:
-            cp[i] = (u1(), u2())
-        else:
-            raise Refused("R458_UNKNOWN_CP_TAG")
-        i += 1
+    else:
+        cp_count, tags, cp, pos = r461_cp.admit(shared_pool, raw)
 
     def typed(index: int, expected: tuple[int, ...], reason: str):
         need(type(index) is int and 0 < index < cp_count

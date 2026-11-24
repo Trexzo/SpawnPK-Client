@@ -64,7 +64,8 @@ def need(condition: bool, code: str) -> None:
         raise Refused(code)
 
 
-def inspect(original: Path, companion: Path | None = None) -> tuple[dict, dict]:
+def inspect(original: Path, companion: Path | None = None,
+            *, shared_pool_factory=None) -> tuple[dict, dict]:
     # R446.observe always checks exact OS TEMP roots (no aliases),
     # fixed source/class counts, per-file SHA maps and pinned Store files.
     # This observation is never an independently approved R421 history.
@@ -118,11 +119,15 @@ def inspect(original: Path, companion: Path | None = None) -> tuple[dict, dict]:
 
         # The same immutable byte string is passed to each existing parser.
         # None reopens source/class files or invokes another full audit.
-        record = r453.parse_class(data)
+        # R461 optional path: immutable one-class-local CP index shared
+        # across independent semantic checks. Legacy R459 remains unchanged.
+        shared = shared_pool_factory(data) if shared_pool_factory is not None else None
+        options = {} if shared is None else {"shared_pool": shared}
+        record = r453.parse_class(data, **options)
         need(record.class_name == path,
              "R459_REBUILT_CLASS_INTERNAL_NAME_MISMATCH")
         class_records[path] = record
-        dynamic = r458.scan_class(data)
+        dynamic = r458.scan_class(data, **options)
         need(dynamic.class_name == path,
              "R459_BOOTSTRAP_CLASS_INTERNAL_NAME_MISMATCH")
         dynamic_records[path] = dynamic
@@ -139,7 +144,7 @@ def inspect(original: Path, companion: Path | None = None) -> tuple[dict, dict]:
 
         generic, proximity, api_count = r450.classfile_evidence(
             data, r449.resource_literal, code_observer=resource_callback,
-            member_observer=opcode)
+            member_observer=opcode, **options)
         methods["generic_signature_class_refs"] += len(generic)
         methods["resource_proximity_pairs"] += len(proximity)
         methods["known_resource_api_invokes"] += api_count

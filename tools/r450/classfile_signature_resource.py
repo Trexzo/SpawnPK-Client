@@ -8,6 +8,8 @@ reflection, JNI and dynamic resource names are outside this analysis.
 """
 from __future__ import annotations
 
+from tools.r461 import shared_constant_pool as r461_cp
+
 import re
 
 MAX_SIGNATURE_CHARS = 65535
@@ -274,7 +276,7 @@ def instructions(code: bytes) -> list[tuple[int, int, bytes]]:
 
 
 def classfile_evidence(raw: bytes, resource_filter, code_observer=None,
-                       member_observer=None) -> tuple[
+                       member_observer=None, *, shared_pool=None) -> tuple[
         set[str], list[tuple[str, str]], int]:
     """Returns (generic types, [(method, resource literal)], API call count).
 
@@ -301,31 +303,34 @@ def classfile_evidence(raw: bytes, resource_filter, code_observer=None,
     def four() -> int:
         return int.from_bytes(grab(4), "big")
 
-    cp_count = two()
-    require(1 <= cp_count <= 65535, "R450_INVALID_CP_COUNT")
-    tags = [0] * cp_count
-    cp: list[object | None] = [None] * cp_count
-    i = 1
-    while i < cp_count:
-        tag = grab(1)[0]
-        tags[i] = tag
-        if tag == 1:
-            length = two()
-            cp[i] = grab(length).decode("utf-8", "replace")
-        elif tag in (3, 4):
-            grab(4)
-        elif tag in (5, 6):
-            grab(8)
+    if shared_pool is None:
+        cp_count = two()
+        require(1 <= cp_count <= 65535, "R450_INVALID_CP_COUNT")
+        tags = [0] * cp_count
+        cp: list[object | None] = [None] * cp_count
+        i = 1
+        while i < cp_count:
+            tag = grab(1)[0]
+            tags[i] = tag
+            if tag == 1:
+                length = two()
+                cp[i] = grab(length).decode("utf-8", "replace")
+            elif tag in (3, 4):
+                grab(4)
+            elif tag in (5, 6):
+                grab(8)
+                i += 1
+            elif tag in (7, 8, 16, 19, 20):
+                cp[i] = two()
+            elif tag in (9, 10, 11, 12, 17, 18):
+                cp[i] = (two(), two())
+            elif tag == 15:
+                cp[i] = (grab(1)[0], two())
+            else:
+                raise Refused("R450_INVALID_CP_TAG")
             i += 1
-        elif tag in (7, 8, 16, 19, 20):
-            cp[i] = two()
-        elif tag in (9, 10, 11, 12, 17, 18):
-            cp[i] = (two(), two())
-        elif tag == 15:
-            cp[i] = (grab(1)[0], two())
-        else:
-            raise Refused("R450_INVALID_CP_TAG")
-        i += 1
+    else:
+        cp_count, tags, cp, cursor = r461_cp.admit(shared_pool, raw)
 
     def utf(index: int) -> str:
         require(type(index) is int and 1 <= index < cp_count

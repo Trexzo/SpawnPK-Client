@@ -1,0 +1,51 @@
+name: v309-r461-shared-classfile-index
+on:
+  push:
+    branches:
+      - research/v309-r461-shared-classfile-index
+  pull_request:
+    paths:
+      - tools/r461/**
+      - tools/r459/audit_consolidated_inspection.py
+      - tools/r450/classfile_signature_resource.py
+      - tools/r453/classfile_member_reference.py
+      - tools/r458/bootstrap_callsite_evidence.py
+      - tests/test_v309_r461_*.py
+      - docs/V309_R461_SHARED_INDEX.md
+      - .github/workflows/v309-r461-shared-index.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  immutable-shared-java11-pool-parity:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: R461 shared constant-pool parity, mutation refusal and paired profiling
+        run: python -B -m unittest discover -s tests -p 'test_v309_r461_*.py' -v
+      - name: Inherited R460 independent full-inventory benchmark safety
+        run: python -B -m unittest discover -s tests -p 'test_v309_r460_*.py' -v
+      - name: Inherited R459 SHA verified evidence regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r459_*.py' -v
+      - name: Inherited R458 bootstrap and condy regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r458_*.py' -v
+      - name: Inherited R453 member classfile regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r453_*.py' -v
+      - name: Inherited R450 generic Code attribute regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r450_*.py' -v
+      - name: Historical R421 custody denial regressions
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v
