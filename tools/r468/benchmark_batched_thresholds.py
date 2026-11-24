@@ -118,7 +118,11 @@ def compare(*, pairs: int = 5, iterations: int = 8, cases=CASES):
             for mode in order:
                 result, (w, c) = one_batch(
                     workload, mode, iterations=iterations)
-                if result != baseline or w <= 0 or c <= 0:
+                # Windows process_time_ns can be coarse enough to report
+                # ZERO CPU elapsed for short correct batches. Zero is a
+                # measured resolution floor, not invalid evidence. Wall
+                # time must be positive and both values nonnegative.
+                if result != baseline or w <= 0 or c < 0:
                     raise Refused("R468_PAIRED_MEASUREMENT_OR_OUTPUT_DRIFT")
                 wall[mode].append(w)
                 cpu[mode].append(c)
@@ -161,6 +165,7 @@ def compare(*, pairs: int = 5, iterations: int = 8, cases=CASES):
         "alternating_order": True,
         "timer_includes_selector_and_R455_R456_analysis": True,
         "tracemalloc_disabled_for_timing": True,
+        "coarse_cpu_clock_may_report_zero_on_windows": True,
         "no_performance_ratio_pass_fail_gate": True,
         "all_complete_public_and_private_evidence_parity": True,
         "original_owner_client_used": False,
