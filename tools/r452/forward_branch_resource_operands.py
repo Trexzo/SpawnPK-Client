@@ -70,6 +70,7 @@ def analyze_method(
     literal_resolver: Callable[[int], str | None],
     method_resolver: Callable[[int], tuple[str, str, str]],
     resource_filter: Callable[[str], str | None],
+    *, shared_instructions=None,
 ) -> Evidence | None:
     """Return None unless every reachable path is supported and terminates.
 
@@ -86,7 +87,8 @@ def analyze_method(
     if exception_count:
         return None
     try:
-        decoded = r450.instructions(code)
+        decoded = r450.instructions(
+            code, shared_instructions=shared_instructions)
     except r450.Refused:
         raise Refused("R452_INVALID_JVM_INSTRUCTION_BOUNDARIES") from None
     if not decoded:
@@ -302,7 +304,8 @@ def analyze_method(
 
 class Collector:
     """Additive observer compatible with R450's optional Code callback."""
-    def __init__(self):
+    def __init__(self, *, shared_instructions=None):
+        self.shared_instructions = shared_instructions
         self.methods_seen = 0
         self.methods_modeled = 0
         self.methods_skipped = 0
@@ -321,7 +324,8 @@ class Collector:
         need(self.methods_seen <= 60000, "R452_METHOD_BUDGET")
         outcome = analyze_method(
             code, max_stack, max_locals, exceptions,
-            literal, methodref, resource_filter)
+            literal, methodref, resource_filter,
+            shared_instructions=self.shared_instructions)
         if outcome is None:
             self.methods_skipped += 1
             return

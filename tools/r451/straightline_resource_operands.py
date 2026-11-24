@@ -101,6 +101,7 @@ def trace_method(
     literal_resolver,
     method_resolver,
     resource_filter,
+    *, shared_instructions=None,
 ) -> tuple[list[str], int] | None:
     """Trace only a fully modeled straight-line body, otherwise return None.
 
@@ -117,7 +118,8 @@ def trace_method(
     if exception_count:
         return None
     try:
-        instructions = r450.instructions(code)
+        instructions = r450.instructions(
+            code, shared_instructions=shared_instructions)
     except r450.Refused:
         raise Refused("R451_MALFORMED_INSTRUCTION_STREAM") from None
     if any(opcode in CONTROL_FLOW for _, opcode, _ in instructions):
@@ -228,7 +230,8 @@ def trace_method(
 
 class Collector:
     """R450's read-only Code callback; no state shared across method traces."""
-    def __init__(self):
+    def __init__(self, *, shared_instructions=None):
+        self.shared_instructions = shared_instructions
         self.methods_observed = 0
         self.methods_straightline_analyzed = 0
         self.methods_unsupported_or_control_flow = 0
@@ -245,7 +248,8 @@ class Collector:
              "R451_METHOD_BUDGET_EXCEEDED")
         result = trace_method(
             code, max_stack, max_locals, exception_count, literal,
-            methodref, resource_filter)
+            methodref, resource_filter,
+            shared_instructions=self.shared_instructions)
         if result is None:
             self.methods_unsupported_or_control_flow += 1
             return

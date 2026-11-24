@@ -62,6 +62,7 @@ def decoded_sites(
     method_label: str,
     code: bytes,
     typed_memberref,
+    *, shared_instructions=None,
 ) -> tuple[tuple[Site, ...], int]:
     """Count direct field/method access instructions only, never CP-only refs.
 
@@ -73,7 +74,8 @@ def decoded_sites(
     sites: list[Site] = []
     dynamic = 0
     try:
-        instructions = bytecode.instructions(code)
+        instructions = bytecode.instructions(
+            code, shared_instructions=shared_instructions)
     except bytecode.Refused:
         raise Refused("R456_UNSAFE_INSTRUCTION_BOUNDARY") from None
     for pc, op, operand in instructions:
@@ -118,8 +120,9 @@ def decoded_sites(
 
 class Collector:
     """Optional member_observer callback to the R450 Java11 Code reader."""
-    def __init__(self, source_class: str):
+    def __init__(self, source_class: str, *, shared_instructions=None):
         self.source_class = source_class
+        self.shared_instructions = shared_instructions
         self.sites: list[Site] = []
         self.dynamic_sites = 0
         self.methods_with_code = 0
@@ -127,7 +130,8 @@ class Collector:
     def __call__(self, method_label: str, code: bytes, typed_memberref) -> None:
         self.methods_with_code += 1
         sites, dynamic = decoded_sites(
-            self.source_class, method_label, code, typed_memberref)
+            self.source_class, method_label, code, typed_memberref,
+            shared_instructions=self.shared_instructions)
         self.sites.extend(sites)
         self.dynamic_sites += dynamic
         require(len(self.sites) <= MAX_SITES_PER_CLASS,

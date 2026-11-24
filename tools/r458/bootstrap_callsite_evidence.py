@@ -85,7 +85,8 @@ class Evidence:
     unreferenced_bootstrap_entries: int
 
 
-def scan_class(raw: bytes, *, shared_pool=None) -> Evidence:
+def scan_class(raw: bytes, *, shared_pool=None,
+               shared_instructions=None) -> Evidence:
     """Strict class-file CP + BootstrapMethods + selected Code site reader."""
     need(type(raw) is bytes and 10 <= len(raw) <= MAX_CLASS
          and raw[:4] == b"\xca\xfe\xba\xbe"
@@ -273,7 +274,8 @@ def scan_class(raw: bytes, *, shared_pool=None) -> Evidence:
             part(nested_len)
         need(p == len(data), "R458_CODE_ATTRIBUTE_TRAILING_BYTES")
         try:
-            instructions = code_reader.instructions(body)
+            instructions = code_reader.instructions(
+                body, shared_instructions=shared_instructions)
         except code_reader.Refused:
             raise Refused("R458_BAD_JVM_INSTRUCTION_BOUNDARY") from None
         for pc, op, operand in instructions:

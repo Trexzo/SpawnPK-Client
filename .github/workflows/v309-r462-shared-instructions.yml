@@ -1,0 +1,59 @@
+name: v309-r462-shared-instruction-stream
+on:
+  push:
+    branches:
+      - research/v309-r462-shared-bytecode
+  pull_request:
+    paths:
+      - tools/r462/**
+      - tools/r459/audit_consolidated_inspection.py
+      - tools/r450/classfile_signature_resource.py
+      - tools/r451/straightline_resource_operands.py
+      - tools/r452/forward_branch_resource_operands.py
+      - tools/r456/member_opcode_evidence.py
+      - tools/r458/bootstrap_callsite_evidence.py
+      - tests/test_v309_r462_*.py
+      - docs/V309_R462_SHARED_INSTRUCTIONS.md
+      - .github/workflows/v309-r462-shared-instructions.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  shared-method-code-instruction-index:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: R462 class-local instruction stream and paired profiling
+        run: python -B -m unittest discover -s tests -p 'test_v309_r462_*.py' -v
+      - name: Inherited R461 constant-pool sharing and audit safety
+        run: python -B -m unittest discover -s tests -p 'test_v309_r461_*.py' -v
+      - name: Inherited R460 benchmark and integrity gates
+        run: python -B -m unittest discover -s tests -p 'test_v309_r460_*.py' -v
+      - name: Inherited R459 full SHA verified inspection
+        run: python -B -m unittest discover -s tests -p 'test_v309_r459_*.py' -v
+      - name: Inherited R458 dynamic method linking checks
+        run: python -B -m unittest discover -s tests -p 'test_v309_r458_*.py' -v
+      - name: Inherited R456 JVM bytecode member opcode checks
+        run: python -B -m unittest discover -s tests -p 'test_v309_r456_*.py' -v
+      - name: Inherited R452 bounded forward CFG modeling
+        run: python -B -m unittest discover -s tests -p 'test_v309_r452_*.py' -v
+      - name: Inherited R451 straightline resource tracing
+        run: python -B -m unittest discover -s tests -p 'test_v309_r451_*.py' -v
+      - name: Inherited R450 Code Signature scanning
+        run: python -B -m unittest discover -s tests -p 'test_v309_r450_*.py' -v
+      - name: Historical R421 manifest custody remains unapproved
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v

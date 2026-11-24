@@ -65,7 +65,8 @@ def need(condition: bool, code: str) -> None:
 
 
 def inspect(original: Path, companion: Path | None = None,
-            *, shared_pool_factory=None) -> tuple[dict, dict]:
+            *, shared_pool_factory=None,
+            shared_instruction_factory=None) -> tuple[dict, dict]:
     # R446.observe always checks exact OS TEMP roots (no aliases),
     # fixed source/class counts, per-file SHA maps and pinned Store files.
     # This observation is never an independently approved R421 history.
@@ -123,17 +124,21 @@ def inspect(original: Path, companion: Path | None = None,
         # across independent semantic checks. Legacy R459 remains unchanged.
         shared = shared_pool_factory(data) if shared_pool_factory is not None else None
         options = {} if shared is None else {"shared_pool": shared}
+        stream = (shared_instruction_factory()
+                  if shared_instruction_factory is not None else None)
+        stream_options = ({} if stream is None else
+                          {"shared_instructions": stream})
         record = r453.parse_class(data, **options)
         need(record.class_name == path,
              "R459_REBUILT_CLASS_INTERNAL_NAME_MISMATCH")
         class_records[path] = record
-        dynamic = r458.scan_class(data, **options)
+        dynamic = r458.scan_class(data, **options, **stream_options)
         need(dynamic.class_name == path,
              "R459_BOOTSTRAP_CLASS_INTERNAL_NAME_MISMATCH")
         dynamic_records[path] = dynamic
-        opcode = r456.Collector(path)
-        straight = r451.Collector()
-        branch = r452.Collector()
+        opcode = r456.Collector(path, **stream_options)
+        straight = r451.Collector(**stream_options)
+        branch = r452.Collector(**stream_options)
 
         def resource_callback(method, code, max_stack, max_locals,
                               exceptions, literal, methodref, filter_resource):
@@ -144,7 +149,7 @@ def inspect(original: Path, companion: Path | None = None,
 
         generic, proximity, api_count = r450.classfile_evidence(
             data, r449.resource_literal, code_observer=resource_callback,
-            member_observer=opcode, **options)
+            member_observer=opcode, **options, **stream_options)
         methods["generic_signature_class_refs"] += len(generic)
         methods["resource_proximity_pairs"] += len(proximity)
         methods["known_resource_api_invokes"] += api_count
