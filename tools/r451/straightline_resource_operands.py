@@ -101,7 +101,7 @@ def trace_method(
     literal_resolver,
     method_resolver,
     resource_filter,
-    *, shared_instructions=None,
+    *, shared_instructions=None, method_shape_resolver=None,
 ) -> tuple[list[str], int] | None:
     """Trace only a fully modeled straight-line body, otherwise return None.
 
@@ -194,7 +194,7 @@ def trace_method(
             elif opcode in (0xb6, 0xb7, 0xb8, 0xb9):
                 index = int.from_bytes(operand[:2], "big")
                 owner, name, descriptor = method_resolver(index)
-                argc, returns_value, wide = method_shape(descriptor)
+                argc, returns_value, wide = (method_shape_resolver or method_shape)(descriptor)
                 if wide:
                     raise UnsupportedFlow()
                 arguments = [pop() for _ in range(argc)][::-1]
@@ -230,8 +230,10 @@ def trace_method(
 
 class Collector:
     """R450's read-only Code callback; no state shared across method traces."""
-    def __init__(self, *, shared_instructions=None):
+    def __init__(self, *, shared_instructions=None,
+                 method_shape_resolver=None):
         self.shared_instructions = shared_instructions
+        self.method_shape_resolver = method_shape_resolver
         self.methods_observed = 0
         self.methods_straightline_analyzed = 0
         self.methods_unsupported_or_control_flow = 0
@@ -249,7 +251,8 @@ class Collector:
         result = trace_method(
             code, max_stack, max_locals, exception_count, literal,
             methodref, resource_filter,
-            shared_instructions=self.shared_instructions)
+            shared_instructions=self.shared_instructions,
+            method_shape_resolver=self.method_shape_resolver)
         if result is None:
             self.methods_unsupported_or_control_flow += 1
             return

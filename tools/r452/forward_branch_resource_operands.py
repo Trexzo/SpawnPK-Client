@@ -70,7 +70,7 @@ def analyze_method(
     literal_resolver: Callable[[int], str | None],
     method_resolver: Callable[[int], tuple[str, str, str]],
     resource_filter: Callable[[str], str | None],
-    *, shared_instructions=None,
+    *, shared_instructions=None, method_shape_resolver=None,
 ) -> Evidence | None:
     """Return None unless every reachable path is supported and terminates.
 
@@ -237,7 +237,7 @@ def analyze_method(
             elif op in (0xb6, 0xb7, 0xb8, 0xb9):
                 index = int.from_bytes(operand[:2], "big")
                 owner, name, descriptor = method_resolver(index)
-                argc, has_return, wide = r451.method_shape(descriptor)
+                argc, has_return, wide = (method_shape_resolver or r451.method_shape)(descriptor)
                 if wide:
                     raise Unsupported()
                 args = [pop() for _ in range(argc)][::-1]
@@ -304,8 +304,10 @@ def analyze_method(
 
 class Collector:
     """Additive observer compatible with R450's optional Code callback."""
-    def __init__(self, *, shared_instructions=None):
+    def __init__(self, *, shared_instructions=None,
+                 method_shape_resolver=None):
         self.shared_instructions = shared_instructions
+        self.method_shape_resolver = method_shape_resolver
         self.methods_seen = 0
         self.methods_modeled = 0
         self.methods_skipped = 0
@@ -325,7 +327,8 @@ class Collector:
         outcome = analyze_method(
             code, max_stack, max_locals, exceptions,
             literal, methodref, resource_filter,
-            shared_instructions=self.shared_instructions)
+            shared_instructions=self.shared_instructions,
+            method_shape_resolver=self.method_shape_resolver)
         if outcome is None:
             self.methods_skipped += 1
             return
