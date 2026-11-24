@@ -158,6 +158,7 @@ def analyze(
     dependencies: dict[str, member_parser.ClassMembers],
     original: set[str],
     alternate: set[str],
+    *, shared_hierarchy=None,
 ) -> tuple[dict, dict]:
     """Aggregate only; detailed identifiers belong in owner-private TEMP."""
     need(not (rebuilt.keys() & dependencies.keys()),
@@ -166,6 +167,8 @@ def analyze(
     merged.update(rebuilt)
     for name, record in merged.items():
         need(record.class_name == name, "R455_CLASS_RECORD_PATH_MISMATCH")
+    if shared_hierarchy is not None:
+        shared_hierarchy.admit(merged)
     incoming: dict[member_parser.Member, set[str]] = defaultdict(set)
     for caller, record in rebuilt.items():
         for reference in record.references:
@@ -185,10 +188,14 @@ def analyze(
             chain = None
         else:
             if target.owner not in chain_cache:
-                chain_cache[target.owner] = ancestry.ancestry(
-                    merged, target.owner)
+                chain_cache[target.owner] = (
+                    ancestry.ancestry(merged, target.owner)
+                    if shared_hierarchy is None else
+                    shared_hierarchy.chain(target.owner))
             chain = chain_cache[target.owner]
-            resolved = ancestry.lookup(merged, target, chain)
+            resolved = (ancestry.lookup(merged, target, chain)
+                        if shared_hierarchy is None else
+                        shared_hierarchy.resolve(target, chain))
             category = resolved.category
             providers = (target.owner,) if category == "direct_declaration" else (
                 resolved.candidates)
