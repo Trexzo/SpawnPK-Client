@@ -1,0 +1,60 @@
+name: v309-r468-census-batched-calibration
+on:
+  push:
+    branches: [research/v309-r468-overlap-census-batched-benchmark]
+  pull_request:
+    paths:
+      - tools/r468/**
+      - tests/test_v309_r468_*.py
+      - docs/V309_R468_CENSUS_BATCHED_BENCHMARK.md
+      - .github/workflows/v309-r468-census-batched-calibration.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  overlap-census-and-batched-calibration:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: R468 complete overlap census and replicated batched microbenchmark
+        run: python -B -m unittest discover -s tests -p 'test_v309_r468_*.py' -v
+      - name: R467 inherited safety regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r467_*.py' -v
+      - name: R466 inherited safety regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r466_*.py' -v
+      - name: R465 inherited safety regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r465_*.py' -v
+      - name: R464 inherited safety regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r464_*.py' -v
+      - name: R463 inherited safety regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r463_*.py' -v
+      - name: R462 inherited safety regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r462_*.py' -v
+      - name: R461 inherited safety regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r461_*.py' -v
+      - name: R460 inherited safety regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r460_*.py' -v
+      - name: R459 inherited safety regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r459_*.py' -v
+      - name: R456 inherited safety regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r456_*.py' -v
+      - name: R455 inherited safety regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r455_*.py' -v
+      - name: R454 inherited safety regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r454_*.py' -v
+      - name: R442 inherited safety regression suite
+        run: python -B -m unittest discover -s tests -p 'test_v309_r442_*.py' -v
