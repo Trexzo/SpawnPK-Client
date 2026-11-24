@@ -99,6 +99,7 @@ def method_shape(descriptor: str) -> MethodShape:
 def site_issues(
     site: prior.Site,
     reference_owner: members.ClassMembers | None,
+    *, method_shape_resolver=None,
 ) -> tuple[str, ...]:
     """List advisory static callsite inconsistencies, never runtime verdicts."""
     require(isinstance(site, prior.Site),
@@ -121,7 +122,7 @@ def site_issues(
 
     findings: list[str] = []
     if site.operation in methods:
-        shape = method_shape(site.target.descriptor)
+        shape = (method_shape_resolver or method_shape)(site.target.descriptor)
         if site.operation == "invokeinterface":
             expect = shape.parameter_slots + 1
             if expect > 255:
@@ -169,17 +170,26 @@ def analyze(
     selected_dependencies: dict[str, members.ClassMembers],
     sites: list[prior.Site],
     dynamic_sites: int,
+    *, prior_witness=None, method_shape_resolver=None,
 ) -> tuple[dict, dict]:
     """Aggregate only; detailed site identities belong in private TEMP."""
-    previous, _ = prior.analyze(
-        rebuilt, selected_dependencies, sites, dynamic_sites)
+    if prior_witness is None:
+        previous, _ = prior.analyze(
+            rebuilt, selected_dependencies, sites, dynamic_sites)
+    else:
+        from tools.r463 import reuse_validated_metadata as shared
+        previous = shared.admit(
+            prior_witness, rebuilt, selected_dependencies, sites,
+            dynamic_sites)
     merged = dict(selected_dependencies)
     merged.update(rebuilt)
     counts: Counter[str] = Counter()
     flagged: list[dict] = []
     total = 0
     for site in sites:
-        issues = site_issues(site, merged.get(site.target.owner))
+        issues = site_issues(
+            site, merged.get(site.target.owner),
+            method_shape_resolver=method_shape_resolver)
         total += 1
         for issue in issues:
             counts[issue] += 1
