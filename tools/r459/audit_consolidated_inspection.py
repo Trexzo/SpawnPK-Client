@@ -68,7 +68,8 @@ def inspect(original: Path, companion: Path | None = None,
             *, shared_pool_factory=None,
             shared_instruction_factory=None,
             descriptor_cache_factory=None,
-            reuse_opcode_summary=False) -> tuple[dict, dict]:
+            reuse_opcode_summary=False,
+            hierarchy_factory=None) -> tuple[dict, dict]:
     # R446.observe always checks exact OS TEMP roots (no aliases),
     # fixed source/class counts, per-file SHA maps and pinned Store files.
     # This observation is never an independently approved R421 history.
@@ -196,15 +197,23 @@ def inspect(original: Path, companion: Path | None = None,
         preferred_raw, dep_hashes["R239_filtered.jar"],
         preferred_names, class_records)
 
+    # R464 cache applies only to the COMBINED selected+rebuilt graph.
+    # R454 below intentionally analyzes the rebuilt-only graph separately.
+    shared_graph = (hierarchy_factory(class_records, chosen_dependencies)
+                    if hierarchy_factory is not None else None)
+    graph_options = ({} if shared_graph is None else
+                     {"shared_hierarchy": shared_graph})
+
     member_summary, member_private = r453_audit.classify(
         class_records, preferred_names, alternate_names, original_classes)
     ancestry_summary, ancestry_private = r454.analyze(
         class_records, preferred_names, alternate_names, original_classes)
     dependency_summary, dependency_private = r455.analyze(
-        class_records, chosen_dependencies, original_classes, alternate_names)
+        class_records, chosen_dependencies, original_classes, alternate_names,
+        **graph_options)
     opcode_summary, opcode_private = r456.analyze(
         class_records, chosen_dependencies, member_sites,
-        methods["invokedynamic_sites_in_R456_decoder"])
+        methods["invokedynamic_sites_in_R456_decoder"], **graph_options)
     prior_witness = None
     if reuse_opcode_summary:
         from tools.r463 import reuse_validated_metadata as metadata
