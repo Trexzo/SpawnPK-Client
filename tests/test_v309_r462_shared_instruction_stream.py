@@ -25,7 +25,7 @@ class R462PureInstructionStream(unittest.TestCase):
             b"\x12\x01\x57\xb1",           # ldc, pop, return
             b"\x99\x00\x03\xb1",           # branch + return
             b"\xc4\x15\x00\x01\xb1",       # wide iload + return
-            b"\xaa\x00\x00\x00" + b"\x00" * 12 + b"\xb1",
+            b"\xaa\x00\x00\x00" + b"\x00" * 16 + b"\xb1",
             b"\xab\x00\x00\x00" + b"\x00" * 8 + b"\xb1",
         )
         index = stream.Index()
