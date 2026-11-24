@@ -73,7 +73,11 @@ Cases include 1, 2, 4, 8, 12 and 16 unique synthetic overlaps, plus a
 24-owner no-opcode negative control. Default five paired trials per case,
 eight complete analyzer invocations in each timed sample. It reports
 wall and CPU medians, median absolute deviations, min/max spread and
-within-pair speedup ratios. Tracemalloc is intentionally **disabled for
+within-pair speedup ratios. On Windows the CPU process timer may be too
+coarse for sub-tick batches and legitimately report zero CPU elapsed;
+this is kept as a resolution-limited observation, not mistaken for a
+failed run or a claimed zero-cost computation. Positive wall time and
+complete evidence parity remain hard requirements. Tracemalloc is intentionally **disabled for
 timing** in this pass, unlike earlier R467 runs, to reduce intrusive
 measurement noise. Selector overhead IS included in every adaptive mode.
 
