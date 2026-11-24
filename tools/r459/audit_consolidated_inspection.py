@@ -66,7 +66,9 @@ def need(condition: bool, code: str) -> None:
 
 def inspect(original: Path, companion: Path | None = None,
             *, shared_pool_factory=None,
-            shared_instruction_factory=None) -> tuple[dict, dict]:
+            shared_instruction_factory=None,
+            descriptor_cache_factory=None,
+            reuse_opcode_summary=False) -> tuple[dict, dict]:
     # R446.observe always checks exact OS TEMP roots (no aliases),
     # fixed source/class counts, per-file SHA maps and pinned Store files.
     # This observation is never an independently approved R421 history.
@@ -104,6 +106,12 @@ def inspect(original: Path, companion: Path | None = None,
     class_file_reads = 0
     class_bytes_read = 0
     methods = Counter()
+    shape_cache = (descriptor_cache_factory()
+                   if descriptor_cache_factory is not None else None)
+    resource_shape_kwargs = ({} if shape_cache is None else
+                             {"method_shape_resolver": shape_cache.resource_shape})
+    callsite_shape_kwargs = ({} if shape_cache is None else
+                             {"method_shape_resolver": shape_cache.callsite_shape})
 
     for path, expected_sha in sorted(snapshot["class_inventory"].items()):
         r447.zip_path(path)
@@ -137,8 +145,8 @@ def inspect(original: Path, companion: Path | None = None,
              "R459_BOOTSTRAP_CLASS_INTERNAL_NAME_MISMATCH")
         dynamic_records[path] = dynamic
         opcode = r456.Collector(path, **stream_options)
-        straight = r451.Collector(**stream_options)
-        branch = r452.Collector(**stream_options)
+        straight = r451.Collector(**stream_options, **resource_shape_kwargs)
+        branch = r452.Collector(**stream_options, **resource_shape_kwargs)
 
         def resource_callback(method, code, max_stack, max_locals,
                               exceptions, literal, methodref, filter_resource):
@@ -197,9 +205,16 @@ def inspect(original: Path, companion: Path | None = None,
     opcode_summary, opcode_private = r456.analyze(
         class_records, chosen_dependencies, member_sites,
         methods["invokedynamic_sites_in_R456_decoder"])
+    prior_witness = None
+    if reuse_opcode_summary:
+        from tools.r463 import reuse_validated_metadata as metadata
+        prior_witness = metadata.witness(
+            class_records, chosen_dependencies, member_sites,
+            methods["invokedynamic_sites_in_R456_decoder"], opcode_summary)
     callsite_summary, callsite_private = r457.analyze(
         class_records, chosen_dependencies, member_sites,
-        methods["invokedynamic_sites_in_R456_decoder"])
+        methods["invokedynamic_sites_in_R456_decoder"],
+        prior_witness=prior_witness, **callsite_shape_kwargs)
     dynamic_summary, dynamic_private = r458_audit.aggregate(
         dynamic_records, set(class_records), preferred_names,
         alternate_names, original_classes)
