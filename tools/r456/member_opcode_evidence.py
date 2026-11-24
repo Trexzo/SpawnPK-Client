@@ -143,6 +143,7 @@ def analyze(
     selected: dict[str, members.ClassMembers],
     sites: list[Site],
     dynamic: int,
+    *, shared_hierarchy=None,
 ) -> tuple[dict, dict]:
     """Return non-identifying aggregate + owner-private name-only worklist.
 
@@ -156,6 +157,8 @@ def analyze(
     merged.update(rebuilt)
     for path, rec in merged.items():
         require(path == rec.class_name, "R456_MEMBER_OWNER_RECORD_MISMATCH")
+    if shared_hierarchy is not None:
+        shared_hierarchy.admit(merged)
     require(len(sites) <= MAX_TOTAL_SITES and type(dynamic) is int
             and 0 <= dynamic <= MAX_TOTAL_SITES,
             "R456_TOTAL_OPCODE_SITES_BUDGET")
@@ -184,10 +187,14 @@ def analyze(
             unknown_edges = ()
         else:
             if target.owner not in ancestry_cache:
-                ancestry_cache[target.owner] = ancestry.ancestry(
-                    merged, target.owner)
+                ancestry_cache[target.owner] = (
+                    ancestry.ancestry(merged, target.owner)
+                    if shared_hierarchy is None else
+                    shared_hierarchy.chain(target.owner))
             chain = ancestry_cache[target.owner]
-            resolved = ancestry.lookup(merged, target, chain)
+            resolved = (ancestry.lookup(merged, target, chain)
+                        if shared_hierarchy is None else
+                        shared_hierarchy.resolve(target, chain))
             providers = (
                 (target.owner,) if resolved.category == "direct_declaration"
                 else resolved.candidates)
