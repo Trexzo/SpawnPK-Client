@@ -62,7 +62,10 @@ class R468Census(unittest.TestCase):
             for site in w.sites
         ]
         c = census.count(w.rebuilt, w.selected, wrong)
-        self.assertEqual(c.eligible_in_graph_opcode_targets, 192)
+        # Replacing all eight method names per owner with one synthetic
+        # name collapses eight opcode targets to one per owner: 24 uniques.
+        self.assertEqual(c.eligible_in_graph_opcode_targets, 24)
+        self.assertEqual(c.distinct_opcode_member_targets, 24)
         self.assertEqual(c.exact_overlapping_distinct_targets, 0)
         self.assertEqual(c.exact_overlapping_opcode_site_occurrences, 0)
 
