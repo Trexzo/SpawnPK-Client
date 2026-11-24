@@ -218,7 +218,7 @@ THREE_OPERANDS = frozenset({0xc5})
 FOUR_OPERANDS = frozenset({0xb9, 0xba, 0xc8, 0xc9})
 
 
-def instructions(code: bytes) -> list[tuple[int, int, bytes]]:
+def _instructions_uncached(code: bytes) -> list[tuple[int, int, bytes]]:
     """Exact opcode boundaries, including wide, switch alignment, and bounds."""
     require(type(code) is bytes and len(code) <= MAX_CODE_BYTES,
             "R450_CODE_LENGTH_INVALID")
@@ -275,8 +275,17 @@ def instructions(code: bytes) -> list[tuple[int, int, bytes]]:
     return answer
 
 
+def instructions(code: bytes, *, shared_instructions=None):
+    """Preserve the original parser unless a class-local R462 index is given."""
+    if shared_instructions is None:
+        return _instructions_uncached(code)
+    from tools.r462 import shared_instruction_stream as shared
+    return shared.decode(shared_instructions, code, _instructions_uncached)
+
+
 def classfile_evidence(raw: bytes, resource_filter, code_observer=None,
-                       member_observer=None, *, shared_pool=None) -> tuple[
+                       member_observer=None, *, shared_pool=None,
+                       shared_instructions=None) -> tuple[
         set[str], list[tuple[str, str]], int]:
     """Returns (generic types, [(method, resource literal)], API call count).
 
@@ -418,7 +427,8 @@ def classfile_evidence(raw: bytes, resource_filter, code_observer=None,
                 exceptions, literal, methodref, resource_filter)
 
         string_sites: list[tuple[int, str]] = []
-        for offset, opcode, operand in instructions(method_code):
+        for offset, opcode, operand in instructions(
+                method_code, shared_instructions=shared_instructions):
             if opcode in (0x12, 0x13):
                 index = operand[0] if opcode == 0x12 else int.from_bytes(
                     operand, "big")
